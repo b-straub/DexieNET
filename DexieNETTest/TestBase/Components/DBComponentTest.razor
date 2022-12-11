@@ -1,0 +1,72 @@
+﻿@inherits DexieNET<FriendsDB>
+@using Microsoft.AspNetCore.Components.Forms
+
+<h1>A very simple liveQuery() example</h1>
+
+<hr>
+
+<div id="centerBox">
+    <EditForm Model="@this" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Name:</label>
+            <InputText id="name" @bind-Value="Name" />
+
+        </div>
+
+        <div>
+            <label>Age:</label>
+
+            <InputNumber id="age" @bind-Value="Age" />
+
+        </div>
+
+        <button id="btn_s" class="btn btn-primary" type="submit">Submit</button>
+    </EditForm>
+</div>
+
+<hr>
+
+<div class="flex-container">
+    <button id="btn_m" class="btn btn-secondary flex-item" @onclick="Unsubscribe" disabled=@(_disposeBag.Any() == false)>
+        Unsubscribe
+    </button>
+
+    <button id="btn_m" class="btn btn-secondary flex-item" @onclick="Subscribe" disabled=@_disposeBag.Any()>
+        Subscribe
+    </button>
+
+    <button id="btn_m" class="btn btn-secondary flex-item" @onclick="SubscribeSecond" disabled=@_friendsSecond.Any()>
+        SubscribeSecond
+    </button>
+
+    <button id="btn_m" class="btn btn-secondary flex-item" @onclick="ClearDatabase" disabled=@(_hasData == false)>
+        Clear Database
+    </button>
+</div>
+
+
+<hr>
+
+<h3>Friends</h3>
+
+<p>
+    <div class="flex-container">
+        <GenericList TItem="Friends" Items="_friends"></GenericList>
+        <GenericList TItem="Friends" Items="_friendsSecond"></GenericList>
+    </div>
+</p>
+
+<hr>
+
+<h3>Friends sorted by name</h3>
+
+<div>
+    <label>Query:</label>
+    <input type="text" id="queryName" @bind="_queryName" @bind:event="oninput" @onkeyup="QueryChanged" disabled=@(_hasData == false) />
+</div>
+<p>
+    <GenericList TItem="Friends" Items="_searchedFriends"></GenericList>
+</p>

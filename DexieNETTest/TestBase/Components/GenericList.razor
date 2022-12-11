@@ -1,0 +1,113 @@
+﻿@typeparam TItem
+@using System.Reflection
+
+@if (Items is null)
+{
+    <p>Loading...</p>
+}
+else if (Items.Count() == 0)
+{
+    <div>
+        <p>No items...</p>
+    </div>
+}
+else
+{
+    <ul style="list-style: square inside;">
+        @foreach (var item in Items)
+        {
+            <li>
+                @GetValues(item)
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public IEnumerable<TItem>? Items { get; set; }
+
+    string GetValues(TItem item)
+    {
+        List<(string Name, object? Value, string? Group)> values = new();
+
+        Queue<(Type Type, object Item, string? Group)> types = new();
+        types.Enqueue((item.GetType(), item, null));
+
+        while (types.Any())
+        {
+            var typeGroup = types.Dequeue();
+            PropertyInfo[] properties = typeGroup.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var p in properties)
+            {
+                var val = p.GetValue(typeGroup.Item);
+                if (val is null)
+                {
+                    continue;
+                }
+
+                if (p.PropertyType.Module == typeGroup.Type.Module && !p.PropertyType.IsEnum)
+                {
+                    if (val is not null)
+                    {
+                        types.Enqueue((p.PropertyType, val, p.Name));
+                    }
+                    continue;
+                }
+
+                if (p.PropertyType.IsArray)
+                {
+                    var array = val as Array;
+                    var aItems = string.Empty;
+
+                    if (array is not null)
+                    {
+                        foreach (var aVal in array)
+                        {
+                            aItems += $"{aVal} ";
+                        }
+
+                        val = aItems.Trim();
+                    }
+                }
+
+                values.Add((p.Name, val, typeGroup.Group));
+            }
+        }
+
+        var line = string.Empty;
+        string? lastGroup = null;
+        var trimChars = new char[] { ' ', ';' };
+
+        foreach (var val in values)
+        {
+            var lineItem = string.Empty;
+
+            if (val.Group != lastGroup)
+            {
+                if (lastGroup is not null)
+                {
+                    line = line.TrimEnd(trimChars);
+                    lineItem += "} ";
+                }
+
+                lineItem += $"{val.Group} {{";
+
+                lastGroup = val.Group;
+            }
+
+            lineItem += $"{val.Name}: {val.Value}; ";
+
+            line += lineItem;
+        }
+
+        if (lastGroup is not null)
+        {
+            line = line.TrimEnd(trimChars);
+            line += "}";
+        }
+
+        return line;
+    }
+}

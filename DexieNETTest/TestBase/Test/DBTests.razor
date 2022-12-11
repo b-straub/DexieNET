@@ -1,0 +1,36 @@
+﻿
+<button type="reset" hidden=@(_running == false) @onclick="@Cancel">Cancel</button> 
+
+@if (_testsCompleted)
+{
+    <div>All Tests Completed</div>
+}
+
+@if (_db is not null)
+{
+    _lastCategory = null;
+
+    @foreach (var test in _testResults.OrderBy(t => t.Category))
+    {
+        @if (_lastCategory != test.Category)
+        {
+            _lastCategory = test.Category;
+            <p></p>
+            <h5 style="color: blue">@test.Category</h5>
+        }
+
+        @if (test.Error)
+        {
+            <div style="color: red">@test.Result</div>
+        }
+        else
+        {
+            <div style="color: forestgreen">@test.Result</div>
+        }
+    }
+}
+
+@if (_error is not null)
+{
+    <h1 style="color: red">@_error</h1>
+}

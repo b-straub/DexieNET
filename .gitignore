@@ -1,0 +1,16 @@
+﻿*bin*
+*obj*
+*bat*
+*map*
+*log*
+.vs
+*.user
+*-template
+template-*
+DexieNETIntern.sln
+DexieNET/npm/node_modules
+DexieNET/wwwroot
+DexieNETTest/TableGeneratorTest/TestResults
+Publish
+Nugets
+GeneratorRunner

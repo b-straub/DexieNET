@@ -1,0 +1,27 @@
+﻿
+<h1>DB Administration</h1>
+
+<button class="btn btn-primary" @onclick=@Delete>Delete Databases</button>
+
+
+@code {
+    [Inject]
+    public IDexieNETService<SecondDB>? SecondDB { get; set; }
+
+    [Inject]
+    public IDexieNETService<TestDB>? TestDB { get; set; }
+
+    [Inject]
+    public IDexieNETService<FriendsDB>? FriendsDB { get; set; }
+
+    private async Task Delete()
+    {
+        ArgumentNullException.ThrowIfNull(SecondDB);
+        ArgumentNullException.ThrowIfNull(TestDB);
+        ArgumentNullException.ThrowIfNull(FriendsDB);
+
+        await SecondDB.DexieNETFactory.Delete();
+        await TestDB.DexieNETFactory.Delete();
+        await FriendsDB.DexieNETFactory.Delete();
+    }
+ }

@@ -1,0 +1,37 @@
+﻿div {
+    margin-bottom: 10px;
+}
+
+
+label {
+    display: inline-block;
+    width: 100px;
+    text-align: right;
+}
+
+#centerBox {
+    width: 500px;
+    margin: auto 0;
+    text-align: center;
+}
+
+#btn_s {
+    width: 90px;
+}
+
+#btn_m {
+    width: 150px;
+}
+
+.flex-container {
+    display: flex;
+    column-gap: 50px;
+}
+
+.flex-item {
+    flex: 0 1 auto;
+}
+
+::deep ul {
+    flex: 0 1 auto;
+}

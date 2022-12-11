@@ -1,0 +1,83 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageLicenseExpression>Apache </PackageLicenseExpression>
+		<Description>A C# wrapper for Dexie JS Library.</Description>
+		<PackageOutputPath>$(SolutionDir)\Nugets</PackageOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Remove="npm\package-lock.json" />
+		<Content Remove="npm\package.json" />
+		<Content Remove="npm\tsconfig.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="npm\tsconfig.json" Pack="false" />
+		<Content Include="npm\src\*.js" Pack="false" />
+		<Content Include="npm\src\*.map" Pack="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" />
+		<PackageReference Include="System.Reactive" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.9.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="wwwroot\js\" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" Pack="false">
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+			<OutputItemType>Content</OutputItemType>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</ProjectReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Package the generator in the analyzer directory of the nuget package -->
+		<None Include="$(OutputPath)\DexieNETTableGenerator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+	
+	<PropertyGroup>
+		<!-- File with mtime of last successful npm install -->
+		<NpmInstallStampFile>npm/node_modules/.install-stamp</NpmInstallStampFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<Title>.NET wrapper for dexie.js minimalistic wrapper for IndexedDB</Title>
+	</PropertyGroup>
+
+	<Target Name="DeleteJSFiles" BeforeTargets="BeforeBuild">
+		<RemoveDir Directories="wwwroot\js\" />
+	</Target>
+
+	<Target Name="NpmInstall" BeforeTargets="BeforeBuild" Inputs="package.json" Outputs="$(NpmInstallStampFile)">
+		<Exec Command="npm install" WorkingDirectory="npm" />
+		<Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
+	</Target>
+
+	<Target Name="NpmCommandsDebug" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+		<Exec Command="npm run buildDebug" WorkingDirectory="npm" />
+	</Target>
+
+	<Target Name="NpmCommandsRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+		<Exec Command="npm run buildRelease" WorkingDirectory="npm" />
+	</Target>
+
+</Project>

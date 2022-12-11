@@ -1,0 +1,10 @@
+﻿@page "/"
+@page "/{TestName}"
+
+<PageTitle>Tests</PageTitle>
+<DBTests TestName=@TestName></DBTests>
+
+@code {
+    [Parameter]
+    public string? TestName { get; set; }
+}
