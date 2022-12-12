@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Person();
+            var table = await DB.Persons();
             await table.Clear();
 
             var person = DataGenerator.GetPerson1();

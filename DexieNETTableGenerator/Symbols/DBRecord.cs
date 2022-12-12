@@ -60,7 +60,7 @@ namespace DNTGenerator.Verifier
             Properties = symbol.GetIndexProperties(compilation, cancellationToken);
             SchemaDescriptor = symbol.GetSchemaDescriptor(compilation, cancellationToken);
             CompoundKeys = symbol.GetCompoundKeys(compilation, cancellationToken);
-            DBName = symbol.Name + "DB";
+            DBName = symbol.Name + "sDB";
         }
 
         public void SetDBName(string dbName)

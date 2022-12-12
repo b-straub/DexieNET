@@ -122,9 +122,9 @@ namespace DexieNETTest.TestBase.Test
             };
         }
 
-        public static IEnumerable<Friends> GetFriends()
+        public static IEnumerable<Components.Friend> GetFriends()
         {
-            return GetFriend().Select(f => new Friends(f.Name, f.AgeInfo.Age));
+            return GetFriend().Select(f => new Components.Friend(f.Name, f.AgeInfo.Age));
         }
     }
 }

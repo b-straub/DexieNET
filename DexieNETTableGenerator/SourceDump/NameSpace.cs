@@ -115,7 +115,7 @@ namespace {namespaceName}
 ");
             foreach (DBRecord record in records)
             {
-                _ = sb1.Append(record.MakeTransaction());
+                _ = sb1.Append(record.MakeTransaction(records));
             }
 
             sb.Append(sb1.ToString().TrimEnd());

@@ -7,7 +7,7 @@ namespace DexieNETTest.TestBase.Test
     {
     }
 
-    [Schema(OutboundPrimaryKey = true)]
+    [Schema(StoreName = nameof(TestStore), OutboundPrimaryKey = true)]
     public record TestStore
     (
         [property: Index] string Name
@@ -86,6 +86,7 @@ namespace DexieNETTest.TestBase.Test
         [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
     ) : ITestDB;
 
+    [Schema(StoreName = "Logentries")]
     public record Logentry
    (
        [property: Index] string Message,
@@ -111,7 +112,7 @@ namespace DexieNETTest.TestBase.Test
         [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
     ) : ITestDB;
 
-    [Schema(StoreName = "Friend")]
+    [Schema(StoreName = "Friends2", UpdateStore = typeof(Friend))]
     public record Friend2
     (
         [property: Index] string Name,
@@ -120,7 +121,7 @@ namespace DexieNETTest.TestBase.Test
         [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
     ) : ITestDB;
 
-    [Schema(StoreName = "Friend")]
+    [Schema(StoreName = "Friends3", UpdateStore = typeof(Friend))]
     public record Friend3
     (
         [property: Index] string FirstName,
@@ -129,7 +130,7 @@ namespace DexieNETTest.TestBase.Test
         [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
     ) : ITestDB;
 
-    [Schema(PrimaryKeyName = "PKey")]
+    [Schema(StoreName = nameof(PersonWithProperties), PrimaryKeyName = "PKey")]
     public partial class PersonWithProperties : ITestDB
     {
         [Index] public string FirstName { get; init; }
@@ -158,6 +159,7 @@ namespace DexieNETTest.TestBase.Test
         [property: Index] string Name
     ) : ITestDB;
 
+    [Schema(StoreName = nameof(WrongMultiEntry))]
     public partial record WrongMultiEntry
     (
         [property: Index(IsMultiEntry = true)] int[] Ages,

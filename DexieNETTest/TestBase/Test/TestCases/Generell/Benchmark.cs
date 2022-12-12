@@ -21,7 +21,7 @@ namespace DexieNETTest.TestBase.Test
 
             PersonComparer comparer = new(true);
 
-            var table = await DB.Person();
+            var table = await DB.Persons();
             var persons = DataGenerator.GetPersonsRandom(20000);
 
             /*await table.Clear();

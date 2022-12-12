@@ -18,33 +18,35 @@ limitations under the License.
 
 using DNTGenerator.Helpers;
 using DNTGenerator.Verifier;
+using Microsoft.CodeAnalysis;
+using System;
 using System.Text;
 
 namespace DNTGenerator.SourceDump
 {
     internal static class RecordDump
     {
-        public static string MakeTable(this DBRecord record)
+        public static string MakeTable(this DBRecord record, IEnumerable<DBRecord> records)
         {
             StringBuilder sb = new();
 
             var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? "ulong" : record.GetPrimaryIndexTypeName();
-            var tablePropertyName = $"_{record.Symbol.Name.LowerFirstChar()}Table";
+            var tablePropertyName = $"_{record.SchemaDescriptor.StoreName.LowerFirstChar()}Table";
 
             if (primaryIndexTypeName is null)
             {
                 _ = sb.Append($@"
-        public async ValueTask<Table<{record.Symbol.Name}, I>> {record.Symbol.Name}<I>()
+        public async ValueTask<Table<{record.Symbol.Name}, I>> {record.SchemaDescriptor.StoreName}<I>()
         {{  
             {record.MakeConverter()}
-            var reference = await _jso.InvokeAsync<IJSObjectReference>(""table"", ""{record.SchemaDescriptor.StoreName}"");
-            return new Table<{record.Symbol.Name}, I>(this, reference, ""{record.SchemaDescriptor.StoreName}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            var reference = await _jso.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            return new Table<{record.Symbol.Name}, I>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
         }}");
             }
             else
             {
                 _ = sb.Append($@"
-        public async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.Symbol.Name}()
+        public async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.SchemaDescriptor.StoreName}()
         {{
             if ({tablePropertyName} is not null)
             {{
@@ -52,8 +54,8 @@ namespace DNTGenerator.SourceDump
             }}
 
             {record.MakeConverter()}
-            var reference = await _jso.InvokeAsync<IJSObjectReference>(""table"", ""{record.SchemaDescriptor.StoreName}"");
-            var table = new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(this, reference, ""{record.SchemaDescriptor.StoreName}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            var reference = await _jso.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            var table = new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
 
             {tablePropertyName} = table;
             return table;
@@ -64,7 +66,7 @@ namespace DNTGenerator.SourceDump
             return sb.ToString();
         }
 
-        public static string MakeTransaction(this DBRecord record)
+        public static string MakeTransaction(this DBRecord record, IEnumerable<DBRecord> records)
         {
             StringBuilder sb = new();
 
@@ -73,21 +75,21 @@ namespace DNTGenerator.SourceDump
             if (primaryIndexTypeName is null)
             {
                 _ = sb.Append($@"
-        public static async ValueTask<Table<{record.Symbol.Name}, I>> {record.Symbol.Name}<I>(this TransactionBase transaction)
+        public static async ValueTask<Table<{record.Symbol.Name}, I>> {record.SchemaDescriptor.StoreName}<I>(this TransactionBase transaction)
         {{
             {record.MakeConverter()}
-            var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.SchemaDescriptor.StoreName}"");
-            return new Table<{record.Symbol.Name}, I>(transaction.DB, reference, ""{record.SchemaDescriptor.StoreName}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            return new Table<{record.Symbol.Name}, I>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
         }}");
             }
             else
             {
                 _ = sb.Append($@"
-        public static async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.Symbol.Name}(this TransactionBase transaction)
+        public static async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.SchemaDescriptor.StoreName}(this TransactionBase transaction)
         {{
             {record.MakeConverter()}
-            var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.SchemaDescriptor.StoreName}"");
-            return new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(transaction.DB, reference, ""{record.SchemaDescriptor.StoreName}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            return new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
         }}
 ");
             }
@@ -145,7 +147,7 @@ namespace DNTGenerator.SourceDump
             foreach (DBRecord record in records)
             {
                 var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? "ulong" : record.GetPrimaryIndexTypeName();
-                var tablePropertyName = $"_{record.Symbol.Name.LowerFirstChar()}Table";
+                var tablePropertyName = $"_{record.SchemaDescriptor.StoreName.LowerFirstChar()}Table";
 
                 if (primaryIndexTypeName is not null)
                 {
@@ -180,7 +182,7 @@ namespace DNTGenerator.SourceDump
 
             foreach (DBRecord record in records)
             {
-                _ = sb.Append(record.MakeTable());
+                _ = sb.Append(record.MakeTable(records));
             }
 
             return sb.ToString().TrimEnd();
@@ -197,7 +199,7 @@ namespace DNTGenerator.SourceDump
             {{");
             foreach (var record in records)
             {
-                var (StoreName, Schema, Update) = record.GetSchema();
+                var (StoreBaseName, Schema, Update) = record.GetSchema(records);
 
                 if (Update)
                 {
@@ -205,7 +207,7 @@ namespace DNTGenerator.SourceDump
                 }
 
                 _ = sb.Append($@"
-                {{ ""{StoreName}"", ""{Schema}"" }},");
+                {{ ""{StoreBaseName}"", ""{Schema}"" }},");
             }
 
             _ = sb.Append($@"
@@ -220,7 +222,7 @@ namespace DNTGenerator.SourceDump
             {{");
             foreach (var record in records)
             {
-                var (StoreName, Schema, Update) = record.GetSchema();
+                var (StoreBaseName, Schema, Update) = record.GetSchema(records);
 
                 if (!Update)
                 {
@@ -229,7 +231,7 @@ namespace DNTGenerator.SourceDump
 
                 _ = sb.Append($@"
                 {{  
-                    ""{record.Symbol.Name.ToLowerInvariant()}"", (""{StoreName}"", ""{Schema}"")
+                    ""{record.Symbol.Name.ToLowerInvariant()}"", (""{StoreBaseName}"", ""{Schema}"")
                 }},");
             }
 

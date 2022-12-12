@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var tableP = await DB.Person();
+            var tableP = await DB.Persons();
 
             await tableP.Where(tableP.PrimaryKey);
             await tableP.Where(t => t.Name);
@@ -33,7 +33,7 @@ namespace DexieNETTest.TestBase.Test
             await tableP.Where(t => t.Phone.Number.Number);
             await tableP.Where(t => t.Phone.Number.Country);
 
-            var tableF = await DB.FieldTest();
+            var tableF = await DB.FieldTests();
 
             await tableF.Where(tableF.PrimaryKey);
             await tableF.Where(t => t.ID);
@@ -45,7 +45,7 @@ namespace DexieNETTest.TestBase.Test
             await tableF.Where(t => t.Blob);
             await tableF.Where(t => t.Array);
 
-            var tableC = await DB.PersonCompound();
+            var tableC = await DB.PersonCompounds();
             await tableC.Where(tableC.PrimaryKey);
             await tableC.Where(p => p.FirstName);
             await tableC.Where(p => p.FirstName, p => p.LastName);

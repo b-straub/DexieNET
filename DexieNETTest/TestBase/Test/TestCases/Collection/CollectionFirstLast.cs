@@ -15,7 +15,7 @@ namespace DexieNETTest.TestBase.Test
         {
             PersonComparer comparer = new(true);
 
-            var table = await DB.Person();
+            var table = await DB.Persons();
             await table.Clear();
 
             var first = await table.ToCollection().First();

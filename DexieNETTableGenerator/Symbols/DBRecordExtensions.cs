@@ -50,15 +50,17 @@ namespace DNTGenerator.Verifier
             }
         }
 
-        public record struct SchemaDescriptor(string StoreName, string? PrimaryKeyName, Location PKNameLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, Location Location);
+        public record struct SchemaDescriptor(string StoreName, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, Location PKNameLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, Location Location);
 
         public static SchemaDescriptor GetSchemaDescriptor(this INamedTypeSymbol symbol, Compilation compilation, CancellationToken cancellationToken)
         {
             var attr = symbol.GetAttributes().Where(a => a.AttributeClass.MatchSchemaAttribute(compilation)).FirstOrDefault();
+            var store = symbol.Name + "s";
+            var storeBase = store;
 
             if (attr is null)
             {
-                return new(symbol.Name.ToLowerInvariant(), null, Location.None, false, false, Location.None);
+                return new(store, null, null, Location.None, false, false, Location.None);
             }
 
             var node = attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken);
@@ -69,6 +71,7 @@ namespace DNTGenerator.Verifier
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
             var storeName = (string?)attr.NamedArguments.Where(na => na.Key == "StoreName").FirstOrDefault().Value.Value;
+            var updateStore = (INamedTypeSymbol?)attr.NamedArguments.Where(na => na.Key == "UpdateStore").FirstOrDefault().Value.Value;
 
             string? primaryKeyName = null;
             Location? pkNameLocation = null;
@@ -81,10 +84,10 @@ namespace DNTGenerator.Verifier
 
             var outboundPrimaryKey = ((bool?)attr.NamedArguments.Where(na => na.Key == "OutboundPrimaryKey").FirstOrDefault().Value.Value).True();
 
-            var store = storeName ?? symbol.Name;
+            store = storeName ?? symbol.Name + "s";
 
             var location = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
-            return new(store.ToLowerInvariant(), primaryKeyName, pkNameLocation ?? Location.None, outboundPrimaryKey, storeName is not null, location);
+            return new(store, updateStore, primaryKeyName, pkNameLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, location);
         }
 
         public static IEnumerable<(IEnumerable<(string Name, Location Location)> Keys, bool IsPrimary, Location PKLocation)> GetCompoundKeys(this INamedTypeSymbol symbol, Compilation compilation, CancellationToken cancellationToken)
@@ -199,7 +202,7 @@ namespace DNTGenerator.Verifier
             return forSchema ? primaryIndexName?.ToLowerInvariant() : primaryIndexName;
         }
 
-        public static (string StoreName, string Schema, bool Update) GetSchema(this DBRecord record)
+        public static (string StoreBaseName, string Schema, bool Update) GetSchema(this DBRecord record, IEnumerable<DBRecord> records)
         {
             var comparer = new IndexDescriptorComparer();
 
@@ -246,7 +249,24 @@ namespace DNTGenerator.Verifier
 
             schema = schema.TrimEnd(new[] { ',', ' ' });
 
-            return new(record.SchemaDescriptor.StoreName, schema, record.SchemaDescriptor.HasExplicitStoreName);
+            return new(record.GetStoreBaseName(records), schema, record.SchemaDescriptor.HasExplicitStoreName);
+        }
+
+        public static string GetStoreBaseName(this DBRecord record, IEnumerable<DBRecord> records)
+        {
+            if (record.SchemaDescriptor.UpdateStore is null)
+            {
+                return record.SchemaDescriptor.StoreName.ToLowerInvariant();
+            }
+
+            var baseStore = records.Where(r => r.Symbol.Equals(record.SchemaDescriptor.UpdateStore, SymbolEqualityComparer.Default)).FirstOrDefault();
+
+            if (baseStore is null)
+            {
+                throw new InvalidOperationException($"Invalid UpdateStore for: {nameof(record.Symbol.Name)}");
+            }
+
+            return baseStore.SchemaDescriptor.StoreName.ToLowerInvariant();
         }
 
         public static string Keys(this DBRecord record, bool multiEntryOnly)

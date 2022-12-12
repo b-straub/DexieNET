@@ -12,8 +12,8 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var tablePerson = await DB.Person();
-            var tableStudents = await DB.Student();
+            var tablePerson = await DB.Persons();
+            var tableStudents = await DB.Students();
 
             await tablePerson.Clear();
             await tableStudents.Clear();

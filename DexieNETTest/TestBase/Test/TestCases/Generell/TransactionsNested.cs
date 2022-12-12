@@ -17,21 +17,21 @@ namespace DexieNETTest.TestBase.Test
         {
             await DB.Transaction(async _ =>
             {
-                var tableLog = await DB.Logentry();
+                var tableLog = await DB.Logentries();
                 await tableLog.Add(new Logentry(message, DateTime.Now));
             });
         }
 
         public override async ValueTask<string?> RunTest()
         {
-            var tableLog = await DB.Logentry();
+            var tableLog = await DB.Logentries();
             await tableLog.Clear();
             await Log("StartLogging");
 
-            var tableFieldTest = await DB.FieldTest();
+            var tableFieldTest = await DB.FieldTests();
             var fieldsData = DataGenerator.GetFieldTestRandom().ToArray();
 
-            var tablePersons = await DB.Person();
+            var tablePersons = await DB.Persons();
             var persons = DataGenerator.GetPersons();
             var personsR1 = DataGenerator.GetPersonsRandom(20, "Test1");
             var personsR2 = DataGenerator.GetPersonsRandom(20, "Test2");

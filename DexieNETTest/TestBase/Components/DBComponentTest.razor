@@ -54,8 +54,8 @@
 
 <p>
     <div class="flex-container">
-        <GenericList TItem="Friends" Items="_friends"></GenericList>
-        <GenericList TItem="Friends" Items="_friendsSecond"></GenericList>
+        <GenericList TItem="Friend" Items="_friends"></GenericList>
+        <GenericList TItem="Friend" Items="_friendsSecond"></GenericList>
     </div>
 </p>
 
@@ -68,5 +68,5 @@
     <input type="text" id="queryName" @bind="_queryName" @bind:event="oninput" @onkeyup="QueryChanged" disabled=@(_hasData == false) />
 </div>
 <p>
-    <GenericList TItem="Friends" Items="_searchedFriends"></GenericList>
+    <GenericList TItem="Friend" Items="_searchedFriends"></GenericList>
 </p>

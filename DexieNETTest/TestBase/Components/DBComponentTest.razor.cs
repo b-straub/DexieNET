@@ -8,7 +8,7 @@ using System.Reactive.Subjects;
 
 namespace DexieNETTest.TestBase.Components
 {
-    public partial record Friends
+    public partial record Friend
     (
         [property: Index] string Name,
         [property: Index] int Age
@@ -16,9 +16,9 @@ namespace DexieNETTest.TestBase.Components
 
     public partial class DBComponentTest : IAsyncDisposable
     {
-        private IEnumerable<Friends> _friends = Enumerable.Empty<Friends>();
-        private IEnumerable<Friends> _friendsSecond = Enumerable.Empty<Friends>();
-        private IEnumerable<Friends> _searchedFriends = Enumerable.Empty<Friends>();
+        private IEnumerable<Friend> _friends = Enumerable.Empty<Friend>();
+        private IEnumerable<Friend> _friendsSecond = Enumerable.Empty<Friend>();
+        private IEnumerable<Friend> _searchedFriends = Enumerable.Empty<Friend>();
 
         [Required]
         [StringLength(30, ErrorMessage = "Name is too long.")]
@@ -31,8 +31,8 @@ namespace DexieNETTest.TestBase.Components
         private readonly CompositeDisposable _disposeBag = new();
         private string _queryName = string.Empty;
         private readonly Subject<Unit> _queryChanged = new();
-        private LiveQuery<IEnumerable<Friends>>? _friendsQuery = null;
-        private LiveQuery<IEnumerable<Friends>>? _searchFriendsQuery = null;
+        private LiveQuery<IEnumerable<Friend>>? _friendsQuery = null;
+        private LiveQuery<IEnumerable<Friend>>? _searchFriendsQuery = null;
         private bool _hasData = false;
         private IDisposable? _hasDataDisposable = null;
 
@@ -77,7 +77,7 @@ namespace DexieNETTest.TestBase.Components
 
         private async Task HandleValidSubmit()
         {
-            var friend = new Friends(Name, Age);
+            var friend = new Friend(Name, Age);
             await Dexie.Friends().Add(friend);
         }
 
@@ -137,9 +137,9 @@ namespace DexieNETTest.TestBase.Components
                 disposable.Dispose();
             }
             _disposeBag.Clear();
-            _friends = Enumerable.Empty<Friends>();
-            _friendsSecond = Enumerable.Empty<Friends>();
-            _searchedFriends = Enumerable.Empty<Friends>();
+            _friends = Enumerable.Empty<Friend>();
+            _friendsSecond = Enumerable.Empty<Friend>();
+            _searchedFriends = Enumerable.Empty<Friend>();
             _queryName = string.Empty;
             InvokeAsync(StateHasChanged);
         }

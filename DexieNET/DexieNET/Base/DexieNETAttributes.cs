@@ -119,7 +119,6 @@ namespace DexieNET
     public class CompoundIndexAttribute : Attribute
     {
         public string[] Keys { get; init; }
-
         public bool IsPrimary { get; set; }
 
         /// <summary>
@@ -142,9 +141,8 @@ namespace DexieNET
     public class SchemaAttribute : Attribute
     {
         public string StoreName { get; set; }
-
+        public Type? UpdateStore { get; set; }
         public string PrimaryKeyName { get; set; }
-
         public bool OutboundPrimaryKey { get; set; }
 
         /// <summary>
@@ -153,6 +151,7 @@ namespace DexieNET
         public SchemaAttribute()
         {
             StoreName = string.Empty;
+            UpdateStore = null;
             PrimaryKeyName = string.Empty;
             OutboundPrimaryKey = false;
         }
