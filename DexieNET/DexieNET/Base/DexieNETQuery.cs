@@ -347,7 +347,7 @@ namespace DexieNET
 
             if (jsonElements is null || jsonElements.Count() != ga.Length)
             {
-                throw new InvalidOperationException($"Can not deserialize to ({typeof(K).Name}, invalid JSON.");
+                throw new InvalidOperationException($"Can not deserialize to {typeof(K).Name}, invalid JSON.");
             }
 
             MethodInfo? mi = ga.Length switch
@@ -355,12 +355,12 @@ namespace DexieNET
                 2 => typeof(KeyFactory).GetMethod("Create2")?.MakeGenericMethod(ga),
                 3 => typeof(KeyFactory).GetMethod("Create3")?.MakeGenericMethod(ga),
                 // And add other cases as needed
-                _ => throw new NotSupportedException($"Can not deserialize to ({typeof(K).Name}, invalid tuple length."),
+                _ => throw new NotSupportedException($"Can not deserialize to {typeof(K).Name}, invalid tuple length."),
             };
 
             if (mi is null)
             {
-                throw new InvalidOperationException($"Can not deserialize to ({typeof(K).Name}, invalid tuple creation.");
+                throw new InvalidOperationException($"Can not deserialize to {typeof(K).Name}, invalid tuple creation.");
             }
 
             var args = jsonElements.Select(je => (object)je);
@@ -370,7 +370,7 @@ namespace DexieNET
 
             if (tuple is null)
             {
-                throw new InvalidOperationException($"Can not deserialize to ({typeof(K).Name}, invalid tuple.");
+                throw new InvalidOperationException($"Can not deserialize to {typeof(K).Name}, invalid tuple.");
             }
 
             return (K)tuple;
