@@ -72,21 +72,15 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Keys not indentical.");
             }
 
-            static string callbackName(IEnumerable<string> keys)
-            {
-                return keys.Aggregate(string.Empty, (prev, curr) => prev.ToString() + curr.ToString());
-            }
-
             var cbDataU = persons.Select(p => p.Name)
                 .Distinct()
-                .OrderBy(a => a)
-                .Aggregate(string.Empty, (prev, curr) => prev.ToString() + curr.ToString());
+                .Count();
 
-            var cbKeysU = await table.OrderBy(p => p.Name).UniqueKeys(callbackName);
+            var cbKeysU = await table.OrderBy(p => p.Name).UniqueKeys(k => k.Count());
 
             if (cbDataU != cbKeysU)
             {
-                throw new InvalidOperationException("UniqueKeys not indentical.");
+                throw new InvalidOperationException("UniqueKeys count not indentical.");
             }
 
             var queryData = persons
