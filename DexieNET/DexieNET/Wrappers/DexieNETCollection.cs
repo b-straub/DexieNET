@@ -520,10 +520,10 @@ namespace DexieNET
             return callback(keys);
         }
 
-        public static async ValueTask<R?> Keys<T, I, K, Q, R>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
+        public static async ValueTask<IEnumerable<Q>> Keys<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
         {
             var collection = await collectionT;
-            return await collection.Keys(query, callback);
+            return await collection.Keys(query);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
@@ -543,6 +543,13 @@ namespace DexieNET
             return collection.AsEnumerable<Q>(js);
         }
 
+        public static async ValueTask<R?> Keys<T, I, K, Q, R>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
+        {
+            var collection = await collectionT;
+            return await collection.Keys(query, callback);
+        }
+
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
         public static async ValueTask<R?> Keys<T, I, K, Q, R>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
         {
@@ -560,12 +567,6 @@ namespace DexieNET
             var js = await collection.JSObject.InvokeAsync<JsonElement>("keys");
             var keys = collection.AsEnumerable<Q>(js);
             return callback(keys);
-        }
-
-        public static async ValueTask<IEnumerable<Q>> Keys<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Keys(query);
         }
         #endregion
 
@@ -736,6 +737,7 @@ namespace DexieNET
                 MixedType = typeof(K) != typeof(Q)
             };
         }
+
         #endregion
 
         #region PrimaryKeys
@@ -894,10 +896,10 @@ namespace DexieNET
             return callback(keys);
         }
 
-        public static async ValueTask<R?> UniqueKeys<T, I, K, Q, R>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
+        public static async ValueTask<IEnumerable<Q>> UniqueKeys<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
         {
             var collection = await collectionT;
-            return await collection.UniqueKeys(query, callback);
+            return await collection.UniqueKeys(query);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
@@ -917,6 +919,12 @@ namespace DexieNET
             return collection.AsEnumerable<Q>(js);
         }
 
+        public static async ValueTask<R?> UniqueKeys<T, I, K, Q, R>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
+        {
+            var collection = await collectionT;
+            return await collection.UniqueKeys(query, callback);
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
         public static async ValueTask<R?> UniqueKeys<T, I, K, Q, R>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
         {
@@ -934,12 +942,6 @@ namespace DexieNET
             var js = await collection.JSObject.InvokeAsync<JsonElement>("uniqueKeys");
             var keys = collection.AsEnumerable<Q>(js);
             return callback(keys);
-        }
-
-        public static async ValueTask<IEnumerable<Q>> UniqueKeys<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.UniqueKeys(query);
         }
         #endregion
 
