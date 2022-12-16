@@ -11,6 +11,8 @@ DNTGG003 | DNTGenerator | Error | GeneratorDiagnostic
 DNTGG100 | DNTGenerator | Error | GeneratorDiagnostic
 DNTGG200 | DNTGenerator | Error | GeneratorDiagnostic
 DNTGG201 | DNTGenerator | Error | GeneratorDiagnostic
+DNTGG202 | DNTGenerator | Error | GeneratorDiagnostic
+DNTGG203 | DNTGenerator | Error | GeneratorDiagnostic
 DNTGG210 | DNTGenerator | Error | GeneratorDiagnostic
 DNTGG211 | DNTGenerator | Error | GeneratorDiagnostic
 DNTGG220 | DNTGenerator | Error | GeneratorDiagnostic

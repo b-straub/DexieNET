@@ -1,4 +1,5 @@
 ﻿using DexieNET;
+using System.Text;
 
 namespace DexieNETTest.TestBase.Test
 {
@@ -50,6 +51,24 @@ namespace DexieNETTest.TestBase.Test
             if (fieldsDataInclude.Count() != fieldsInclude.Count())
             {
                 throw new InvalidOperationException("Include Items not identical.");
+            }
+
+            var fieldsDataIncludeME = fieldsData.Where(f => f.IncludeME.Contains(false));
+            var fieldsIncludeME = await table.Where(f => f.IncludeME).Equal(false).ToArray();
+
+            if (fieldsDataIncludeME.Count() != fieldsIncludeME.Count())
+            {
+                throw new InvalidOperationException("IncludeME Items not identical.");
+            }
+
+            var blobQuery = new byte[] { 0x10, 0x20 };
+
+            var fieldsDataBlobME = fieldsData.Where(f => f.BlobME.Any(b => b.SequenceEqual(blobQuery)));
+            var fieldsBlobME = await table.Where(f => f.BlobME).Equal(blobQuery).ToArray();
+
+            if (fieldsDataBlobME.Count() != fieldsBlobME.Count())
+            {
+                throw new InvalidOperationException("IncludeME Items not identical.");
             }
 
             var dateLow = new DateOnly(1999, 1, 1);

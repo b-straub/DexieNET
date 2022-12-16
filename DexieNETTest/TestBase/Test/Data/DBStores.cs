@@ -77,11 +77,13 @@ namespace DexieNETTest.TestBase.Test
     public record FieldTest
     (
         [property: BoolIndex] bool Include,
+        [property: BoolIndex(IsMultiEntry = true)] IEnumerable<bool> IncludeME,
         [property: Index] DateOnly Date,
         [property: Index] TimeOnly Time,
         [property: Index] TimeSpan TimeSpan,
         [property: Index] DateTime DateTime,
         [property: ByteIndex] byte[] Blob,
+        [property: ByteIndex(IsMultiEntry = true)] IEnumerable<byte[]> BlobME,
         [property: Index] int[] Array,
         [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
     ) : ITestDB;
@@ -157,13 +159,6 @@ namespace DexieNETTest.TestBase.Test
     public record FriendNP
     (
         [property: Index] string Name
-    ) : ITestDB;
-
-    [Schema(StoreName = nameof(WrongMultiEntry))]
-    public partial record WrongMultiEntry
-    (
-        [property: Index(IsMultiEntry = true)] int[] Ages,
-        [property: ByteIndex] IEnumerable<byte> Bytes
     ) : ITestDB;
 
     [CompoundIndex("FirstName", "LastName", IsPrimary = true)]

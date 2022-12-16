@@ -112,5 +112,27 @@ namespace DNTGenerator.Query
 
             return implementInterface;
         }
+
+        public static string? GetGenericType(this IPropertySymbol ocs)
+        {
+            if (ocs.Type is not INamedTypeSymbol type || !type.IsGenericType || type.TypeArguments.Length != 1)
+            {
+                return null;
+            }
+
+            var argFirst = type.TypeArguments.FirstOrDefault();
+
+            return argFirst?.ToString();
+        }
+
+        public static string? GetBasicOrArrayType(this IPropertySymbol ocs)
+        {
+            if (ocs.Type is IArrayTypeSymbol type)
+            {
+                return type.ElementType.ToString();
+            }
+
+            return ocs.Type.ToString();
+        }
     }
 }

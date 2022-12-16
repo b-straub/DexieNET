@@ -21,6 +21,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Xml.Linq;
 
 namespace DNTGenerator.CodeFix
 {
@@ -228,6 +229,46 @@ namespace DNTGenerator.CodeFix
                         nullableType = nullableType.WithTriviaFrom(property.Type);
                     }
                     newNode = property.WithType(nullableType);
+                    break;
+            };
+
+            if (newNode is null)
+            {
+                throw new ArgumentNullException(syntaxNode.ToString());
+            }
+
+            return document.WithSyntaxRoot(root.ReplaceNode(
+                        syntaxNode, newNode));
+        }
+
+        public static Document ReplaceType(this Document document, SyntaxNode root, SyntaxNode syntaxNode, string newType)
+        {
+            var type = SyntaxFactory.ParseTypeName(newType);
+
+            if (type is null)
+            {
+                throw new ArgumentNullException(newType.ToString());
+            }
+
+            SyntaxNode? newNode = null;
+
+            switch (syntaxNode.Kind())
+            {
+                case SyntaxKind.Parameter:
+                    var parameter = (ParameterSyntax)syntaxNode;
+                    if (parameter.Type is not null)
+                    {
+                        type = type.WithTriviaFrom(parameter.Type);
+                    }
+                    newNode = parameter.WithType(type);
+                    break;
+                case SyntaxKind.PropertyDeclaration:
+                    var property = (PropertyDeclarationSyntax)syntaxNode;
+                    if (property.Type is not null)
+                    {
+                        type = type.WithTriviaFrom(property.Type);
+                    }
+                    newNode = property.WithType(type);
                     break;
             };
 

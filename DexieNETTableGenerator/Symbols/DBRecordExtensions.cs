@@ -308,7 +308,8 @@ namespace DNTGenerator.Verifier
         {
             return record.Properties
                 .Select(p => p.IndexConverter)
-                .WhereNotNull();
+                .WhereNotNull()
+                .Distinct();
         }
 
 

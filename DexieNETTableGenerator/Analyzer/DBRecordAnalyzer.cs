@@ -35,6 +35,8 @@ namespace DNTGenerator.Analyzer
             GeneratorDiagnostic.NotPartial,
             GeneratorDiagnostic.AutoIncrementNotNullable,
             GeneratorDiagnostic.AutoIncrementNotNumeric,
+            GeneratorDiagnostic.MultiEntryNotIEnumerable,
+            GeneratorDiagnostic.NonMultiEntryNotArray,
             GeneratorDiagnostic.DuplicatePrimaryKeyMember,
             GeneratorDiagnostic.DuplicatePrimaryKeySchemaArgument,
             GeneratorDiagnostic.MultiplePrimaryKeysArgument,

@@ -27,6 +27,7 @@ namespace DexieNET
         public bool IsPrimary { get; }
         public bool IsAuto { get; }
         public bool IsUnique { get; }
+        public bool IsMultiEntry { get; }
     }
 
     public interface IIndexConverter
@@ -80,38 +81,54 @@ namespace DexieNET
 
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-    public abstract class IndexConverterAttribute<T, C> : JsonConverterAttribute, IIndexAttribute where C : IndexConverter<T>, new()
+    public abstract class IndexConverterAttribute<T, C1, C2> : JsonConverterAttribute, IIndexAttribute 
+        where C1 : IndexConverter<T>, new() where C2 : IndexConverter<IEnumerable<T>>, new()
     {
         public bool IsPrimary { get; set; }
         public bool IsAuto { get; set; }
         public bool IsUnique { get; set; }
+        public bool IsMultiEntry { get; set; }
 
-        private readonly C _converter;
+        private readonly C1 _converter;
+        private readonly C2 _converterE;
 
         /// <summary>
         /// Contructor to setup default values
         /// </summary>
         public IndexConverterAttribute()
         {
-            _converter = new C();
+            _converter = new C1();
+            _converterE = new C2();
             IsPrimary = false;
             IsAuto = false;
             IsUnique = false;
+            IsMultiEntry = false;
         }
 
         public override JsonConverter? CreateConverter(Type typeToConvert)
         {
-            if (typeToConvert != typeof(T))
+            if (typeToConvert == typeof(T))
             {
-                throw new InvalidOperationException($"Invalid TypeConverter. {typeof(C).Name} is not a converter for type {typeToConvert.Name}.");
+                return _converter;
             }
 
-            return _converter;
+            if (typeToConvert == typeof(IEnumerable<T>))
+            {
+                return _converterE;
+            }
+
+            throw new InvalidOperationException($"Invalid TypeConverter. No converter for type {typeToConvert.Name}.");
         }
 
-        public static KeyValuePair<Type, IIndexConverter> TypeConverterPair()
+        public static KeyValuePair<Type, IIndexConverter>[] TypeConverterPairs()
         {
-            return KeyValuePair.Create(typeof(T), (IIndexConverter)(new C()));
+            KeyValuePair<Type, IIndexConverter>[] kvps =
+            {
+                KeyValuePair.Create(typeof(T), (IIndexConverter)(new C1())),
+                KeyValuePair.Create(typeof(IEnumerable<T>), (IIndexConverter)(new C2()))
+            };
+
+            return kvps;
         }
     }
 

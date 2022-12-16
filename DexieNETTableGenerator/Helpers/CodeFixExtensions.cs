@@ -34,12 +34,12 @@ namespace DNTGenerator.Helpers
             return source.Any(d => d.Severity is DiagnosticSeverity.Error);
         }
 
-        public static string CodeFixMessage(this DiagnosticDescriptor source, string? name = null)
+        public static string CodeFixMessage(this DiagnosticDescriptor source, params string[] parameters)
         {
             var message = source.CustomTags.Any() ? source.CustomTags.ElementAt(0) : string.Empty;
-            if (name is not null)
+            if (parameters.Any())
             {
-                message = string.Format(message, name);
+                message = string.Format(message, parameters);
             }
 
             return message;

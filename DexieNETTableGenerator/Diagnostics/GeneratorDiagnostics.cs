@@ -105,6 +105,30 @@ namespace DNTGenerator.Diagnostics
                     "Change '{0}' to 'uint?'",
                     "Change '{0}' to 'ulong?'"});
 
+        public static DiagnosticDescriptor MultiEntryNotIEnumerable =
+            new DiagnosticDescriptor(
+                "DNTGG202",
+                "Index error",
+                "MultiEntry '{0}' is not IEnumerable",
+                "DNTGenerator",
+                DiagnosticSeverity.Error,
+                isEnabledByDefault: true,
+                "MultiEntry index type is not IEnumerable<type>.",
+                null,
+                "Change '{0}' to {1}");
+
+        public static DiagnosticDescriptor NonMultiEntryNotArray =
+           new DiagnosticDescriptor(
+               "DNTGG203",
+               "Index error",
+               "Non MultiEntry '{0}' is IEnumerable",
+               "DNTGenerator",
+               DiagnosticSeverity.Error,
+               isEnabledByDefault: true,
+               "Non MultiEntry index type is IEnumerable<type>.",
+               null,
+               "Change '{0}' to {1}");
+
         public static DiagnosticDescriptor DuplicatePrimaryKeyMember =
             new DiagnosticDescriptor(
                 "DNTGG210",

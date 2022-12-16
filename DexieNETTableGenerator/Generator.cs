@@ -114,9 +114,11 @@ namespace DNTGenerator
 
             foreach (string? ns in nameSpaces)
             {
+                var usedNS = ns == "<global namespace>" ? "GlobalNamspace" : ns;
+         
                 try
                 {
-                    source = dbRecordsToUse.DumpNamespace(ns);
+                    source = dbRecordsToUse.DumpNamespace(usedNS);
                 }
                 catch (Exception ex)
                 {
@@ -126,7 +128,7 @@ namespace DNTGenerator
 #endif
                 }
 
-                string sourceName = $"{ns}.Generated.cs";
+                string sourceName = $"{usedNS}.Generated.cs";
 
                 if (source.Any())
                 {

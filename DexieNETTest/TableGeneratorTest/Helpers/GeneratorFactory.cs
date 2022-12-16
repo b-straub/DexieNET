@@ -16,7 +16,7 @@ namespace DexieNETTableGeneratorTest.Helpers
             foreach (string? source in sources)
             {
                 string? st = source;
-                SyntaxTree? syntaxTree = CSharpSyntaxTree.ParseText(SourceText.From(st, Encoding.UTF8), CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Preview));
+                SyntaxTree? syntaxTree = CSharpSyntaxTree.ParseText(SourceText.From(st, Encoding.UTF8), CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp11));
                 syntaxTrees.Add(syntaxTree);
             }
 

@@ -18,6 +18,7 @@ limitations under the License.
 
 using DNTGenerator.Diagnostics;
 using DNTGenerator.Helpers;
+using DNTGenerator.Query;
 using Microsoft.CodeAnalysis;
 using System;
 
@@ -119,6 +120,18 @@ namespace DNTGenerator.Verifier
                     }
                 }
 
+                if (index.IsMultiEntry && !index.Symbol.IsEnumerable(compilation))
+                {
+                    var meType = new KeyValuePair<string, string?>("Type", $"IEnumerable<{index.Symbol.GetBasicOrArrayType()}>");
+                    diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.MultiEntryNotIEnumerable, index, meType));
+                }
+
+                if (!index.IsMultiEntry && index.Symbol.IsEnumerable(compilation))
+                {
+                    var arType = new KeyValuePair<string, string?>("Type", $"{index.Symbol.GetGenericType()}[]");
+                    diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.NonMultiEntryNotArray, index, arType));
+                }
+
                 var indexConverter = GetIndexConverterAttributeName(index.Symbol.Type, compilation);
 
                 if (indexConverter is not null && (index.IndexConverter is null || !indexConverter.StartsWith(index.IndexConverter)))
@@ -156,6 +169,12 @@ namespace DNTGenerator.Verifier
                 typeName.StartsWith("uint") ||
                 typeName.StartsWith("long") ||
                 typeName.StartsWith("ulong");
+        }
+
+        private static bool IsEnumerable(this IPropertySymbol ocs, Compilation compilation)
+        {
+            var typeName = ocs.Type.ToString();
+            return typeName.Contains("IEnumerable<");
         }
 
         public static string GetUniqueNonIDName(this DBRecord record)

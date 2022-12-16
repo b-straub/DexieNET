@@ -26,10 +26,7 @@ namespace DexieNET
     {
         public override object Convert(object value)
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(value);
 
             return (bool)value ? 1 : 0;
         }
@@ -45,7 +42,36 @@ namespace DexieNET
                 writer.WriteNumberValue((int)Convert(value));
     }
 
-    public class BoolIndexAttribute : IndexConverterAttribute<bool, BoolIC>
+    public class BoolEIC : IndexConverter<IEnumerable<bool>>
+    {
+        public override object Convert(object values)
+        {
+            ArgumentNullException.ThrowIfNull(values);
+
+            var valuesE = (IEnumerable<bool>)values;
+            ArgumentNullException.ThrowIfNull(valuesE);
+
+            return valuesE.Select(v => v ? 1 : 0);
+        }
+
+        public override IEnumerable<bool> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var values = JsonSerializer.Deserialize<IEnumerable<int>>(ref reader, options);
+            ArgumentNullException.ThrowIfNull(values);
+
+            var valuesC = values.Select(v => v != 0);
+
+            return valuesC;
+        }
+
+        public override void Write(Utf8JsonWriter writer, IEnumerable<bool> values, JsonSerializerOptions options)
+        {
+            var valuesC = Convert(values);
+            JsonSerializer.Serialize(writer, valuesC, options);
+        }
+    }
+
+    public class BoolIndexAttribute : IndexConverterAttribute<bool, BoolIC, BoolEIC>
     {
     }
 
@@ -79,7 +105,37 @@ namespace DexieNET
                 writer.WriteStringValue((string)Convert(value));
     }
 
-    public class ByteIndexAttribute : IndexConverterAttribute<byte[], ByteIC>
+    public class ByteEIC : IndexConverter<IEnumerable<byte[]>>
+    {
+        public override object Convert(object values)
+        {
+            ArgumentNullException.ThrowIfNull(values);
+
+            var valuesE = (IEnumerable<byte[]>)values;
+            ArgumentNullException.ThrowIfNull(valuesE);
+
+            return valuesE.Select(System.Convert.ToBase64String);
+        }
+
+        public override IEnumerable<byte[]> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var values = JsonSerializer.Deserialize< IEnumerable<string>>(ref reader, options);
+            ArgumentNullException.ThrowIfNull(values);
+
+            var valuesC = values.Select(v => System.Convert.FromBase64String(v));
+            ArgumentNullException.ThrowIfNull(valuesC);
+
+            return valuesC;
+        }
+
+        public override void Write(Utf8JsonWriter writer, IEnumerable<byte[]> values, JsonSerializerOptions options)
+        {
+            var valuesC = Convert(values);
+            JsonSerializer.Serialize(writer, valuesC, options);
+        }
+    }
+
+    public class ByteIndexAttribute : IndexConverterAttribute<byte[], ByteIC, ByteEIC>
     {
     }
 }

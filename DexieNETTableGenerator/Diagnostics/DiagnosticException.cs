@@ -111,6 +111,14 @@ namespace DNTGenerator.Diagnostics
             _messageArgs = new[] { id.Name };
         }
 
+        public GeneratorDiagnostic(DiagnosticDescriptor descriptor, IndexDescriptor id, KeyValuePair<string, string?> property)
+        {
+            _descriptor = descriptor;
+            _location = id.Symbol.Locations.First();
+            _messageArgs = new[] { id.Name };
+            AddProperties(property);
+        }
+
         public void ReportDiagnostic(Action<Diagnostic> reportDiagnostics)
         {
             reportDiagnostics(Diagnostic.Create(_descriptor, _location, _properties.ToImmutableDictionary(), _messageArgs));

@@ -1,5 +1,5 @@
 ﻿
-using DexieNETTest.TestBase.Components;
+using System.Linq;
 
 namespace DexieNETTest.TestBase.Test
 {
@@ -101,10 +101,17 @@ namespace DexieNETTest.TestBase.Test
             return Enumerable.Range(0, count)
                 .Select(_ => random.Next(-5, 5))
                 .Select(r => new FieldTest(
-                    r >= 0, new DateOnly(2000 + r, 1, 1),
+                    r >= 0,
+                    new bool[] { true, r > 0 },
+                    new DateOnly(2000 + r, 1, 1),
                     new TimeOnly(12 + r, 0), new TimeSpan(r * 1000),
                     new DateTime((DateTime.Now + TimeSpan.FromHours(r)).Ticks),
                     new byte[] { (byte)(r + 5), 0x0, 0x10, (byte)(r + 5) },
+                    new byte[][] 
+                        { 
+                            new byte[] { (byte)(r + 5), 0x20 }, 
+                            new byte[] { (byte)(r + 5 + 0x10), 0x20 } 
+                        },
                     new int[] { (r + 500), 0x0, 0x10, (r + 500) }))
                 .ToList();
         }

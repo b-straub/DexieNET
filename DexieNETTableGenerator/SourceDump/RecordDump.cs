@@ -100,27 +100,19 @@ namespace DNTGenerator.SourceDump
         private static string MakeConverter(this DBRecord record)
         {
             StringBuilder sb = new();
-            StringBuilder sbInner = new();
 
             var converters = record.GetIndexConverters();
 
             if (converters.Any())
             {
                 sb.Append($@"
-            var typeConverterPairs = new KeyValuePair<Type, IIndexConverter>[] 
-            {{");
+            var typeConverterPairs = new List<KeyValuePair<Type, IIndexConverter>>();");
 
                 foreach (var converter in converters)
                 {
-                    sbInner.Append($@"
-                {converter}.TypeConverterPair(),");
+                    sb.Append($@"
+            typeConverterPairs.AddRange({converter}.TypeConverterPairs());");
                 }
-
-                sb.Append(sbInner.ToString().TrimEnd(','));
-                sb.Append($@"
-            }};
-");
-
             }
             else
             {

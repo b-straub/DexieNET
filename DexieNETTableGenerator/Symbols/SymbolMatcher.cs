@@ -30,7 +30,7 @@ namespace DNTGenerator.Matcher
         public static string DexieNETNamespace = "DexieNET";
         public static string IIndexAttributeName = DexieNETNamespace + "." + "IIndexAttribute";
         public static string GeneratedCodeAttribute = "System.CodeDom.Compiler.GeneratedCodeAttribute";
-        public static string IndexConverterAttribute = DexieNETNamespace + "." + "IndexConverterAttribute`2";
+        public static string IndexConverterAttribute = DexieNETNamespace + "." + "IndexConverterAttribute`3";
         public static string SchemaAttributeName = DexieNETNamespace + "." + "SchemaAttribute";
         public static string CompoundIndexAttributeName = DexieNETNamespace + "." + "CompoundIndexAttribute";
         public static string DBNameAttributeName = DexieNETNamespace + "." + "DBNameAttribute";

@@ -39,6 +39,8 @@ namespace DNTGenerator.CodeFix
             {
                 return ImmutableArray.Create(GeneratorDiagnostic.AutoIncrementNotNullable.Id,
                     GeneratorDiagnostic.AutoIncrementNotNumeric.Id,
+                    GeneratorDiagnostic.MultiEntryNotIEnumerable.Id,
+                    GeneratorDiagnostic.NonMultiEntryNotArray.Id,
                     GeneratorDiagnostic.DuplicatePrimaryKeyMember.Id,
                     GeneratorDiagnostic.MissingIndexConverter.Id,
                     GeneratorDiagnostic.ReservedPrimaryKeyNameMember.Id);
@@ -76,9 +78,15 @@ namespace DNTGenerator.CodeFix
                 throw new ArgumentNullException(nameof(node), nameof(node));
             }
 
+            TypeSyntax? typeSyntax = null;
+
             if (!diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.MissingIndexConverter))
             {
                 var name = node.IdentifierName();
+                if (name is null)
+                {
+                    throw new ArgumentNullException(nameof(name), nameof(name));
+                }
 
                 switch (diagnostic.Descriptor)
                 {
@@ -130,7 +138,7 @@ namespace DNTGenerator.CodeFix
                     case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.AutoIncrementNotNullable):
 
                         // index must be a type
-                        var typeSyntax = node.DescendantNodesAndSelf().OfType<TypeSyntax>().Last();
+                        typeSyntax = node.DescendantNodesAndSelf().OfType<TypeSyntax>().Last();
 
                         if (typeSyntax is null)
                         {
@@ -178,6 +186,29 @@ namespace DNTGenerator.CodeFix
                                 title: codeFixMessages.ElementAt(0),
                                 nestedActions: inlineActions,
                                 isInlinable: true), diagnostic);
+
+                        break;
+                    case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.MultiEntryNotIEnumerable):
+                    case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.NonMultiEntryNotArray):
+
+                        var typeParameter = diagnostic.CodeFixProperty("Type");
+                        if (typeParameter is null)
+                        {
+                            throw new ArgumentNullException(nameof(typeParameter), nameof(typeParameter));
+                        }
+
+                        codeFixMessage = diagnostic.Descriptor.CodeFixMessage(name, typeParameter);
+                        if (string.IsNullOrEmpty(codeFixMessage))
+                        {
+                            throw new ArgumentException("No title for: " + diagnostic.Descriptor.Id);
+                        }
+
+                        context.RegisterCodeFix(
+                            CodeAction.Create(
+                                title: codeFixMessage,
+                                createChangedDocument: _ => Task.FromResult(context.Document.ReplaceType(root, node, typeParameter)),
+                                equivalenceKey: diagnostic.Descriptor.Id),
+                            diagnostic);
 
                         break;
                 }

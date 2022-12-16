@@ -38,11 +38,13 @@ namespace DexieNETTest.TestBase.Test
             await tableF.Where(tableF.PrimaryKey);
             await tableF.Where(t => t.ID);
             await tableF.Where(t => t.Include);
+            await tableF.Where(t => t.IncludeME);
             await tableF.Where(t => t.DateTime);
             await tableF.Where(t => t.Date);
             await tableF.Where(t => t.Time);
             await tableF.Where(t => t.TimeSpan);
             await tableF.Where(t => t.Blob);
+            await tableF.Where(t => t.BlobME);
             await tableF.Where(t => t.Array);
 
             var tableC = await DB.PersonCompounds();
@@ -79,17 +81,6 @@ namespace DexieNETTest.TestBase.Test
                 exceptions++;
             }
 
-            var tableWME = await DB.WrongMultiEntry();
-
-            try
-            {
-                await tableWME.Where(t => t.Bytes);
-            }
-            catch
-            {
-                exceptions++;
-            }
-
             try
             {
                 await tableP.Where(t => t.Tags, t => t.Tags);
@@ -108,7 +99,7 @@ namespace DexieNETTest.TestBase.Test
                 exceptions++;
             }
 
-            if (exceptions != 6)
+            if (exceptions != 5)
             {
                 throw new InvalidOperationException("Key test failed!");
             }
