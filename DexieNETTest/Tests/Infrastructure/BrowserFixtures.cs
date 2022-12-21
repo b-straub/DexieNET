@@ -41,7 +41,7 @@ namespace DexieNETTest.Tests.Infrastructure
         public IWAFixture.BrowserType Type => IWAFixture.BrowserType.Webkit;
         public int Port => PortNumber;
         public bool OnePass => true;
-        public bool Headless => false;
+        public bool Headless => true;
 
         private static int PortNumber => 7050;
 
