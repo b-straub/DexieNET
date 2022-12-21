@@ -18,9 +18,8 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-
 import Dexie, {
-    DBCore, DBCoreMutateRequest, DBCoreMutateResponse, DBCoreTable, liveQuery, Middleware, Observable, Subscription, TransactionMode
+    DBCore, DBCoreMutateRequest, DBCoreMutateResponse, DBCoreTable, Middleware
 } from 'dexie';
 
 export class DB extends Dexie {
