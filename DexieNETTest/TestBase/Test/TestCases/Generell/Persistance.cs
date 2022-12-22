@@ -17,7 +17,7 @@
             var persist = await persistance.RequestPersistance();
             var persistanceType2 = await persistance.GetPersistanceType();
 
-            return $"PersistanceTest: OK, PersistanceType before: {persistanceType1}, Persistance: {persist}, PersistanceType after: {persistanceType2}, " +
+            return $"PersistanceTest: OK, PersistanceType before: {persistanceType1}, Persistence: {persist}, PersistanceType after: {persistanceType2}, " +
                 $"Quota: {Math.Round(storageEstimate.Quota / 1000000.0, 2)} MB, Used: {Math.Round(storageEstimate.Usage / 1000000.0, 2)} MB";
         }
     }

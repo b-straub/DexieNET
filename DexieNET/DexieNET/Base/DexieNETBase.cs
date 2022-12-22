@@ -131,7 +131,7 @@ namespace DexieNET
         {
             if (jsRuntime is not IJSInProcessRuntime)
             {
-                throw new InvalidOperationException("This IndexedDB wrapper is ony designed for Webassembly usage!");
+                throw new InvalidOperationException("This IndexedDB wrapper is only designed for Webassembly usage!");
             }
             _moduleTask = new(() => jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
                "import", @"./_content/DexieNET/js/dexieNET.js").AsTask());

@@ -26,7 +26,7 @@ namespace DexieNETTest.Tests.Tests
         }
 
         [Theory]
-        // Generell
+        // General
         [InlineData("VersionUpdate")]
         [InlineData("KeyTest")]
         [InlineData("OpenClose")]

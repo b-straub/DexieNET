@@ -51,7 +51,7 @@ namespace DexieNET
     {
         public string Name { get; private set; }
         /// <summary>
-        /// Contructor to setup default values
+        /// Constructor to setup default values
         /// </summary>
         public DBNameAttribute(string name)
         {
@@ -68,7 +68,7 @@ namespace DexieNET
         public bool IsMultiEntry { get; set; }
 
         /// <summary>
-        /// Contructor to setup default values
+        /// Constructor to setup default values
         /// </summary>
         public IndexAttribute()
         {
@@ -93,7 +93,7 @@ namespace DexieNET
         private readonly C2 _converterE;
 
         /// <summary>
-        /// Contructor to setup default values
+        /// Constructor to setup default values
         /// </summary>
         public IndexConverterAttribute()
         {
@@ -139,7 +139,7 @@ namespace DexieNET
         public bool IsPrimary { get; set; }
 
         /// <summary>
-        /// Contructor to setup default values
+        /// Constructor to setup default values
         /// </summary>
         public CompoundIndexAttribute(string key1, string key2)
         {
@@ -165,7 +165,7 @@ namespace DexieNET
         public bool OutboundPrimaryKey { get; set; }
 
         /// <summary>
-        /// Contructor to setup default values
+        /// Constructor to setup default values
         /// </summary>
         public SchemaAttribute()
         {

@@ -25,20 +25,20 @@
 
         private void PopulateTests(TestDB db)
         {
-            // Generell
-            _tests.Add(("Generell", new PersistanceTest(db)));
-            _tests.Add(("Generell", new VersionUpdate(db)));
-            _tests.Add(("Generell", new KeyTest(db)));
-            _tests.Add(("Generell", new OpenClose(db)));
-            _tests.Add(("Generell", new FailedTransaction(db)));
-            _tests.Add(("Generell", new TransactionsParallel(db)));
-            _tests.Add(("Generell", new TransactionsParallel(db, true)));
-            _tests.Add(("Generell", new TransactionsNested(db)));
-            _tests.Add(("Generell", new TransactionsNested(db, true)));
-            _tests.Add(("Generell", new EqualSpecialFields(db)));
-            _tests.Add(("Generell", new Reverse(db)));
-            _tests.Add(("Generell", new CompoundPrimary(db)));
-            _tests.Add(("Generell", new LiveQueryTest(db)));
+            // General
+            _tests.Add(("General", new PersistanceTest(db)));
+            _tests.Add(("General", new VersionUpdate(db)));
+            _tests.Add(("General", new KeyTest(db)));
+            _tests.Add(("General", new OpenClose(db)));
+            _tests.Add(("General", new FailedTransaction(db)));
+            _tests.Add(("General", new TransactionsParallel(db)));
+            _tests.Add(("General", new TransactionsParallel(db, true)));
+            _tests.Add(("General", new TransactionsNested(db)));
+            _tests.Add(("General", new TransactionsNested(db, true)));
+            _tests.Add(("General", new EqualSpecialFields(db)));
+            _tests.Add(("General", new Reverse(db)));
+            _tests.Add(("General", new CompoundPrimary(db)));
+            _tests.Add(("General", new LiveQueryTest(db)));
             // Table
             _tests.Add(("Table", new ClearCount(db)));
             _tests.Add(("Table", new Add(db)));

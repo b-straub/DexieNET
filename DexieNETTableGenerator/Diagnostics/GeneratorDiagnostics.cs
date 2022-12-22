@@ -18,7 +18,7 @@ limitations under the License.
 
 using Microsoft.CodeAnalysis;
 
-#pragma warning disable IDE0090 // Use 'new DiagnosticDescriptor(...)' doesn't work wi
+#pragma warning disable IDE0090 // Use 'new DiagnosticDescriptor(...)' doesn't work with target typed new
 
 namespace DNTGenerator.Diagnostics
 {
@@ -137,7 +137,7 @@ namespace DNTGenerator.Diagnostics
                 "DNTGenerator",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                "DBItem has allready a schema with 'PrimaryKeyName'.",
+                "DBItem has already a schema with 'PrimaryKeyName'.",
                 null,
                 "Remove '{0}'");
 
@@ -149,7 +149,7 @@ namespace DNTGenerator.Diagnostics
                 "DNTGenerator",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                "DBItem has allready attribute with 'PrimaryKeyName'.",
+                "DBItem has already attribute with 'PrimaryKeyName'.",
                 null,
                 "Remove '{0}'");
 

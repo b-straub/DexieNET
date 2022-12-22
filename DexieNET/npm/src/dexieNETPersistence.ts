@@ -59,7 +59,7 @@ export async function tryPersistWithoutPromtingUser(): Promise<string> {
         return "persisted";
     }
 
-    // the experimental permisson API on iOS doesn't work with "persistent-storage" yet
+    // the experimental permission API on iOS doesn't work with "persistent-storage" yet
     if (iOS() || !navigator.permissions || !navigator.permissions.query) {
         return "prompt"; // It MAY be successful to prompt. Don't know.
     }

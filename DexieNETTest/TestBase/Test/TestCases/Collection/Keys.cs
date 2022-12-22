@@ -69,7 +69,7 @@ namespace DexieNETTest.TestBase.Test
 
             if (cbData != cbKeys)
             {
-                throw new InvalidOperationException("Keys not indentical.");
+                throw new InvalidOperationException("Keys not identical.");
             }
 
             var cbDataU = persons.Select(p => p.Name)
@@ -80,7 +80,7 @@ namespace DexieNETTest.TestBase.Test
 
             if (cbDataU != cbKeysU)
             {
-                throw new InvalidOperationException("UniqueKeys count not indentical.");
+                throw new InvalidOperationException("UniqueKeys count not identical.");
             }
 
             var queryData = persons
