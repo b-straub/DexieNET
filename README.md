@@ -86,38 +86,37 @@ namespace YourNamspace.HelloWorld
 
 ## Advanced
 
-###Naming###
+### Naming
 
 - the Source Generator will create the following classes from an *IDBStore* derived class, struct, record:
-	- **PIndentifier** -> Plural of *Identifier* provided by *PluralizeService.Core* (English only)
+	- **PIndentifier** -> Plural of *Identifier* provided by *Humanizer.Core* (English only), be aware the plural form might not be always obvious e.g. Person -> People
 	- service: *PIndentifier***DB**
 	- table: *PIndentifier*
 	
-		```c#
-		// Record
-		public partial record Friend
-		(
-			[property: Index] string Name,
-			[property: Index] int Age
-		) : IDBStore;
+    ```c#
+    // Record
+    public partial record Friend
+    (
+        [property: Index] string Name,
+        [property: Index] int Age
+    ) : IDBStore;
 
-		......
-		// Service
-		builder.Services.AddDexieNET<FriendsDB>();
-		......
-		[Inject]
-		public IDexieNETService<FriendsDB>? DB { get; set; }
+    ......
+    // Service
+    builder.Services.AddDexieNET<FriendsDB>();
+    ......
+    [Inject]
+    public IDexieNETService<FriendsDB>? DB { get; set; }
 
-		......
-		// Table
-		var table = await DB.Friends();
-		```
+    ......
+    // Table
+    var table = await DB.Friends();
+    ```
 		
-	- You can have multiple stores in one database
+- You can have multiple stores in one database
 	
 	```c#
-	[DBName("TestDB") // optional -> default name = interface name 
-	without leading 'I' -> PersonsDB
+	[DBName("TestDB")] // optional -> default name = interface name without leading 'I' -> PersonsDB
 	public interface IPersonsDB : IDBStore
 	{
 	}
@@ -156,7 +155,7 @@ namespace YourNamspace.HelloWorld
 	var addresses = await TestDB.Addresses();
 	```
 
-###Transactions###
+### Transactions
 
 ```c#
 void async Task LogName(string name)
@@ -167,7 +166,7 @@ void async Task LogName(string name)
 		{
 			await DB.LogEntries.Add(new LogEntry(name, DateTime.Now());
 		}
-		catch (Exception ex) // this will prevent outer transaction to abort even when 		nested transaction failed
+		catch (Exception ex) // this will prevent outer transaction to abort even when nested transaction failed
 		{
 			Console.WriteLine($"Can not add {name} to Log));
 		}
@@ -182,7 +181,7 @@ try
 		var key = await db.Friends().Add(new Friend("Test", 33));
 		var friend = await db.Friends().Get(key);
 		
-		if (friend.Name == "Test" || tx is null) // tx is null means first pass of transaction 	where table names are collected
+		if (friend.Name == "Test" || tx is null) // tx is null means first pass of transaction where table names are collected
 		{
 			await LogName(friend.Name);
 		}
@@ -198,6 +197,6 @@ catch (Exception ex)
 }
 ```
 
-###Samples##
+### Samples
 
-The tests from [TestCases](DexieNETTest/TestBase/TestCases) will cover all possible *DexieNET Api* calls. Those calls are as close as possible modelled after the original *Dexie.js* API.
+The tests from [TestCases](DexieNETTest/TestBase/Test/TestCases) will cover all possible *DexieNET Api* calls. Those calls are as close as possible modelled after the original *Dexie.js* API.
