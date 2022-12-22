@@ -8,7 +8,7 @@ using System.Reactive.Subjects;
 
 namespace DexieNETTest.TestBase.Components
 {
-    public partial record Friend
+    public partial record struct Friend
     (
         [property: Index] string Name,
         [property: Index] int Age

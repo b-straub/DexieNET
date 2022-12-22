@@ -50,17 +50,17 @@ namespace DNTGenerator.Verifier
             }
         }
 
-        public record struct SchemaDescriptor(string StoreName, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, Location PKNameLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, Location Location);
+        public record struct SchemaDescriptor(string StoreName, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, bool PrimaryKeyGuid, Location PKNameLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, Location Location);
 
-        public static SchemaDescriptor GetSchemaDescriptor(this INamedTypeSymbol symbol, Compilation compilation, CancellationToken cancellationToken)
+        public static SchemaDescriptor GetSchemaDescriptor(this INamedTypeSymbol symbol, bool isInterface, Compilation compilation, CancellationToken cancellationToken)
         {
             var attr = symbol.GetAttributes().Where(a => a.AttributeClass.MatchSchemaAttribute(compilation)).FirstOrDefault();
-            var store = symbol.Name + "s";
-            var storeBase = store;
+            var storeName = symbol.Name.MakeDBOrTableName(false, isInterface);
+            var storeBase = storeName;
 
             if (attr is null)
             {
-                return new(store, null, null, Location.None, false, false, Location.None);
+                return new(storeName, null, null, true, Location.None, false, false, Location.None);
             }
 
             var node = attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken);
@@ -70,7 +70,7 @@ namespace DNTGenerator.Verifier
             }
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
-            var storeName = (string?)attr.NamedArguments.Where(na => na.Key == "StoreName").FirstOrDefault().Value.Value;
+            var storeAttributeName = (string?)attr.NamedArguments.Where(na => na.Key == "StoreName").FirstOrDefault().Value.Value;
             var updateStore = (INamedTypeSymbol?)attr.NamedArguments.Where(na => na.Key == "UpdateStore").FirstOrDefault().Value.Value;
 
             string? primaryKeyName = null;
@@ -81,13 +81,12 @@ namespace DNTGenerator.Verifier
                 primaryKeyName = (string?)attr.NamedArguments.Where(na => na.Key == "PrimaryKeyName").FirstOrDefault().Value.Value;
                 pkNameLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "PrimaryKeyName").FirstOrDefault().GetLocation();
             }
+            var primaryKeyGuid = (bool?)attr.NamedArguments.Where(na => na.Key == "PrimaryKeyGuid").FirstOrDefault().Value.Value;
 
             var outboundPrimaryKey = ((bool?)attr.NamedArguments.Where(na => na.Key == "OutboundPrimaryKey").FirstOrDefault().Value.Value).True();
 
-            store = storeName ?? symbol.Name + "s";
-
             var location = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
-            return new(store, updateStore, primaryKeyName, pkNameLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, location);
+            return new(storeAttributeName ?? storeName, updateStore, primaryKeyName, primaryKeyGuid ?? true, pkNameLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, location);
         }
 
         public static IEnumerable<(IEnumerable<(string Name, Location Location)> Keys, bool IsPrimary, Location PKLocation)> GetCompoundKeys(this INamedTypeSymbol symbol, Compilation compilation, CancellationToken cancellationToken)
@@ -142,6 +141,11 @@ namespace DNTGenerator.Verifier
                 !record.CompoundKeys.Where(p => p.IsPrimary).Any();
         }
 
+        public static bool HasGuidPrimaryKey(this DBRecord record)
+        {
+            return record.HasGeneratedPrimaryKey() && record.SchemaDescriptor.PrimaryKeyGuid;
+        }
+
         public static bool HasGeneratedPrimaryKeys(this IEnumerable<DBRecord> records)
         {
             return records
@@ -190,11 +194,13 @@ namespace DNTGenerator.Verifier
                 {
                     if (record.SchemaDescriptor.PrimaryKeyName is null)
                     {
-                        primaryIndexName ??= forSchema ? "++ID" : "ID";
+                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid ? "++ID" 
+                            : "ID";
                     }
                     else
                     {
-                        primaryIndexName ??= forSchema ? $"++{record.SchemaDescriptor.PrimaryKeyName}" : record.SchemaDescriptor.PrimaryKeyName;
+                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid ? $"++{record.SchemaDescriptor.PrimaryKeyName}"
+                            : record.SchemaDescriptor.PrimaryKeyName;
                     }
                 }
             }

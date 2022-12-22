@@ -55,7 +55,7 @@ namespace DNTGenerator.Query
 
             if (record is not null && record.Type == DBRecord.RecordType.Interface)
             {
-                var dbName = record.Symbol.Name.TrimStart('I');
+                var dbName = record.Symbol.Name.MakeDBOrTableName(true, true);
 
                 string? dbAttributeName = null;
                 var attr = record.Symbol.GetAttributes().Where(a => a.AttributeClass.MatchDBNameAttribute(compilation)).FirstOrDefault();

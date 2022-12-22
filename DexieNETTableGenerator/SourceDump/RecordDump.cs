@@ -30,7 +30,9 @@ namespace DNTGenerator.SourceDump
         {
             StringBuilder sb = new();
 
-            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? "ulong" : record.GetPrimaryIndexTypeName();
+            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGuidPrimaryKey() ? "Guid" : "ulong"
+                : record.GetPrimaryIndexTypeName();
+
             var tablePropertyName = $"_{record.SchemaDescriptor.StoreName.LowerFirstChar()}Table";
 
             if (primaryIndexTypeName is null)
@@ -40,7 +42,7 @@ namespace DNTGenerator.SourceDump
         {{  
             {record.MakeConverter()}
             var reference = await _jso.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
-            return new Table<{record.Symbol.Name}, I>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            return new Table<{record.Symbol.Name}, I>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasGuidPrimaryKey() ? "true" : "false")});
         }}");
             }
             else
@@ -55,7 +57,7 @@ namespace DNTGenerator.SourceDump
 
             {record.MakeConverter()}
             var reference = await _jso.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
-            var table = new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            var table = new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasGuidPrimaryKey() ? "true" : "false")});
 
             {tablePropertyName} = table;
             return table;
@@ -70,7 +72,8 @@ namespace DNTGenerator.SourceDump
         {
             StringBuilder sb = new();
 
-            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? "ulong" : record.GetPrimaryIndexTypeName();
+            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGuidPrimaryKey() ? "Guid" : "ulong"
+                : record.GetPrimaryIndexTypeName();
 
             if (primaryIndexTypeName is null)
             {
@@ -79,7 +82,7 @@ namespace DNTGenerator.SourceDump
         {{
             {record.MakeConverter()}
             var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
-            return new Table<{record.Symbol.Name}, I>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            return new Table<{record.Symbol.Name}, I>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasGuidPrimaryKey() ? "true" : "false")});
         }}");
             }
             else
@@ -89,7 +92,7 @@ namespace DNTGenerator.SourceDump
         {{
             {record.MakeConverter()}
             var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
-            return new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)});
+            return new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasGuidPrimaryKey() ? "true" : "false")});
         }}
 ");
             }
@@ -138,7 +141,9 @@ namespace DNTGenerator.SourceDump
 ");
             foreach (DBRecord record in records)
             {
-                var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? "ulong" : record.GetPrimaryIndexTypeName();
+                var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGuidPrimaryKey() ? "Guid" : "ulong"
+                : record.GetPrimaryIndexTypeName();
+
                 var tablePropertyName = $"_{record.SchemaDescriptor.StoreName.LowerFirstChar()}Table";
 
                 if (primaryIndexTypeName is not null)

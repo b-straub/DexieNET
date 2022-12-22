@@ -160,6 +160,8 @@ namespace DexieNET
         public string StoreName { get; set; }
         public Type? UpdateStore { get; set; }
         public string PrimaryKeyName { get; set; }
+        public bool PrimaryKeyGuid { get; set; }
+
         public bool OutboundPrimaryKey { get; set; }
 
         /// <summary>
@@ -171,6 +173,7 @@ namespace DexieNET
             UpdateStore = null;
             PrimaryKeyName = string.Empty;
             OutboundPrimaryKey = false;
+            PrimaryKeyGuid = true;
         }
     }
 }

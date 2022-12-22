@@ -24,6 +24,11 @@ using System.Text.Json;
 
 namespace DexieNET
 {
+    public interface IGuidStore<T> where T : IDBStore
+    {
+        public T AssignPrimaryKey();
+    }
+
     public enum TransactionCaller
     {
         Table,
@@ -37,13 +42,10 @@ namespace DexieNET
 
         internal DBBase DB { get; }
         internal string Name { get; }
-
+        internal bool PKGuid { get; }
         internal string[] Keys { get; }
-
         internal string[] MultiEntry { get; }
-
         internal ITypeConverter TypeConverter { get; }
-
         internal I DefaultPrimaryKey { get; }
 
         internal bool TransactionCollectMode => (DB.CurrentTransaction is not null && DB.CurrentTransaction.TransactionBase is null);
@@ -52,7 +54,7 @@ namespace DexieNET
         private readonly Dictionary<Type, object> _emptyCollection;
         private readonly Dictionary<Type, object> _emptyWhereClause;
 
-        public Table(DBBase db, IJSObjectReference reference, string name, ITypeConverter typeConverter, string[] keys, string[] multiEntry)
+        public Table(DBBase db, IJSObjectReference reference, string name, ITypeConverter typeConverter, string[] keys, string[] multiEntry, bool pkGuid)
         {
             if (!typeof(I).IsAllowedPrimaryIndexType())
             {
@@ -62,6 +64,7 @@ namespace DexieNET
             TableJS = new(db.DBBaseJS.Module, reference);
             DB = db;
             Name = name;
+            PKGuid = pkGuid;
             TypeConverter = typeConverter;
             Keys = keys;
             MultiEntry = multiEntry;
@@ -178,6 +181,11 @@ namespace DexieNET
                 throw new ArgumentNullException(nameof(item));
             }
 
+            if (table.PKGuid)
+            {
+                item = ((IGuidStore<T>)item).AssignPrimaryKey();
+            }
+
             var json = item.FromObject(); // ensure lowerCase keys
             return await table.TableJS.InvokeAsync<I>("add", json);
         }
@@ -234,9 +242,14 @@ namespace DexieNET
                 return Enumerable.Empty<I>();
             }
 
-            var json = items.FromObject(); // ensure lowerCase keys
-
             Dictionary<string, bool> options = new() { { "allKeys", allKeys } };
+
+            if (table.PKGuid)
+            {
+                items = items.Select(i => ((IGuidStore<T>)i).AssignPrimaryKey());
+            }
+
+            var json = items.FromObject(); // ensure lowerCase keys
 
             if (allKeys)
             {

@@ -19,6 +19,18 @@ namespace DexieNETTest.TestBase.Test
         string Name
     ) : IDBStore;
 
+    [Schema(PrimaryKeyGuid = false)]
+    public partial record NoGuidRecord
+    (
+        [property: Index] string Name
+    ) : IDBStore;
+
+    public record GuidRecord
+    (
+        [property: Index] string Name,
+        [property: Index(IsPrimary = true)] Guid? ID = null
+    ) : IDBStore;
+
     public interface ITestDB : IDBStore
     {
     }
@@ -55,6 +67,7 @@ namespace DexieNETTest.TestBase.Test
     [CompoundIndex("Name", "Address.City")]
     [CompoundIndex("Address.City", "Address.Street")]
     [CompoundIndex("Name", "Age", "Phone.Number.Number")]
+    [Schema(StoreName = "Persons", PrimaryKeyGuid = false)] // humanizer sophisticatedly changes this to 'People'
     public partial record Person
     (
         [property: Index] string Name,
@@ -139,7 +152,7 @@ namespace DexieNETTest.TestBase.Test
         [Index] public string LastName { get; init; }
         public PersonWithProperties(string firstName, string lastName)
           => (FirstName, LastName) = (firstName, lastName);
-        public void Deconstruct(out string firstName, out string lastName, out ulong? pkey)
+        public void Deconstruct(out string firstName, out string lastName, out Guid? pkey)
           => (firstName, lastName, pkey) = (FirstName, LastName, PKey);
     }
 

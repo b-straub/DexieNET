@@ -97,13 +97,57 @@ namespace {namespaceName}
                         throw new InvalidOperationException($"No primaryIndexName for {record.Symbol.Name}.");
                     }
 
-                    _ = sb.Append($@"
+                    if (record.HasGuidPrimaryKey())
+                    {
+                        if (record.Type is DBRecord.RecordType.Record || record.Type is DBRecord.RecordType.RecordStruct || record.Type is DBRecord.RecordType.Struct)
+                        {
+                            _ = sb.Append($@"
+    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore<{record.Symbol.Name}>
+    {{
+        {attribute}
+        public Guid? {primaryIndexName} {{ get; init; }}
+        
+        public {record.Symbol.Name} AssignPrimaryKey()
+        {{
+            if ({primaryIndexName} is null)
+            {{
+                return this with {{ {primaryIndexName} = Guid.NewGuid() }};
+            }}
+            return this;
+        }}
+    }}                      
+");
+                        }
+                        else
+                        {
+                            _ = sb.Append($@"
+    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore<{record.Symbol.Name}>
+    {{
+        {attribute}
+        public Guid? {primaryIndexName} {{ get; set; }}
+        
+        public {record.Symbol.Name} AssignPrimaryKey()
+        {{
+            if ({primaryIndexName} is null)
+            {{
+                {primaryIndexName} = Guid.NewGuid();
+            }}
+            return this;
+        }}
+    }}                      
+");
+                        }
+                    }
+                    else
+                    {
+                        _ = sb.Append($@"
     {record.AccessToString} partial {record.TypeName} {record.Symbol.Name}
     {{
         {attribute}
         public ulong? {primaryIndexName} {{ get; init; }}
     }}
 ");
+                    }
                 }
             }
 

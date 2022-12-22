@@ -74,7 +74,7 @@ namespace DNTGenerator.Verifier
             RecordType.Interface => throw new InvalidOperationException("Interface can not be used as name."),
             RecordType.Class => "class",
             RecordType.Record => "record",
-            RecordType.RecordStruct => "struct record",
+            RecordType.RecordStruct => "record struct",
             RecordType.Struct => "struct",
             _ => throw new NotImplementedException()
         };
