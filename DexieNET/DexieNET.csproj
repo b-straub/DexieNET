@@ -7,9 +7,14 @@
 
 	<PropertyGroup>
 		<Title>DexieNET</Title>
-		<Description>A .NET wrapper for dexie.js minimalistic wrapper for IndexedDB.</Description>
+		<Description>A .NET wrapper for dexie.js minimalist wrapper for IndexedDB.</Description>
+		<Authors>Bernhard Straub</Authors>
+		<Copyright>Bernhard Straub</Copyright>
+		<PackageProjectUrl>https://github.com/b-straub/DexieNET</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/b-straub/DexieNET</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageOutputPath>$(SolutionDir)\Nugets</PackageOutputPath>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
