@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+using DNTGenerator.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Threading;
@@ -58,9 +59,9 @@ namespace DNTGenerator.Verifier
             Type = recordType;
             IsPartial = isPartial;
             Properties = symbol.GetIndexProperties(compilation, cancellationToken);
-            SchemaDescriptor = symbol.GetSchemaDescriptor(compilation, cancellationToken);
+            SchemaDescriptor = symbol.GetSchemaDescriptor(recordType is RecordType.Interface, compilation, cancellationToken);
             CompoundKeys = symbol.GetCompoundKeys(compilation, cancellationToken);
-            DBName = symbol.Name + "sDB";
+            DBName = symbol.Name.MakeDBOrTableName(true, recordType is RecordType.Interface);
         }
 
         public void SetDBName(string dbName)

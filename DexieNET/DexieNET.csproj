@@ -11,6 +11,7 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 		<PackageOutputPath>$(SolutionDir)\Nugets</PackageOutputPath>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -44,7 +45,7 @@
 	<ItemGroup>
 		<Folder Include="wwwroot\js\" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" Pack="false">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -56,8 +57,9 @@
 	<ItemGroup>
 		<!-- Package the generator in the analyzer directory of the nuget package -->
 		<None Include="$(OutputPath)\DexieNETTableGenerator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="$(OutputPath)\Humanizer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
-	
+
 	<PropertyGroup>
 		<!-- File with mtime of last successful npm install -->
 		<NpmInstallStampFile>npm/node_modules/.install-stamp</NpmInstallStampFile>

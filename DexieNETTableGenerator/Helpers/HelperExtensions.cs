@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+using Humanizer;
 using System;
 
 namespace DNTGenerator.Helpers
@@ -31,7 +32,7 @@ namespace DNTGenerator.Helpers
         {
             if (source.EndsWith(trimString))
             {
-                source = source.Substring(0, source.LastIndexOf(trimString));
+                source = source[..source.LastIndexOf(trimString)];
             }
 
             return source;
@@ -42,7 +43,35 @@ namespace DNTGenerator.Helpers
             if (string.IsNullOrEmpty(str) || char.IsLower(str[0]))
                 return str;
 
-            return char.ToLower(str[0]) + str.Substring(1);
+            return char.ToLower(str[0]) + str[1..];
+        }
+
+        public static string MakeDBOrTableName(this string name, bool isDB, bool isInterface)
+        {
+            if (isInterface)
+            {
+                name = name.TrimStart('I');
+            }
+
+            if (isDB)
+            {
+                if (name.ToLowerInvariant().EndsWith("db"))
+                {
+                    name = name[..^2];
+                }
+
+                if (!isInterface)
+                {
+                    name = name.Pluralize();
+                }
+                name += "DB";
+            }
+            else
+            {
+                name = name.Pluralize();
+            }
+
+            return name;
         }
 
         public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source) where T : class
