@@ -18,6 +18,7 @@ namespace DexieNETTest.Tests.Tests
         public ChromiumTest(ChromiumFixture fixture) : base(fixture) { }
     }
 
+#if DEBUG
     [CollectionDefinition("Firefox", DisableParallelization = true)]
     public class FirefoxCollection : ICollectionFixture<FirefoxFixture>
     {
@@ -46,5 +47,6 @@ namespace DexieNETTest.Tests.Tests
     {
     public WebkitTest(WebkitFixture fixture) : base(fixture) { }
     }
+#endif
 #endif
 }
