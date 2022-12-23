@@ -15,8 +15,7 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<PackageOutputPath>$(SolutionDir)\Nugets</PackageOutputPath>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageTags>Dexie, IndexedDB</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
