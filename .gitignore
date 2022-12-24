@@ -15,3 +15,6 @@ Publish
 Nugets
 GeneratorRunner
 payload.json
+DexieNETHelloWorld
+Nuget
+Directory.Build.targets
