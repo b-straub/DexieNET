@@ -13,20 +13,28 @@ namespace DexieNETTest.TestBase.Test
 
         public bool Fail { get; private set; }
 
-        public async Task Log(string message)
+        public async Task Log(string message, bool fromTransaction = true)
         {
-            await DB.Transaction(async _ =>
+            var tableLog = await DB.Logentries();
+
+            if (fromTransaction)
             {
-                var tableLog = await DB.Logentries();
+                tableLog.Transaction(TAMode.ReadWrite, async () =>
+                {
+                    await tableLog.Add(new Logentry(message, DateTime.Now));
+                });
+            }
+            else
+            {
                 await tableLog.Add(new Logentry(message, DateTime.Now));
-            });
+            }
         }
 
         public override async ValueTask<string?> RunTest()
         {
             var tableLog = await DB.Logentries();
             await tableLog.Clear();
-            await Log("StartLogging");
+            await Log("StartLogging", false);
 
             var tableFieldTest = await DB.FieldTests();
             var fieldsData = DataGenerator.GetFieldTestRandom().ToArray();
@@ -110,7 +118,7 @@ namespace DexieNETTest.TestBase.Test
                 exThrown = ex.GetType() == typeof(TransactionException);
             }
 
-            await Log("EndLogging");
+            await Log("EndLogging", false);
 
             if (itemsFT.Count() != countFT)
             {
@@ -121,7 +129,7 @@ namespace DexieNETTest.TestBase.Test
 
             if (Fail)
             {
-                if (!exThrown || items.Any() || logs.Count() != 2)
+                if (!exThrown || items.Any() || logs.Count() != 4)
                 {
                     throw new InvalidOperationException("Failed nested Transaction executed.");
                 }

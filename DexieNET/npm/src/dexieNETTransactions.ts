@@ -1,4 +1,4 @@
-﻿import Dexie, { Transaction, TransactionMode, Version } from 'dexie';
+﻿import Dexie, { Table, Transaction, TransactionMode, Version } from 'dexie';
 import { DB } from "./dexieNETBase";
 
 // Transaction
@@ -19,4 +19,8 @@ export function AbortTransaction(): void {
 
 export function CurrentTransaction(): any {
     return Dexie.currentTransaction;
+}
+
+export function TopLevelTransaction(db: DB, table: Table, mode: TransactionMode, dotnetRef: any): void {
+    db.transaction(mode, table, () => dotnetRef.invokeMethod('TransactionCallback'));
 }

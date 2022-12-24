@@ -15,4 +15,7 @@ export function AbortTransaction() {
 export function CurrentTransaction() {
     return Dexie.currentTransaction;
 }
+export function TopLevelTransaction(db, table, mode, dotnetRef) {
+    db.transaction(mode, table, () => dotnetRef.invokeMethod('TransactionCallback'));
+}
 //# sourceMappingURL=dexieNETTransactions.js.map
