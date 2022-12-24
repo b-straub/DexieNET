@@ -15,11 +15,15 @@ It's designed to work within a Blazor Webassembly application with minimal effor
 
 #### Hello World
 
+- create a Blazor WebAssembly
+- Add the **DexieNET** Nuget
+- Add the HelloWorld Component and update the index
+
 *Program.cs*
 
 ```c#
 using DexieNET;
-
+using YourNamspace.Pages;
 ....
 
 builder.Services.AddDexieNET<FriendsDB>();
@@ -28,60 +32,198 @@ builder.Services.AddDexieNET<FriendsDB>();
 *HelloWorld.razor*
 
 ```razor
+@page "/helloWorld"
+@using DexieNET.Component
 @inherits DexieNET<FriendsDB>
 
+Friends:
 @if (_friends is null)
 {
-	<p>Loading...</p>
+    <p>Loading...</p>
 }
 else if (_friends.Count() == 0)
 {
-	<p>No items...</p>
+    <p>No items...</p>
 }
 else
 {
-	<ul style="list-style: square inside;">
-		@foreach (var friend in _friends)
-		{
-			<li>
-				Name: @friend.Name, Age: @friend.Age
-			</li>
-		}
-	</ul>
+    <ul style="list-style: square inside;">
+        @foreach (var friend in _friends)
+        {
+            <li>
+                Name: @friend.Name, Age: @friend.Age
+            </li>
+        }
+    </ul>
 }
+
+<hr />
+
+Logs:
+@if (_logs is null)
+{
+    <p>Loading...</p>
+}
+else if (_logs.Count() == 0)
+{
+    <p>No items...</p>
+}
+else
+{
+    <ul style="list-style: square inside;">
+        @foreach (var logEntry in _logs)
+        {
+            <li>
+                Message: @logEntry.Message, TimeStamp: @logEntry.TimeStamp.ToLongTimeString();
+            </li>
+        }
+    </ul>
+}
+
+<hr />
+
+<div style="display: flex; column-gap: 50px">
+    <button class="btn btn-primary" style="flex: 0 1 auto" @onclick="PopulateDatabase">
+        PopulateDatabase
+    </button>
+
+    <button class="btn btn-secondary" style="flex: 0 1 auto" @onclick="GoodTransaction">
+        GoodTransaction
+    </button>
+
+    <button class="btn btn-secondary" style="flex: 0 1 auto" @onclick="FailedTransaction">
+        FailedTransaction
+    </button>
+
+    <button class="btn btn-secondary" style="flex: 0 1 auto" @onclick="ClearDatabase">
+        ClearDatabase
+    </button>
+</div>
 ```
 
 *HelloWorld.razor.cs*
 
 ```c#
 using DexieNET;
+using System.Xml.Linq;
 
-namespace YourNamspace.HelloWorld 
+namespace DexieNETHelloWorld.Pages
 {
-	public partial record Friend
-	(
-		[property: Index] string Name,
-		[property: Index] int Age
-	) : IDBStore;
+    public interface IFriendsDB : IDBStore { };
 
-	public partial class DBComponentTest
-	{
-		private var IEnumerable<Friend>? _friends;
+    public partial record Friend
+    (
+        [property: Index] string Name,
+        [property: Index] int Age
+    ) : IFriendsDB;
 
-		protected override async Task OnInitializedAsync()
-		{
-			await base.OnInitializedAsync();
-			
-			if (Dexie is not null)
-			{
-				await Dexie.Version(1).Stores();
-				await Dexie.Friends().Add(new Friend("Jane Doe", 44));
-				_friends = await Dexie.Friends().ToArray();
-			}
-		}
-	}
+    public partial record LogEntry
+    (
+        [property: Index] string? Message,
+        [property: Index] DateTime TimeStamp
+    ) : IFriendsDB;
+
+    public partial class HelloWorld
+    {
+        private IEnumerable<Friend>? _friends;
+        private IEnumerable<LogEntry>? _logs;
+
+        protected override async Task OnInitializedAsync()
+        {
+            await base.OnInitializedAsync();
+
+            await Dexie.Version(1).Stores();
+            _friends = await Dexie.Friends().ToArray();
+            _logs = await Dexie.LogEntries().ToArray();
+        }
+
+        private async Task LogMessage(string? name)
+        {
+            await Dexie.LogEntries().Transaction(TAMode.ReadWrite, async () =>
+            {
+                await Dexie.LogEntries().Add(new LogEntry(name, DateTime.Now));
+            });
+        }
+        private async Task ClearDatabase()
+        {
+            await Dexie.Friends().Clear();
+            await Dexie.LogEntries().Clear();
+
+            _friends = await Dexie.Friends().ToArray();
+            _logs = await Dexie.LogEntries().ToArray();
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task PopulateDatabase()
+        {
+            await LogMessage("PopulateDatabase");
+
+            Random rand = new();
+            await Dexie.Friends().Add(new Friend("Jane Doe", rand.Next(1, 99)));
+            await Dexie.Friends().Add(new Friend("John Doe", rand.Next(1, 99)));
+
+            _friends = await Dexie.Friends().ToArray();
+            _logs = await Dexie.LogEntries().ToArray();
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task GoodTransaction()
+        {
+            await LogMessage("GoodTransaction");
+
+            await Dexie.Transaction(async tx =>
+            {
+                Random rand = new();
+                var key = await Dexie.Friends().Add(new Friend("Luke", rand.Next(1, 99)));
+                var friend = await Dexie.Friends().Get(key);
+
+                if (friend?.Name == "Luke" || tx is null)
+                // tx is null, this means the first pass of the transaction, in which the table names are collected
+                // if a second table is hidden behind a conditional statement, it must also be visited in the first pass
+                {
+                    await Dexie.Friends().Add(new Friend("John", rand.Next(1, 99)));
+                    await Dexie.LogEntries().Add(new LogEntry("TA executed", DateTime.Now));
+                }
+            });
+
+            _friends = await Dexie.Friends().ToArray();
+            _logs = await Dexie.LogEntries().ToArray();
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task FailedTransaction()
+        {
+            await LogMessage("ProvokeFail");
+
+            try
+            {
+                await Dexie.Transaction(async tx =>
+                {
+                    await Dexie.Friends().Clear();
+                    var key = await Dexie.Friends().Add(new Friend("Test", 33));
+                    var friend = await Dexie.Friends().Get(key);
+
+                    if (friend?.Name == "Test")
+                    {
+                        await LogMessage("TA will fail");
+                    }
+                    await Dexie.Friends().Add(friend); // this will fail
+                });
+            }
+            catch (Exception ex)
+            {
+                if (ex.GetType() != typeof(TransactionException))
+                {
+                    Console.WriteLine("Transaction failed unexpectedly");
+                }
+            }
+
+            _friends = await Dexie.Friends().ToArray();
+            _logs = await Dexie.LogEntries().ToArray();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 }
-
 ```
 
 ## Advanced
@@ -117,35 +259,38 @@ namespace YourNamspace.HelloWorld
 	
 	```c#
 	[DBName("TestDB")] // optional -> default name = interface name without leading 'I' -> PersonsDB
-	public interface IPersonsDB : IDBStore
-	{
-	}
+    public interface IPersonsDB : IDBStore
+    {
+    }
 
-	// Records
-	[CompoundIndex("FirstName", "LastName")]
-	public partial record Person
-	(
-		[property: Index] string FirstName,
-		[property: Index] string LastName,
-		Guid? AddressKey
-	) : IPersonsDB;
+    // Records
+    [CompoundIndex("FirstName", "LastName")]
+    public partial record Person
+    (
+        [property: Index] string FirstName,
+        [property: Index] string LastName,
+        Guid? AddressKey
+    ) : IPersonsDB;
 
-	[CompoundIndex("City", "Street")]
-	[CompoundIndex("Zip", "Street")]
-	public record Address
-	(
-		[property: Index] string Street,
-		[property: Index] string Housenumber,
-		[property: Index] string City,
-		[property: Index] string ZIP,
-		[property: Index] string Country,
-		[property: Index(IsPrimary = true, IsAuto = true) Guid? Key
-	) IPersonsDB;
+    [CompoundIndex("City", "Street")]
+    [CompoundIndex("Zip", "Street")]
+    public partial record Address
+    (
+        [property: Index] string Street,
+        [property: Index] string Housenumber,
+        [property: Index] string City,
+        [property: Index] string ZIP,
+        [property: Index] string Country
+
+    ) : IPersonsDB;
 
 	......
 	// Service
+	using DexieNET;
+	.......
 	builder.Services.AddDexieNET<TestDB>();
-	......
+	
+	// Component
 	[Inject]
 	public IDexieNETService<TestDB>? TestDB { get; set; }
 
@@ -157,45 +302,10 @@ namespace YourNamspace.HelloWorld
 
 ### Transactions
 
-```c#
-void async Task LogName(string name)
-{
-	await DB.Transaction(async _ =>
-	{
-		try
-		{
-			await DB.LogEntries.Add(new LogEntry(name, DateTime.Now());
-		}
-		catch (Exception ex) // this will prevent outer transaction to abort even when nested transaction failed
-		{
-			Console.WriteLine($"Can not add {name} to Log));
-		}
-	});
-}
-
-try
-{
-	await DB.Transaction(async tx =>
-	{
-		await db.Friends().Clear();
-		var key = await db.Friends().Add(new Friend("Test", 33));
-		var friend = await db.Friends().Get(key);
-		
-		if (friend.Name == "Test" || tx is null) // tx is null means first pass of transaction where table names are collected
-		{
-			await LogName(friend.Name);
-		}
-		await table.Add(person); // this will fail
-	});
-}
-catch (Exception ex)
-{
-	if (ex.GetType() != typeof(TransactionException))
-	{
-		Console.WriteLine("Transaction failed unexpectedly");
-	}
-}
-```
+- transactions capture the table names in two passes
+- if a second table is hidden behind a conditional statement, it must also be visited in the first pass
+- nested transactions contain all required table names
+- top level transactions must use *table.Transaction*, nested transactions are not yet supported
 
 ### Samples
 
