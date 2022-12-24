@@ -1,0 +1,33 @@
+name: Build and publish Nuget
+
+on:
+  release:
+    types: [published]
+
+env:
+  NuGetDirectory: ${{ github.workspace}}/Nuget
+
+jobs:
+  build:
+
+    env:
+      SOLUTION: 'DexieNET.sln'
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 7.0.x
+
+    - name: Build
+      run: dotnet build $SOLUTION --configuration Release
+
+    - name: Run tests
+      run: dotnet test --configuration Release --verbosity normal
+      
+    - name: Publish
+      run: dotnet nuget push ${{ env.NuGetDirectory }}/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
