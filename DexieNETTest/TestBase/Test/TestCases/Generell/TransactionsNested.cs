@@ -13,28 +13,21 @@ namespace DexieNETTest.TestBase.Test
 
         public bool Fail { get; private set; }
 
-        public async Task Log(string message, bool fromTransaction = true)
+        public async Task Log(string message)
         {
             var tableLog = await DB.Logentries();
 
-            if (fromTransaction)
-            {
-                tableLog.Transaction(TAMode.ReadWrite, async () =>
-                {
-                    await tableLog.Add(new Logentry(message, DateTime.Now));
-                });
-            }
-            else
+            await tableLog.Transaction(TAMode.ReadWrite, async () =>
             {
                 await tableLog.Add(new Logentry(message, DateTime.Now));
-            }
+            });
         }
 
         public override async ValueTask<string?> RunTest()
         {
             var tableLog = await DB.Logentries();
             await tableLog.Clear();
-            await Log("StartLogging", false);
+            await Log("StartLogging");
 
             var tableFieldTest = await DB.FieldTests();
             var fieldsData = DataGenerator.GetFieldTestRandom().ToArray();
@@ -118,7 +111,7 @@ namespace DexieNETTest.TestBase.Test
                 exThrown = ex.GetType() == typeof(TransactionException);
             }
 
-            await Log("EndLogging", false);
+            await Log("EndLogging");
 
             if (itemsFT.Count() != countFT)
             {
@@ -133,11 +126,8 @@ namespace DexieNETTest.TestBase.Test
                 {
                     throw new InvalidOperationException("Failed nested Transaction executed.");
                 }
-
-                return "OK";
             }
-
-            if (exThrown || !items.Any() || itemU?.Name != "Updated" || logs.Count() != 6)
+            else if (exThrown || !items.Any() || itemU?.Name != "Updated" || logs.Count() != 6)
             {
                 throw new InvalidOperationException("Nested Transaction not executed.");
             }

@@ -24,3 +24,7 @@ export function CurrentTransaction(): any {
 export function TopLevelTransaction(db: DB, table: Table, mode: TransactionMode, dotnetRef: any): void {
     db.transaction(mode, table, () => dotnetRef.invokeMethod('TransactionCallback'));
 }
+
+export async function TopLevelTransactionAsync(db: DB, table: Table, mode: TransactionMode, dotnetRef: any): Promise<void> {
+    await db.transaction(mode, table, () => dotnetRef.invokeMethod('TransactionCallback'));
+}

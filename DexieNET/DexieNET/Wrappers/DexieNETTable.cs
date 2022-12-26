@@ -159,13 +159,21 @@ namespace DexieNET
         public static async Task Transaction<T, I>(this ValueTask<Table<T, I>> tableT, TAMode mode, Func<Task> taCallback) where T : IDBStore
         {
             var table = await tableT;
-            table.Transaction(mode, taCallback);
+            await table.Transaction(mode, taCallback);
         }
 
-        public static void Transaction<T, I>(this Table<T, I> table, TAMode mode, Func<Task> taCallback) where T : IDBStore
+        public static async ValueTask Transaction<T, I>(this Table<T, I> table, TAMode mode, Func<Task> taCallback) where T : IDBStore
         {
             table.TableJS.SetTACallback(taCallback);
-            table.TableJS.Module.InvokeVoid("TopLevelTransaction", table.DB.DBBaseJS.Reference, table.TableJS.Reference, mode == TAMode.Read ? "r!" : "rw!", table.TableJS.DotnetRef);
+
+            if (table.DB.CurrentTransaction is not null)
+            {
+                table.TableJS.Module.InvokeVoid("TopLevelTransaction", table.DB.DBBaseJS.Reference, table.TableJS.Reference, mode == TAMode.Read ? "r!" : "rw!", table.TableJS.DotnetRef);
+            }
+            else
+            {
+                await table.TableJS.Module.InvokeVoidAsync("TopLevelTransactionAsync", table.DB.DBBaseJS.Reference, table.TableJS.Reference, mode == TAMode.Read ? "r!" : "rw!", table.TableJS.DotnetRef);
+            }
         }
         #endregion
 
