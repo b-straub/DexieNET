@@ -67,16 +67,6 @@ namespace DexieNET
             TransactionBase = null;
         }
 
-        public Transaction(DBBase db, HashSet<string> tableNames, TAMode mode) : base(db.DBBaseJS.Module, null)
-        {
-            _db = db;
-            _dotnetRef = DotNetObjectReference.Create(this);
-            _create = null;
-            _tableNames = tableNames;
-            _mode = mode;
-            TransactionBase = null;
-        }
-
         public bool AddTableInfo((string Name, TAMode Mode) tableInfo)
         {
             if (TransactionBase is not null)

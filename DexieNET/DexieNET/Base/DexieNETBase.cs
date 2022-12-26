@@ -94,19 +94,6 @@ namespace DexieNET
             return true;
         }
 
-        [MemberNotNullWhen(returnValue: true, member: nameof(CurrentTransaction))]
-        internal bool StartTransaction(HashSet<string> tableNames, TAMode mode)
-        {
-            CurrentTransaction = new(this, tableNames, mode);
-            if (CurrentTransaction is null)
-            {
-                return false;
-            }
-
-            TransactionParallel = false;
-            return true;
-        }
-
         internal void StopTransaction()
         {
             if (CurrentTransaction is not null)

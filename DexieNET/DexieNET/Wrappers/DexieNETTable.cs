@@ -29,13 +29,6 @@ namespace DexieNET
         public T AssignPrimaryKey();
     }
 
-    public enum TransactionCaller
-    {
-        Table,
-        Collection,
-        WhereClause
-    }
-
     internal sealed class TableJS : JSObject, IDisposable
     {
         public DotNetObjectReference<TableJS> DotnetRef { get; }
