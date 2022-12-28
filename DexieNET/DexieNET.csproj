@@ -12,6 +12,7 @@
 		<Copyright>Bernhard Straub</Copyright>
 		<PackageProjectUrl>https://github.com/b-straub/DexieNET</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/b-straub/DexieNET</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryType>git</RepositoryType>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -20,6 +21,10 @@
 		<PackageOutputPath>..\Nuget</PackageOutputPath>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="."/>
+	</ItemGroup>
+	
 	<ItemGroup>
 		<Content Remove="npm\package-lock.json" />
 		<Content Remove="npm\package.json" />
