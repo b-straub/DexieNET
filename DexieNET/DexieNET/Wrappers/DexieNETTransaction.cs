@@ -23,10 +23,25 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DexieNET
 {
+    public enum TAType
+    {
+        Nested,
+        TopLevel,
+        Parallel,
+    }
+
     public enum TAMode
     {
         Read,
         ReadWrite
+    }
+
+    internal enum TAState
+    {
+        Collecting,
+        ParallelCollecting,
+        Executing,
+        ParallelExecuting,
     }
 
     public sealed class TransactionException : InvalidOperationException
@@ -36,46 +51,64 @@ namespace DexieNET
         }
     }
 
-    public sealed class TransactionBase : JSObject
+    internal sealed class TAInfoEqualityComparer : IEqualityComparer<(int Hash, TAMode Mode, IEnumerable<string> Tables)>
     {
-        public DBBase DB { get; }
-
-        internal string? FirstError { get; set; }
-
-        internal TransactionBase(DBBase db, IJSObjectReference reference) : base(db.DBBaseJS.Module, reference)
+        public bool Equals((int Hash, TAMode Mode, IEnumerable<string> Tables) x, (int Hash, TAMode Mode, IEnumerable<string> Tables) y)
         {
-            DB = db;
+            var tablesX = x.Tables.Aggregate(string.Empty, (curr, next) => curr + next);
+            var tablesY = y.Tables.Aggregate(string.Empty, (curr, next) => curr + next);
+
+            return (x.Hash, x.Mode, tablesX).Equals((y.Hash, x.Mode, tablesY));
+        }
+
+        public int GetHashCode([DisallowNull] (int Hash, TAMode Mode, IEnumerable<string> Tables) obj)
+        {
+            var tableHash = obj.Tables.Aggregate(string.Empty, (curr, next) => curr + next).GetHashCode();
+            return HashCode.Combine(obj.Hash, obj.Mode, tableHash);
         }
     }
 
-
-    internal sealed class Transaction : JSObject, IDisposable
+    public sealed class Transaction : JSObject, IDisposable
     {
-        public TransactionBase? TransactionBase { get; set; }
+        public DBBase DB { get; }
+        public bool Collecting { get; private set; }
 
-        private readonly DBBase _db;
+        internal string? Error { get; set; }
+
+        private Func<Transaction, Task>? _create;
+        private Func<Task>? _waitFor;
+
         private readonly DotNetObjectReference<Transaction> _dotnetRef;
-        private Func<TransactionBase?, Task>? _create;
-        private readonly HashSet<string> _tableNames;
-        private TAMode _mode = TAMode.Read;
-        public Transaction(DBBase db) : base(db.DBBaseJS.Module, null)
+        private readonly bool _parallel;
+
+        private TAMode _mode;
+        private bool _aborted = false;
+
+        private readonly HashSet<string> _tables;
+        public Transaction(DBBase db, bool parallel) : base(db.DBBaseJS.Module, null)
         {
-            _db = db;
+            DB = db;
+
             _dotnetRef = DotNetObjectReference.Create(this);
-            _create = null;
-            _tableNames = new();
-            TransactionBase = null;
+            _mode = TAMode.Read;
+            _parallel = parallel;
+            _tables = new();
         }
 
-        public bool AddTableInfo((string Name, TAMode Mode) tableInfo)
+        internal bool AddTableInfo((string Name, TAMode Mode) tableInfo)
         {
-            if (TransactionBase is not null)
+            if (_parallel)
+            {
+                throw new InvalidOperationException("Outer parallel Transaction must be empty.");
+            }
+
+            if (!Collecting)
             {
                 return false;
             }
 
-            _tableNames.Add(tableInfo.Name);
-            if (_mode == TAMode.Read && tableInfo.Mode == TAMode.ReadWrite)
+            _tables.Add(tableInfo.Name);
+            if (tableInfo.Mode is TAMode.ReadWrite && _mode is not TAMode.ReadWrite)
             {
                 _mode = TAMode.ReadWrite;
             }
@@ -83,32 +116,109 @@ namespace DexieNET
             return true;
         }
 
-        public async ValueTask Commit(Func<TransactionBase?, Task> create)
+        internal void Commit(Func<Transaction, Task> create)
         {
-            _create = create;
+            if (!_tables.Any())
+            {
+                throw new InvalidOperationException("Found empty Transaction.");
+            }
 
-            var tableNames = _tableNames.ToArray();
-            await Module.InvokeVoidAsync("Transaction", _db.DBBaseJS.Reference, _dotnetRef, tableNames, _mode == TAMode.Read ? "r" : "rw");
+            var mode = _mode is TAMode.ReadWrite ? "rw!" : "r!";
+            _create = create;
+            Module.InvokeVoid("TopLevelTransaction", DB.DBBaseJS.Reference, _tables, mode, _dotnetRef);
+        }
+
+        internal async ValueTask CommitAsync(Func<Transaction, Task> create)
+        {
+            if (!_tables.Any())
+            {
+                throw new InvalidOperationException("Found empty Transaction.");
+            }
+
+            var mode = _mode is TAMode.ReadWrite ? "rw!" : "r!";
+            _create = create;
+            await Module.InvokeVoidAsync("TopLevelTransactionAsync", DB.DBBaseJS.Reference, _tables, mode, _dotnetRef);
+        }
+
+        internal void StartCollect()
+        {
+            _aborted = false;
+            Error = null;
+            _tables.Clear();
+            _mode = TAMode.Read;
+            Collecting = true;
+        }
+
+        internal void StopCollect()
+        {
+            Collecting = false;
+        }
+
+        public bool Abort(string? reason = null)
+        {
+            if (_aborted)
+            {
+                return false;
+            }
+
+            Error = reason;
+            _aborted = true;
+            StopCollect();
+            _tables.Clear();
+            _mode = TAMode.Read;
+            Module.InvokeVoid("AbortTransaction", Reference);
+            return true;
+        }
+
+        public async ValueTask WaitFor(Func<Task> waitFor)
+        {
+            _waitFor = waitFor;
+
+            if (Collecting)
+            {
+               await waitFor();
+            }
+            else
+            {
+                await Module.InvokeVoidAsync("TransactioWaitFor", _dotnetRef);
+            }
+        }
+
+        [JSInvokable]
+        public async ValueTask TransactionWaitForCallback()
+        {
+            if (!Collecting && _waitFor is not null)
+            {
+                try
+                {
+                    await _waitFor();
+                }
+                catch (Exception ex)
+                {
+                    Error = ex.Message;
+                }
+            }
         }
 
         [JSInvokable]
         public async ValueTask TransactionCallback()
         {
-            if (!SetBaseTransaction())
-            {
-                throw new InvalidOperationException("Can not set current transaction.");
-            }
+            SetJSO(Module.Invoke<IJSObjectReference>("CurrentTransaction"));
 
             if (_create is not null)
             {
                 try
                 {
-                    await _create(TransactionBase);
+                    await _create(this);
+                    if (Error is not null)
+                    {
+                        throw new TransactionException(Error);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    TransactionBase.FirstError ??= ex.Message;
-                    await TransactionBase.Abort();
+                    DB.CurrentTransaction = this;
+                    Abort(ex.Message);
                 }
             }
         }
@@ -116,29 +226,6 @@ namespace DexieNET
         public void Dispose()
         {
             _dotnetRef.Dispose();
-        }
-
-        [MemberNotNullWhen(returnValue: true, member: nameof(TransactionBase))]
-        private bool SetBaseTransaction()
-        {
-            var tx = Module.Invoke<IJSObjectReference>("CurrentTransaction");
-
-            if (tx is null)
-            {
-                return false;
-            }
-
-            TransactionBase ??= new(_db, tx);
-
-            return true;
-        }
-    }
-
-    public static class TransactionExtensions
-    {
-        public static async ValueTask Abort(this TransactionBase transaction)
-        {
-            await transaction.InvokeVoidAsync("abort");
         }
     }
 }

@@ -78,7 +78,7 @@ namespace DNTGenerator.SourceDump
             if (primaryIndexTypeName is null)
             {
                 _ = sb.Append($@"
-        public static async ValueTask<Table<{record.Symbol.Name}, I>> {record.SchemaDescriptor.StoreName}<I>(this TransactionBase transaction)
+        public static async ValueTask<Table<{record.Symbol.Name}, I>> {record.SchemaDescriptor.StoreName}<I>(this Transaction transaction)
         {{
             {record.MakeConverter()}
             var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
@@ -88,7 +88,7 @@ namespace DNTGenerator.SourceDump
             else
             {
                 _ = sb.Append($@"
-        public static async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.SchemaDescriptor.StoreName}(this TransactionBase transaction)
+        public static async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.SchemaDescriptor.StoreName}(this Transaction transaction)
         {{
             {record.MakeConverter()}
             var reference = await transaction.InvokeAsync<IJSObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");

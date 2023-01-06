@@ -29,34 +29,10 @@ namespace DexieNET
         public T AssignPrimaryKey();
     }
 
-    internal sealed class TableJS : JSObject, IDisposable
+    internal sealed class TableJS : JSObject
     {
-        public DotNetObjectReference<TableJS> DotnetRef { get; }
-
-        private Func<Task>? _taCallback;
-
         public TableJS(IJSInProcessObjectReference module, IJSObjectReference reference) : base(module, reference)
         {
-            DotnetRef = DotNetObjectReference.Create(this);
-        }
-
-        public void SetTACallback(Func<Task> taCallback)
-        {
-            _taCallback = taCallback;
-        }
-
-        [JSInvokable]
-        public async ValueTask TransactionCallback()
-        {
-            if (_taCallback is not null)
-            {     
-                await _taCallback();        
-            }
-        }
-
-        public void Dispose()
-        {
-            DotnetRef.Dispose();
         }
     }
 
@@ -72,7 +48,7 @@ namespace DexieNET
         internal ITypeConverter TypeConverter { get; }
         internal I DefaultPrimaryKey { get; }
 
-        internal bool TransactionCollectMode => (DB.CurrentTransaction is not null && DB.CurrentTransaction.TransactionBase is null);
+        internal bool TransactionCollectMode => (DB.CurrentTransaction is not null && DB.CurrentTransaction.Collecting);
         internal TableJS TableJS { get; }
 
         private readonly Dictionary<Type, object> _emptyCollection;
@@ -108,7 +84,7 @@ namespace DexieNET
         }
 
         internal bool AddTableInfo((string Name, TAMode Mode) tableInfo)
-        {
+        {   
             if (DB.CurrentTransaction is not null)
             {
                 return DB.CurrentTransaction.AddTableInfo(tableInfo);
@@ -155,28 +131,6 @@ namespace DexieNET
 
     public static class TableExtensions
     {
-        #region Top level transaction
-        public static async Task Transaction<T, I>(this ValueTask<Table<T, I>> tableT, TAMode mode, Func<Task> taCallback) where T : IDBStore
-        {
-            var table = await tableT;
-            await table.Transaction(mode, taCallback);
-        }
-
-        public static async ValueTask Transaction<T, I>(this Table<T, I> table, TAMode mode, Func<Task> taCallback) where T : IDBStore
-        {
-            table.TableJS.SetTACallback(taCallback);
-
-            if (table.DB.CurrentTransaction is not null)
-            {
-                table.TableJS.Module.InvokeVoid("TopLevelTransaction", table.DB.DBBaseJS.Reference, table.TableJS.Reference, mode == TAMode.Read ? "r!" : "rw!", table.TableJS.DotnetRef);
-            }
-            else
-            {
-                await table.TableJS.Module.InvokeVoidAsync("TopLevelTransactionAsync", table.DB.DBBaseJS.Reference, table.TableJS.Reference, mode == TAMode.Read ? "r!" : "rw!", table.TableJS.DotnetRef);
-            }
-        }
-        #endregion
-
         #region Add
         public static async ValueTask<I> Add<T, I>(this ValueTask<Table<T, I>> tableT, T? item, I primaryKey) where T : IDBStore
         {

@@ -29,32 +29,31 @@ namespace DexieNETTest.TestBase.Test
             {
                 try
                 {
-                    await DB.Transaction(
-                        async _ =>
-                        {
-                            await DB.Transaction(async ta =>
-                            {
-                                await tablePersons.Clear();
-                            });
+                    await DB.Transaction(async _ =>
+                    {
+                        await tablePersons.Clear();
+                        await tablePersons.BulkAdd(personsR1);
 
-                            await tablePersons.Clear();
-                        },
-                        async _ =>
+                        await DB.Transaction(async ta =>
                         {
-                            await tablePersons.Clear();
-                        }
-                    );
+                            await tablePersons.BulkAdd(personsR2);
+                        });
+                    }, TAType.Parallel);
                 }
                 catch (Exception ex)
                 {
                     exThrown = ex.GetType() == typeof(InvalidOperationException);
                 }
 
+                var count = await tablePersons.Count();
+
                 if (!exThrown)
                 {
                     throw new InvalidOperationException("Nested parallel transaction executed.");
                 }
             }
+
+            exThrown = false;
 
             try
             {
@@ -66,20 +65,23 @@ namespace DexieNETTest.TestBase.Test
                     keys = await tablePersons.BulkAdd(personsR3);
                 });
 
-                await DB.Transaction(
-                    async _ =>
+                await DB.Transaction(async _ =>
+                {
+                    await DB.Transaction(async _ =>
                     {
                         var wc = await tablePersons.Where(t => t.Name);
                         var c = await wc.Equal("Test1");
                         await c.EachKey(k => pList.Add(k));
-                    },
-                    async _ =>
+                    }, TAType.TopLevel);
+
+                    await DB.Transaction(async _ =>
                     {
                         var wc = await tablePersons.Where(t => t.Name);
                         var c = await wc.Equal("Test2");
                         await c.EachKey(k => pList.Add(k));
-                    },
-                    async _ =>
+                    }, TAType.TopLevel);
+
+                    await DB.Transaction(async _ =>
                     {
                         var wc = await tablePersons.Where(t => t.Name);
                         var c = await wc.Equal("Test3");
@@ -87,8 +89,9 @@ namespace DexieNETTest.TestBase.Test
 
                         item = Fail ? await tablePersons.Get(keys.LastOrDefault()) : DataGenerator.GetPerson3();
                         await tablePersons.Add(item);
-                    }
-                );
+                    }, TAType.TopLevel);
+
+                }, TAType.Parallel);
             }
             catch (Exception ex)
             {

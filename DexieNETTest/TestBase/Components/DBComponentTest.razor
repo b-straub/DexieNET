@@ -18,9 +18,12 @@
 
         <div>
             <label>Age:</label>
-
             <InputNumber id="age" @bind-Value="Age" />
+        </div>
 
+        <div>
+            <label>Transaction:</label>
+            <InputCheckbox id="generate" @bind-Value="CreateByTransaction" />
         </div>
 
         <button id="btn_s" class="btn btn-primary" type="submit">Submit</button>

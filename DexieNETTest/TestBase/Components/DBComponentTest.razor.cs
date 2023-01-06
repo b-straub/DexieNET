@@ -28,6 +28,8 @@ namespace DexieNETTest.TestBase.Components
         [Range(0, 100, ErrorMessage = "Invalid Age.")]
         public int Age { get; set; } = 0;
 
+        public bool CreateByTransaction { get; set; } = false;
+
         private readonly CompositeDisposable _disposeBag = new();
         private string _queryName = string.Empty;
         private readonly Subject<Unit> _queryChanged = new();
@@ -50,6 +52,21 @@ namespace DexieNETTest.TestBase.Components
 
                 _friendsQuery = await Dexie.LiveQuery(async () =>
                 {
+                    if (CreateByTransaction)
+                    {
+                        await Dexie.Transaction(async ta =>
+                        {
+                            await Dexie.Friends().Add(new Components.Friend("TA1", 55));
+
+                            await Dexie.Transaction(async _ =>
+                            {
+                                await Dexie.Friends().Add(new Components.Friend("TA2", 57));
+                            }, TAType.TopLevel);
+                        });
+
+                        CreateByTransaction = false; // caution reset to prevent endless recursion
+                    }
+
                     var f = await Dexie.Friends().ToArray();
                     return f;
                 });

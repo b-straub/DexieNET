@@ -19,31 +19,30 @@ limitations under the License.
 */
 
 using Microsoft.JSInterop;
-using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace DexieNET
 {
     public sealed class Version : IDisposable
     {
-        internal DBBase DB { get; }
         internal Dictionary<string, string> Stores { get; }
 
         internal Dictionary<string, (string StoreName, string Schema)> UpdateStores { get; }
+
+        internal Transaction Transaction { get; }
 
         internal JSObject VersionJS { get; }
 
         private readonly DotNetObjectReference<Version> _dotnetRef;
 
-        private Func<TransactionBase, Task>? _upgrade;
-        private TransactionBase? _transactionBase;
+        private Func<Transaction, Task>? _upgrade;
 
         public Version(DBBase db, Dictionary<string, string> stores, Dictionary<string, (string, string)> updateStores, IJSObjectReference reference)
         {
             VersionJS = new(db.DBBaseJS.Module, reference);
-            DB = db;
             _dotnetRef = DotNetObjectReference.Create(this);
             _upgrade = null;
-            _transactionBase = null;
+            Transaction = new(db, false);
             Stores = stores;
             UpdateStores = updateStores;
         }
@@ -51,52 +50,28 @@ namespace DexieNET
         [JSInvokable]
         public async ValueTask UpgradeCallback()
         {
-            if (!SetBaseTransaction())
-            {
-                throw new InvalidOperationException("Can not set current transaction.");
-            }
+            Transaction.SetJSO(Transaction.Module.Invoke<IJSObjectReference>("CurrentTransaction"));
 
             if (_upgrade is not null)
             {
-                if (_transactionBase is null)
-                {
-                    throw new InvalidOperationException("Invalid transaction for Verion.Upgrade.");
-                }
-
                 try
                 {
-                    await _upgrade(_transactionBase);
+                    await _upgrade(Transaction);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    await _transactionBase.Abort();
-                    throw;
+                    Transaction.Abort(ex.Message);
+                    throw new TransactionException(ex.Message);
                 }
             }
         }
 
-        public async ValueTask Upgrade(Func<TransactionBase, Task> upgrade)
+        public async ValueTask Upgrade(Func<Transaction, Task> upgrade)
         {
             _upgrade = upgrade;
-
             var reference = await VersionJS.Module.InvokeAsync<IJSObjectReference>("Upgrade", VersionJS.Reference, _dotnetRef);
 
             VersionJS.SetJSO(reference);
-        }
-
-        [MemberNotNullWhen(returnValue: true, member: nameof(_transactionBase))]
-        private bool SetBaseTransaction()
-        {
-            var tx = VersionJS.Module.Invoke<IJSObjectReference>("CurrentTransaction");
-
-            if (tx is null)
-            {
-                return false;
-            }
-
-            _transactionBase ??= new(DB, tx);
-
-            return true;
         }
 
         public void Dispose()
@@ -113,7 +88,7 @@ namespace DexieNET
             return await dexie.Version(versionNumber);
         }
 
-        public static async ValueTask Upgrade(this ValueTask<Version> versionT, Func<TransactionBase, Task> upgrade)
+        public static async ValueTask Upgrade(this ValueTask<Version> versionT, Func<Transaction, Task> upgrade)
         {
             var version = await versionT;
             await version.Upgrade(upgrade);
@@ -146,7 +121,7 @@ namespace DexieNET
         public static async ValueTask<Version> Stores(this Version version)
         {
             var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", version.Stores);
-            return new Version(version.DB, version.Stores, version.UpdateStores, reference);
+            return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
         public static async ValueTask<Version> Stores<T1>(this Version version) where T1 : IDBStore
@@ -163,7 +138,7 @@ namespace DexieNET
             }
 
             var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", stores);
-            return new Version(version.DB, version.Stores, version.UpdateStores, reference);
+            return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
         public static async ValueTask<Version> Stores<T1, T2>(this Version version) where T1 : IDBStore where T2 : IDBStore
@@ -189,7 +164,7 @@ namespace DexieNET
             }
 
             var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", stores);
-            return new Version(version.DB, version.Stores, version.UpdateStores, reference);
+            return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
         public static async ValueTask<Version> Stores<T1, T2, T3>(this Version version) where T1 : IDBStore where T2 : IDBStore where T3 : IDBStore
@@ -224,7 +199,7 @@ namespace DexieNET
             }
 
             var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", stores);
-            return new Version(version.DB, version.Stores, version.UpdateStores, reference);
+            return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
     }
 }

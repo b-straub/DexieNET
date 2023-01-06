@@ -17,10 +17,10 @@ namespace DexieNETTest.TestBase.Test
         {
             var tableLog = await DB.Logentries();
 
-            await tableLog.Transaction(TAMode.ReadWrite, async () =>
+            await DB.Transaction(async _ =>
             {
                 await tableLog.Add(new Logentry(message, DateTime.Now));
-            });
+            }, TAType.TopLevel);
         }
 
         public override async ValueTask<string?> RunTest()
@@ -33,6 +33,8 @@ namespace DexieNETTest.TestBase.Test
             var fieldsData = DataGenerator.GetFieldTestRandom().ToArray();
 
             var tablePersons = await DB.Persons();
+            await tablePersons.Clear();
+
             var persons = DataGenerator.GetPersons();
             var personsR1 = DataGenerator.GetPersonsRandom(20, "Test1");
             var personsR2 = DataGenerator.GetPersonsRandom(20, "Test2");
@@ -77,9 +79,9 @@ namespace DexieNETTest.TestBase.Test
                         var count2 = await collection.Count();
                         var item = await tablePersons.Get(keys.FirstOrDefault());
 
-                        if (item is null && transaction is not null)
+                        if (item is null && !transaction.Collecting)
                         {
-                            await transaction.Abort();
+                            transaction.Abort();
                             throw new ArgumentNullException(nameof(item));
                         }
 
@@ -89,7 +91,7 @@ namespace DexieNETTest.TestBase.Test
                             var count3 = await collection.Count();
                             await Log($"Count: {count3}");
 
-                            var keyU = await tablePersons.Put(transaction is null ? item : item! with { Name = "Updated" });
+                            var keyU = await tablePersons.Put(transaction.Collecting ? item : item! with { Name = "Updated" });
 
                             itemU = await tablePersons.Get(keyU);
 
@@ -122,6 +124,8 @@ namespace DexieNETTest.TestBase.Test
 
             if (Fail)
             {
+                items = await tablePersons.ToArray();
+
                 if (!exThrown || items.Any() || logs.Count() != 4)
                 {
                     throw new InvalidOperationException("Failed nested Transaction executed.");

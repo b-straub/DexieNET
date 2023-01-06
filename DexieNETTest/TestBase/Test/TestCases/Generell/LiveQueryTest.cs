@@ -52,10 +52,10 @@ namespace DexieNETTest.TestBase.Test
         {
             try
             {
-                await DB.Transaction(async _ =>
+                await DB.Transaction(async ta =>
                 {
                     var person = await DB.Persons().ToCollection().First();
-                    person = person! with { Age = 90 };
+                    person = ta.Collecting ? person : person! with { Age = 90 };
                     await DB.Persons().Put(person);
                     await DB.Persons().Add(person);
                 });

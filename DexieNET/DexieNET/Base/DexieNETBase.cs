@@ -19,7 +19,6 @@ limitations under the License.
 */
 
 using Microsoft.JSInterop;
-using System.Diagnostics.CodeAnalysis;
 using System.Reactive;
 
 namespace DexieNET
@@ -70,39 +69,23 @@ namespace DexieNET
     public abstract class DBBase
     {
         public abstract ValueTask<Version> Version(double versionNumber);
-        internal Transaction? CurrentTransaction { get; private set; }
+
         internal bool LiveQueryRunning { get; set; } = false;
-        internal bool TransactionParallel { get; private set; }
         internal JSObject DBBaseJS { get; }
+        internal Transaction? CurrentTransaction { get; set; }
+        internal Stack<Transaction> TransactionCollectStack { get; }
+        internal Dictionary<int, Transaction> TransactionDict { get; }
+
+        internal Stack<Task> TransactionTasks { get; }
+
+        internal TAState TransactionState { get; set; } = TAState.Collecting;
 
         protected DBBase(IJSInProcessObjectReference module, IJSObjectReference reference)
         {
-            TransactionParallel = false;
             DBBaseJS = new(module, reference);
-        }
-
-        [MemberNotNullWhen(returnValue: true, member: nameof(CurrentTransaction))]
-        internal bool StartTransaction(bool parallel)
-        {
-            CurrentTransaction = new(this);
-            if (CurrentTransaction is null)
-            {
-                return false;
-            }
-
-            TransactionParallel = parallel;
-            return true;
-        }
-
-        internal void StopTransaction()
-        {
-            if (CurrentTransaction is not null)
-            {
-                CurrentTransaction.TransactionBase = null;
-            }
-
-            TransactionParallel = false;
-            CurrentTransaction = null;
+            TransactionCollectStack = new();
+            TransactionDict = new();
+            TransactionTasks = new();
         }
 
         public Persistance Persistance()
@@ -157,111 +140,158 @@ namespace DexieNET
             return lq;
         }
 
-        public static async ValueTask Transaction(this DBBase db, Func<TransactionBase?, Task> create)
+        public static async Task Transaction(this DBBase db, Func<Transaction, Task> create, TAType type = TAType.Nested)
         {
-            if (db.LiveQueryRunning)
-            {
-                throw new InvalidOperationException("Transactions not allowed inside a 'LiveQuery' yet.");
-            }
-
-            if (db.TransactionParallel)
-            {
-                db.StopTransaction();
-                throw new InvalidOperationException("Nested parallel transactions are not supported.");
-            }
+            bool parallel = type is TAType.Parallel;
+            bool topLevel = type is TAType.TopLevel;
 
             try
             {
-                if (db.CurrentTransaction is null)
+                if (db.TransactionState is not TAState.Collecting && db.TransactionState is not TAState.ParallelCollecting)
                 {
-                    if (db.StartTransaction(false))
+                    if (topLevel)
                     {
-                        await create(null);
-                        await db.CurrentTransaction.Commit(create);
-                        db.StopTransaction();
+                        if (db.TransactionState is TAState.Executing)
+                        {
+                            if (db.TransactionDict.TryGetValue(create.Method.GetHashCode(), out Transaction? t))
+                            {
+                                db.CurrentTransaction = t;
+                                t.Commit(create);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("Transaction not found.");
+                            }
+                        }
                     }
                     else
                     {
-                        throw new ArgumentNullException(nameof(db));
+                        if (db.CurrentTransaction is null)
+                        {
+                            throw new InvalidOperationException("No transaction running.");
+                        }
+
+                        await create(db.CurrentTransaction);
                     }
                 }
                 else
                 {
-                    try
+                    if (!db.TransactionCollectStack.Any())
                     {
-                        await create(db.CurrentTransaction.TransactionBase);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (db.CurrentTransaction?.TransactionBase is not null)
+                        db.TransactionDict.Clear();
+                        db.TransactionTasks.Clear();
+
+                        db.TransactionState = parallel ? TAState.ParallelCollecting : TAState.Collecting;
+
+                        db.CurrentTransaction = new(db, parallel);
+                        db.TransactionCollectStack.Push(db.CurrentTransaction);
+                        db.TransactionDict.TryAdd(create.Method.GetHashCode(), db.CurrentTransaction);
+
+                        db.CurrentTransaction.StartCollect();
+                        await create(db.CurrentTransaction);
+                        db.CurrentTransaction.StopCollect();
+
+                        db.TransactionState = parallel ? TAState.ParallelExecuting : TAState.Executing;
+
+                        db.CurrentTransaction = db.TransactionCollectStack.Pop();
+
+                        if (db.TransactionCollectStack.Any())
                         {
-                            db.CurrentTransaction.TransactionBase.FirstError ??= ex.Message;
-                            await db.CurrentTransaction.TransactionBase.Abort();
+                            throw new InvalidOperationException("Not all nested transactions have been processed.");
+                        }
+
+                        if (db.TransactionState is TAState.Executing)
+                        {
+                            if (db.TransactionDict.TryGetValue(create.Method.GetHashCode(), out Transaction? t))
+                            {
+                                db.CurrentTransaction = t;
+                                if (db.LiveQueryRunning)
+                                {
+                                    t.Commit(create);
+                                }
+                                else
+                                {
+                                    await t.CommitAsync(create);
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("Transaction not found.");
+                            }
+                        }
+
+                        if (db.TransactionState is TAState.ParallelExecuting)
+                        {
+                            db.CurrentTransaction = null;
+                            await Task.WhenAll(db.TransactionTasks.ToArray());
+                        }
+
+                        db.TransactionState = TAState.Collecting;
+                    }
+                    else if (db.CurrentTransaction is not null)
+                    {
+                        if (db.CurrentTransaction.Collecting)
+                        {
+                            if (topLevel)
+                            {
+                                db.CurrentTransaction = new(db, false);
+                                db.TransactionCollectStack.Push(db.CurrentTransaction);
+                                db.TransactionDict.TryAdd(create.Method.GetHashCode(), db.CurrentTransaction);
+
+                                db.CurrentTransaction.StartCollect();
+                                await create(db.CurrentTransaction);
+                                if (db.TransactionState is TAState.ParallelCollecting)
+                                {
+                                    db.TransactionTasks.Push(db.CurrentTransaction.CommitAsync(create).AsTask());
+                                }
+                                db.CurrentTransaction.StopCollect();
+
+                                db.TransactionCollectStack.Pop();
+                                db.CurrentTransaction = db.TransactionCollectStack.Peek();
+                            }
+                            else
+                            {
+                                db.TransactionDict.TryAdd(create.Method.GetHashCode(), db.CurrentTransaction);
+                                await create(db.CurrentTransaction);
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Transactions not collecting.");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                string message = db.CurrentTransaction?.TransactionBase?.FirstError ?? ex.Message;
-                db.StopTransaction();
-                throw new TransactionException(message);
-            }
-        }
-
-        internal static void AbortTransaction(this DBBase db)
-        {
-            if (db.CurrentTransaction is not null)
-            {
-                db.DBBaseJS.Module.InvokeVoid("AbortTransaction");
-                db.StopTransaction();
-            }
-        }
-
-        public static async ValueTask Transaction(this DBBase db, params Func<TransactionBase?, Task>[] creates)
-        {
-            if (db.LiveQueryRunning)
-            {
-                throw new InvalidOperationException("Transactions not allowed inside a 'LiveQuery' yet.");
-            }
-
-            List<Task> tasks = new();
-            List<(Transaction transaction, Func<TransactionBase?, Task> create)> transactions = new();
-
-            foreach (var create in creates)
-            {
-                if (db.StartTransaction(true))
+                if (!parallel && db.TransactionDict.TryGetValue(create.Method.GetHashCode(), out Transaction? t))
                 {
-                    await create(db.CurrentTransaction.TransactionBase);
-                    transactions.Add((db.CurrentTransaction, create));
-                    db.StopTransaction();
+                    db.CurrentTransaction = t;
+                }
+
+                if (db.CurrentTransaction is not null)
+                {
+                    db.CurrentTransaction.Abort(ex.Message);
+                    var message = db.CurrentTransaction?.Error ?? ex.Message;
+
+                    db.TransactionCollectStack.Clear();
+                    db.TransactionTasks.Clear();
+                    db.TransactionState = TAState.Collecting;
+                    db.CurrentTransaction = null;
+
+                    if (ex.GetType() == typeof(JSException))
+                    {
+                        throw new TransactionException(message);
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
                 else
                 {
-                    throw new ArgumentNullException(nameof(db));
+                    throw;
                 }
-            }
-
-            foreach (var (transaction, create) in transactions)
-            {
-                tasks.Add(transaction.Commit(create).AsTask());
-            }
-
-            try
-            {
-                await Task.WhenAll(tasks);
-            }
-            catch (Exception ex)
-            {
-                string? message = null;
-
-                foreach (var (transaction, create) in transactions)
-                {
-                    message ??= transaction.TransactionBase?.FirstError;
-                }
-
-                message ??= ex.Message;
-                throw new TransactionException(message);
             }
         }
 

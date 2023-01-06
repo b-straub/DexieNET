@@ -57,10 +57,7 @@ namespace DexieNETTest.TestBase.Test
                         await table.BulkAdd(personChunk);
                         if (_cancellationToken.IsCancellationRequested)
                         {
-                            if (tx is not null)
-                            {
-                                await tx.Abort();
-                            }
+                            tx?.Abort();
                         }
                     }
 

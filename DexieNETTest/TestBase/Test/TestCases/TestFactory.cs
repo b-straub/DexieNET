@@ -31,6 +31,8 @@
             _tests.Add(("General", new KeyTest(db)));
             _tests.Add(("General", new OpenClose(db)));
             _tests.Add(("General", new FailedTransaction(db)));
+            _tests.Add(("General", new TransactionAwaited(db)));
+            _tests.Add(("General", new TransactionAwaited(db, true)));
             _tests.Add(("General", new TransactionsParallel(db)));
             _tests.Add(("General", new TransactionsParallel(db, true)));
             _tests.Add(("General", new TransactionsNested(db)));

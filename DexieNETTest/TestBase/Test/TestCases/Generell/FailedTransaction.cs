@@ -27,7 +27,7 @@ namespace DexieNETTest.TestBase.Test
 
             try
             {
-                await DB.Transaction(async collectMode =>
+                await DB.Transaction(async _ =>
                 {
                     await table.Clear();
                     var key = await table.Add(DataGenerator.GetPerson1());
@@ -68,7 +68,7 @@ namespace DexieNETTest.TestBase.Test
                         {
                             exThrown = ex.GetType() != typeof(TransactionException);
                         }
-                    }               
+                    }
                 });
             }
 

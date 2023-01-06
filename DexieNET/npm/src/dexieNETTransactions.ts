@@ -1,30 +1,33 @@
-﻿import Dexie, { Table, Transaction, TransactionMode, Version } from 'dexie';
+﻿import Dexie, { Transaction, TransactionMode, Version } from 'dexie';
 import { DB } from "./dexieNETBase";
-
-// Transaction
-export async function Transaction(db: DB, dotnetRef: any, tableNames: string[], mode: TransactionMode): Promise<void> {
-    await db.transaction(mode, tableNames, () => dotnetRef.invokeMethod('TransactionCallback'));
-}
 
 // Version upgrade
 export async function Upgrade(version: Version, dotnetRef: any): Promise<Version> {
-    return version.upgrade(() => {
+    return version.upgrade(_ => {
         dotnetRef.invokeMethod('UpgradeCallback');
     });
 }
 
-export function AbortTransaction(): void {
+export function AbortCurrentTransaction(): void {
     Dexie.currentTransaction?.abort();
 }
 
-export function CurrentTransaction(): any {
+export function AbortTransaction(transaction: Transaction | null): void {
+    transaction?.abort();
+}
+
+export function CurrentTransaction(): any | null {
     return Dexie.currentTransaction;
 }
 
-export function TopLevelTransaction(db: DB, table: Table, mode: TransactionMode, dotnetRef: any): void {
-    db.transaction(mode, table, () => dotnetRef.invokeMethod('TransactionCallback'));
+export function TopLevelTransaction(db: DB, tables: string[], mode: TransactionMode, dotnetRef: any): void {
+    db.transaction(mode, tables, _ => dotnetRef.invokeMethod('TransactionCallback'));
 }
 
-export async function TopLevelTransactionAsync(db: DB, table: Table, mode: TransactionMode, dotnetRef: any): Promise<void> {
-    await db.transaction(mode, table, () => dotnetRef.invokeMethod('TransactionCallback'));
+export async function TopLevelTransactionAsync(db: DB, tables: string[], mode: TransactionMode, dotnetRef: any): Promise<void> {
+    await db.transaction(mode, tables, _ => dotnetRef.invokeMethod('TransactionCallback'));
+}
+
+export async function TransactioWaitFor(dotnetRef: any): Promise<void> {
+    await Dexie.waitFor(async () => await dotnetRef.invokeMethodAsync('TransactionWaitForCallback'));
 }
