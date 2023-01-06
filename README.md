@@ -105,6 +105,8 @@ else
 
 ```c#
 using DexieNET;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
 namespace DexieNETHelloWorld.Pages
@@ -133,25 +135,28 @@ namespace DexieNETHelloWorld.Pages
             await base.OnInitializedAsync();
 
             await Dexie.Version(1).Stores();
-            _friends = await Dexie.Friends().ToArray();
-            _logs = await Dexie.LogEntries().ToArray();
         }
 
-        private async Task LogMessage(string? name)
+        private async Task FillTables()
         {
-            await Dexie.LogEntries().Transaction(TAMode.ReadWrite, async () =>
+            _friends = await Dexie.Friends().ToArray();
+            _logs = await Dexie.LogEntries().OrderBy(l => l.TimeStamp).Reverse().ToArray();
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task LogMessage(string? message)
+        {
+            await Dexie.Transaction(async _ =>
             {
-                await Dexie.LogEntries().Add(new LogEntry(name, DateTime.Now));
-            });
+                await Dexie.LogEntries().Add(new LogEntry(message, DateTime.Now));
+            }, TAType.TopLevel);
         }
         private async Task ClearDatabase()
         {
             await Dexie.Friends().Clear();
             await Dexie.LogEntries().Clear();
 
-            _friends = await Dexie.Friends().ToArray();
-            _logs = await Dexie.LogEntries().ToArray();
-            await InvokeAsync(StateHasChanged);
+            await FillTables();
         }
 
         private async Task PopulateDatabase()
@@ -162,23 +167,21 @@ namespace DexieNETHelloWorld.Pages
             await Dexie.Friends().Add(new Friend("Jane Doe", rand.Next(1, 99)));
             await Dexie.Friends().Add(new Friend("John Doe", rand.Next(1, 99)));
 
-            _friends = await Dexie.Friends().ToArray();
-            _logs = await Dexie.LogEntries().ToArray();
-            await InvokeAsync(StateHasChanged);
+            await FillTables();
         }
 
         private async Task GoodTransaction()
         {
             await LogMessage("GoodTransaction");
 
-            await Dexie.Transaction(async tx =>
+            await Dexie.Transaction(async ta =>
             {
                 Random rand = new();
                 var key = await Dexie.Friends().Add(new Friend("Luke", rand.Next(1, 99)));
                 var friend = await Dexie.Friends().Get(key);
 
-                if (friend?.Name == "Luke" || tx is null)
-                // tx is null, this means the first pass of the transaction, in which the table names are collected
+                if (friend?.Name == "Luke" || ta.Collecting)
+                // ta.Collecting, this means the first pass of the transaction, in which the table names are collected
                 // if a second table is hidden behind a conditional statement, it must also be visited in the first pass
                 {
                     await Dexie.Friends().Add(new Friend("John", rand.Next(1, 99)));
@@ -186,9 +189,7 @@ namespace DexieNETHelloWorld.Pages
                 }
             });
 
-            _friends = await Dexie.Friends().ToArray();
-            _logs = await Dexie.LogEntries().ToArray();
-            await InvokeAsync(StateHasChanged);
+            await FillTables();
         }
 
         private async Task FailedTransaction()
@@ -197,13 +198,13 @@ namespace DexieNETHelloWorld.Pages
 
             try
             {
-                await Dexie.Transaction(async tx =>
+                await Dexie.Transaction(async ta =>
                 {
                     await Dexie.Friends().Clear();
                     var key = await Dexie.Friends().Add(new Friend("Test", 33));
                     var friend = await Dexie.Friends().Get(key);
 
-                    if (friend?.Name == "Test")
+                    if (friend?.Name == "Test" || ta.Collecting)
                     {
                         await LogMessage("TA will fail");
                     }
@@ -212,15 +213,12 @@ namespace DexieNETHelloWorld.Pages
             }
             catch (Exception ex)
             {
-                if (ex.GetType() != typeof(TransactionException))
-                {
-                    Console.WriteLine("Transaction failed unexpectedly");
-                }
+                var firstDot = ex.Message.IndexOf('.');
+                var message = firstDot <= 0 ? ex.Message : ex.Message[..firstDot];
+                await LogMessage($"TA failed: {message}");
             }
 
-            _friends = await Dexie.Friends().ToArray();
-            _logs = await Dexie.LogEntries().ToArray();
-            await InvokeAsync(StateHasChanged);
+            await FillTables();
         }
     }
 }
@@ -305,7 +303,8 @@ namespace DexieNETHelloWorld.Pages
 - transactions capture the table names in two passes
 - if a second table is hidden behind a conditional statement, it must also be visited in the first pass
 - nested transactions contain all required table names
-- top level transactions must use *table.Transaction*, nested transactions are not yet supported
+- top level transactions must use *TAType.TopLevel*, the root transaction is implictly a top level transaction
+- parallel transactions are composed by a root transaction with *TAType.TopLevel* and top level child transactions
 
 ### Samples
 
