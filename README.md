@@ -133,8 +133,8 @@ namespace DexieNETHelloWorld.Pages
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
-
             await Dexie.Version(1).Stores();
+            await FillTables();
         }
 
         private async Task FillTables()
