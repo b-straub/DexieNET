@@ -51,23 +51,6 @@ namespace DexieNET
         }
     }
 
-    internal sealed class TAInfoEqualityComparer : IEqualityComparer<(int Hash, TAMode Mode, IEnumerable<string> Tables)>
-    {
-        public bool Equals((int Hash, TAMode Mode, IEnumerable<string> Tables) x, (int Hash, TAMode Mode, IEnumerable<string> Tables) y)
-        {
-            var tablesX = x.Tables.Aggregate(string.Empty, (curr, next) => curr + next);
-            var tablesY = y.Tables.Aggregate(string.Empty, (curr, next) => curr + next);
-
-            return (x.Hash, x.Mode, tablesX).Equals((y.Hash, x.Mode, tablesY));
-        }
-
-        public int GetHashCode([DisallowNull] (int Hash, TAMode Mode, IEnumerable<string> Tables) obj)
-        {
-            var tableHash = obj.Tables.Aggregate(string.Empty, (curr, next) => curr + next).GetHashCode();
-            return HashCode.Combine(obj.Hash, obj.Mode, tableHash);
-        }
-    }
-
     public sealed class Transaction : JSObject, IDisposable
     {
         public DBBase DB { get; }
