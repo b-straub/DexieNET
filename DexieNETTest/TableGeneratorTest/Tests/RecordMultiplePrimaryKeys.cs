@@ -131,39 +131,5 @@ namespace Test
 ";
             await ArgumentFixer.VerifyCodeFixAsync(test, fix, 0);
         }
-
-        [Fact]
-        public async Task ClassMultiplePrimaryKeysSchemaFix()
-        {
-            var test = @$"
-using DexieNET;
-
-namespace Test
-{{
-    [Schema({{|{GeneratorDiagnostic.MultiplePrimaryKeysSchemaArgument.Id}:PrimaryKeyName = ""PKey""|}})]
-    [CompoundIndex(""FirstName"", ""LastName"", IsPrimary = true)]
-    public partial class Person : IDBStore
-    {{
-        string LastName {{ get; set; }}
-        string FirstName {{ get; set; }}
-    }}
-}}
-";
-
-            var fix = @"
-using DexieNET;
-
-namespace Test
-{
-    [CompoundIndex(""FirstName"", ""LastName"", IsPrimary = true)]
-    public partial class Person : IDBStore
-    {
-        string LastName { get; set; }
-        string FirstName { get; set; }
-    }
-}
-";
-            await ArgumentFixer.VerifyCodeFixAsync(test, fix);
-        }
     }
 }

@@ -19,16 +19,22 @@ namespace DexieNETTest.TestBase.Test
         string Name
     ) : IDBStore;
 
-    [Schema(PrimaryKeyGuid = false)]
     public partial record NoGuidRecord
     (
-        [property: Index] string Name
+        [property: Index] string Name,
+        [property: Index(IsPrimary = true)] Guid? ID = null
     ) : IDBStore;
 
     public record GuidRecord
     (
         [property: Index] string Name,
         [property: Index(IsPrimary = true)] Guid? ID = null
+    ) : IDBStore;
+
+    public partial record AutoGuidRecord
+    (
+        [property: Index] string Name,
+        [property: Index(IsPrimary = true, IsAuto = true)] Guid? ID = null
     ) : IDBStore;
 
     public interface ITestDB : IDBStore

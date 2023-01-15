@@ -88,7 +88,7 @@ namespace {namespaceName}
 
             foreach (DBRecord record in records)
             {
-                if (record.HasGeneratedPrimaryKey())
+                if (record.HasGeneratedPrimaryKey() || record.HasGuidPrimaryKey())
                 {
                     var primaryIndexName = record.GetPrimaryIndexName(false);
 
@@ -103,10 +103,15 @@ namespace {namespaceName}
                         {
                             _ = sb.Append($@"
     {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore<{record.Symbol.Name}>
-    {{
+    {{");
+                            if (record.HasGeneratedGuidPrimaryKey())
+                            {
+                                _ = sb.Append($@"
         {attribute}
         public Guid? {primaryIndexName} {{ get; init; }}
-        
+");
+                            }
+                            _ = sb.Append($@"
         public {record.Symbol.Name} AssignPrimaryKey()
         {{
             if ({primaryIndexName} is null)

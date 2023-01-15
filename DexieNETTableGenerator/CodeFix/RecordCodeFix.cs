@@ -37,7 +37,7 @@ namespace DNTGenerator.CodeFix
         {
             get
             {
-                return ImmutableArray.Create(GeneratorDiagnostic.NotPartial.Id);
+                return ImmutableArray.Create(GeneratorDiagnostic.NotPartial.Id, GeneratorDiagnostic.NotPartialAutoGuid.Id);
             }
         }
 

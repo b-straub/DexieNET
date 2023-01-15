@@ -134,6 +134,18 @@ namespace DNTGenerator.CodeFix
             return document.WithSyntaxRoot(root.ReplaceNode(attribute, newAttribute));
         }
 
+        public static Document AddAttributeArgument(this Document document, SyntaxNode root, AttributeArgumentListSyntax argumentListDeclaration, string newArgument)
+        {
+            var arguments = argumentListDeclaration.Arguments.ToFullString();
+            arguments = arguments.Any() ? newArgument + ", " + arguments : newArgument;
+
+            arguments = $"({arguments})";
+            var argumentList = SyntaxFactory.ParseAttributeArgumentList(arguments);
+            var newArgumentListDeclaration = argumentListDeclaration.WithArguments(argumentList.Arguments);
+
+            return document.WithSyntaxRoot(root.ReplaceNode(argumentListDeclaration, newArgumentListDeclaration));
+        }
+
         public static Document RenameAttributeArgument(this Document document, SyntaxNode root, AttributeArgumentSyntax argument, string name)
         {
             var nameExpression = argument.DescendantNodesAndSelf().OfType<LiteralExpressionSyntax>().Single();

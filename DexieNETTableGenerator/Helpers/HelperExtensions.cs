@@ -28,6 +28,11 @@ namespace DNTGenerator.Helpers
             return value.GetValueOrDefault(false);
         }
 
+        public static bool False(this bool? value)
+        {
+            return !value.GetValueOrDefault(true);
+        }
+
         public static string TrimEnd(this string source, string trimString)
         {
             if (source.EndsWith(trimString))

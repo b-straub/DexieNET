@@ -66,14 +66,26 @@ namespace DNTGenerator.Diagnostics
         public static DiagnosticDescriptor NotPartial =
            new DiagnosticDescriptor(
                "DNTGG100",
-               "IDBStore error",
-               "'{0}' is not partial but DBItem without primary key or outbound index attribute must be partial",
+               "Store error",
+               "'{0}' is not partial but store without primary key or outbound index attribute must be partial",
                "DNTGenerator",
                DiagnosticSeverity.Error,
                isEnabledByDefault: true,
-               "IDBStore without primary key or outbound index attribute must be partial.",
+               "Store without primary key or outbound index attribute must be partial.",
                null,
                "Add partial modifier to '{0}'");
+
+        public static DiagnosticDescriptor NotPartialAutoGuid =
+          new DiagnosticDescriptor(
+              "DNTGG101",
+              "Store error",
+              "'{0}' is not partial but store with Guid auto primary key must be partial",
+              "DNTGenerator",
+              DiagnosticSeverity.Error,
+              isEnabledByDefault: true,
+              "Store with Guid auto primary key must be partial.",
+              null,
+              "Add partial modifier to '{0}'");
         #endregion
 
         #region DBIndex
@@ -133,11 +145,11 @@ namespace DNTGenerator.Diagnostics
             new DiagnosticDescriptor(
                 "DNTGG210",
                 "Primary key error",
-                "'{0}' is 'IsPrimary' with same name as specified in Schema 'PrimaryKeyName'",
+                "'{0}' name identical to Schema 'PrimaryKeyName'",
                 "DNTGenerator",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                "DBItem has already a schema with 'PrimaryKeyName'.",
+                "Parameter or property name identical to 'PrimaryKeyName'.",
                 null,
                 "Remove '{0}'");
 
@@ -145,11 +157,11 @@ namespace DNTGenerator.Diagnostics
             new DiagnosticDescriptor(
                 "DNTGG211",
                 "Primary key error",
-                "'{0}' is 'PrimaryKeyName' with same name as another 'IsPrimary' parameter or property",
+                "'{0}' is 'PrimaryKeyName' with same name as another parameter or property",
                 "DNTGenerator",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                "DBItem has already attribute with 'PrimaryKeyName'.",
+                "Parameter or property name identical to 'PrimaryKeyName'.",
                 null,
                 "Remove '{0}'");
 
@@ -157,25 +169,49 @@ namespace DNTGenerator.Diagnostics
            new DiagnosticDescriptor(
                "DNTGG220",
                "Primary key error",
-               "'{0}' is 'IsPrimary', multiple 'Primary Keys' exist for same IDBStore",
+               "'{0}' is 'IsPrimary', multiple 'Primary Keys' exist for same store",
                "DNTGenerator",
                DiagnosticSeverity.Error,
                isEnabledByDefault: true,
-               "Multiple Primary Keys for same IDBStore.",
+               "Multiple Primary Keys for same store.",
                null,
                "Remove '{0}'");
 
-        public static DiagnosticDescriptor MultiplePrimaryKeysSchemaArgument =
+        public static DiagnosticDescriptor ReservedGeneratedPKNameSchemaArgument =
           new DiagnosticDescriptor(
               "DNTGG221",
               "Primary key error",
-              "'{0}' has 'PrimaryKeyName', multiple 'Primary Keys' exist for same IDBStore",
+              "'{0}' has 'PrimaryKeyName' but 'IsPrimary' is already specified elsewhere",
               "DNTGenerator",
               DiagnosticSeverity.Error,
               isEnabledByDefault: true,
-              "Multiple 'PrimaryKeyName' for same IDBStore.",
+              "Reserved schema attribute for generated primary key.",
               null,
               "Remove '{0}'");
+
+        public static DiagnosticDescriptor ReservedGeneratedPKGuidSchemaArgument =
+          new DiagnosticDescriptor(
+              "DNTGG222",
+              "Primary key error",
+              "'{0}' has 'PrimaryKeyGuid' but 'IsPrimary' is already specified elsewhere",
+              "DNTGenerator",
+              DiagnosticSeverity.Error,
+              isEnabledByDefault: true,
+              "Reserved schema attribute for generated primary key.",
+              null,
+              "Remove '{0}'");
+
+        public static DiagnosticDescriptor AutoWithoutPrimaryKeyArgument =
+          new DiagnosticDescriptor(
+              "DNTGG223",
+              "Primary key error",
+              "'{0}' is 'IsAuto' but not 'IsPrimary'",
+              "DNTGenerator",
+              DiagnosticSeverity.Error,
+              isEnabledByDefault: true,
+              "Multiple Primary Keys for same store.",
+              null,
+              "Add 'IsPrimary'");
 
         public static DiagnosticDescriptor ReservedPrimaryKeyNameMember =
           new DiagnosticDescriptor(
@@ -209,7 +245,7 @@ namespace DNTGenerator.Diagnostics
                "DNTGenerator",
                DiagnosticSeverity.Error,
                isEnabledByDefault: true,
-               "CompoundIndex not found in IDDBItem.",
+               "CompoundIndex not found.",
                null);
 
         public static DiagnosticDescriptor MissingIndexConverter =

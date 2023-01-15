@@ -30,7 +30,7 @@ namespace DNTGenerator.SourceDump
         {
             StringBuilder sb = new();
 
-            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGuidPrimaryKey() ? "Guid" : "ulong"
+            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGeneratedGuidPrimaryKey() ? "Guid" : "ulong"
                 : record.GetPrimaryIndexTypeName();
 
             var tablePropertyName = $"_{record.SchemaDescriptor.StoreName.LowerFirstChar()}Table";
@@ -72,7 +72,7 @@ namespace DNTGenerator.SourceDump
         {
             StringBuilder sb = new();
 
-            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGuidPrimaryKey() ? "Guid" : "ulong"
+            var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGeneratedGuidPrimaryKey() ? "Guid" : "ulong"
                 : record.GetPrimaryIndexTypeName();
 
             if (primaryIndexTypeName is null)
@@ -141,7 +141,7 @@ namespace DNTGenerator.SourceDump
 ");
             foreach (DBRecord record in records)
             {
-                var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGuidPrimaryKey() ? "Guid" : "ulong"
+                var primaryIndexTypeName = record.HasGeneratedPrimaryKey() ? record.HasGeneratedGuidPrimaryKey() ? "Guid" : "ulong"
                 : record.GetPrimaryIndexTypeName();
 
                 var tablePropertyName = $"_{record.SchemaDescriptor.StoreName.LowerFirstChar()}Table";

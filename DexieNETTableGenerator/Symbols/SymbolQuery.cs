@@ -125,6 +125,28 @@ namespace DNTGenerator.Query
             return argFirst?.ToString();
         }
 
+        public static bool IsGuidType(this IPropertySymbol ocs)
+        {
+            if (ocs.Type is not INamedTypeSymbol type)
+            {
+                return false;
+            }
+
+            if (!type.IsGenericType || type.TypeArguments.Length != 1)
+            {
+                return type.Name.EndsWith("Guid");
+            }
+
+            var argFirst = type.TypeArguments.FirstOrDefault();
+
+            if (argFirst is not INamedTypeSymbol genericType)
+            {
+                return false;
+            }
+
+            return genericType.Name.EndsWith("Guid");
+        }
+
         public static string? GetBasicOrArrayType(this IPropertySymbol ocs)
         {
             if (ocs.Type is IArrayTypeSymbol type)

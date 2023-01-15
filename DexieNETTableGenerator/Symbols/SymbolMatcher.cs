@@ -101,7 +101,7 @@ namespace DNTGenerator.Matcher
                 (symbol?.Name.Equals("EqualityContract")).True();
         }
 
-        private static bool MatchType([NotNullWhen(true)] this INamedTypeSymbol? symbol, string constructedFromName, Compilation compilation)
+        public static bool MatchType([NotNullWhen(true)] this INamedTypeSymbol? symbol, string constructedFromName, Compilation compilation)
         {
             if (symbol is null)
             {

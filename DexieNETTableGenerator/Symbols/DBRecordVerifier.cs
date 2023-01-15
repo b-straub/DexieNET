@@ -30,12 +30,27 @@ namespace DNTGenerator.Verifier
         {
             List<GeneratorDiagnostic> diagnostics = new();
 
-            var hasPrimary = dBRecord.Properties.Where(i => i.IsPrimary).Any() ||
-                dBRecord.CompoundKeys.Where(c => c.IsPrimary).Any();
+            bool missingPrimary = false;
 
-            if (!hasPrimary && !dBRecord.SchemaDescriptor.HasOutboundPrimaryKey && !dBRecord.IsPartial)
+            foreach (var index in dBRecord.Properties)
+            {
+                if (index.IsAuto && !index.IsPrimary)
+                {
+                    diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.AutoWithoutPrimaryKeyArgument, index.PKLocation, index.Name));
+                    missingPrimary = true;
+                }
+            }
+
+            var hasPrimary = dBRecord.Properties.Where(i => i.IsPrimary).Any() ||
+            dBRecord.CompoundKeys.Where(c => c.IsPrimary).Any();
+
+            if (!missingPrimary && !hasPrimary && !dBRecord.SchemaDescriptor.HasOutboundPrimaryKey && !dBRecord.IsPartial)
             {
                 diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.NotPartial, dBRecord));
+            }
+            else if (!dBRecord.IsPartial && dBRecord.Properties.Where(p => p.IsAutoGuidPrimary).Any())
+            {
+                diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.NotPartialAutoGuid, dBRecord));
             }
 
             var duplicatePKIndexes = dBRecord.Properties
@@ -57,7 +72,7 @@ namespace DNTGenerator.Verifier
                     new KeyValuePair<string, string?>("UniqueNonIDName", dBRecord.GetUniqueNonIDName())));
             }
 
-            if (!hasPrimary && !dBRecord.SchemaDescriptor.HasOutboundPrimaryKey && dBRecord.SchemaDescriptor.PrimaryKeyName is null)
+            if (!missingPrimary && !hasPrimary && !dBRecord.SchemaDescriptor.HasOutboundPrimaryKey && dBRecord.SchemaDescriptor.PrimaryKeyName is null)
             {
                 duplicatePKIndexes = dBRecord.Properties
                     .Where(i => i.Name.ToLowerInvariant() == "id");
@@ -88,9 +103,17 @@ namespace DNTGenerator.Verifier
                 }
             }
 
-            if (dBRecord.SchemaDescriptor.PrimaryKeyName is not null && primaryKeysCompound.Any())
+            if (primaryKeysIndex.Count() + primaryKeysCompound.Count() > 0)
             {
-                diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.MultiplePrimaryKeysSchemaArgument, dBRecord.SchemaDescriptor.PKNameLocation, "Schema"));
+                if (dBRecord.SchemaDescriptor.PrimaryKeyName is not null && dBRecord.SchemaDescriptor.PKNameLocation != Location.None)
+                {
+                    diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.ReservedGeneratedPKNameSchemaArgument, dBRecord.SchemaDescriptor.PKNameLocation, "Schema"));
+                }
+
+                if (dBRecord.SchemaDescriptor.PrimaryKeyGuid is not null && dBRecord.SchemaDescriptor.PKGuidLocation != Location.None)
+                {
+                    diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.ReservedGeneratedPKGuidSchemaArgument, dBRecord.SchemaDescriptor.PKGuidLocation, "Schema"));
+                }
             }
 
             var propertyNames = dBRecord.Properties.Select(p => p.Name.ToLowerInvariant());
@@ -108,9 +131,9 @@ namespace DNTGenerator.Verifier
 
             foreach (var index in dBRecord.Properties)
             {
-                if (index.IsAuto)
+                if (!missingPrimary && index.IsAuto)
                 {
-                    if (!index.Symbol.IsNumeric())
+                    if (!index.IsAutoGuidPrimary && !index.Symbol.IsNumeric())
                     {
                         diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.AutoIncrementNotNumeric, index));
                     }

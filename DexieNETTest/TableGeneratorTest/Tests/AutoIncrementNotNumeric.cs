@@ -16,6 +16,24 @@ namespace DNTGeneratorTest.Tests
         }
 
         [Fact]
+        public async Task AutoIncrementNotNumericGuidClass()
+        {
+            var test = @$"
+using DexieNET;
+using System;
+
+namespace Test
+{{
+    public partial class Person : IDBStore
+    {{
+        [Index(IsPrimary = true, IsAuto = true)] Guid? PKey {{ get; set; }}
+    }}
+}}
+";
+            await Fixer.VerifyAnalyzerAsync(test);
+        }
+
+        [Fact]
         public async Task AutoIncrementNotNumericClass()
         {
             var test = @$"
@@ -29,6 +47,24 @@ namespace Test
 
         [Index(IsPrimary = true, IsAuto = true)] string? {{|{GeneratorDiagnostic.AutoIncrementNotNumeric.Id}:ID|}} {{ get; set; }}
     }}
+}}
+";
+            await Fixer.VerifyAnalyzerAsync(test);
+        }
+
+        [Fact]
+        public async Task AutoIncrementNotNumericGuidRecord()
+        {
+            var test = @$"
+using DexieNET;
+using System;
+
+namespace Test
+{{
+    public partial record Person
+    (
+        [property: Index(IsPrimary = true, IsAuto = true)] Guid? PKey
+    ) : IDBStore;
 }}
 ";
             await Fixer.VerifyAnalyzerAsync(test);

@@ -161,7 +161,6 @@ namespace DexieNET
         public Type? UpdateStore { get; set; }
         public string PrimaryKeyName { get; set; }
         public bool PrimaryKeyGuid { get; set; }
-
         public bool OutboundPrimaryKey { get; set; }
 
         /// <summary>

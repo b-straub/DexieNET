@@ -182,5 +182,36 @@ namespace Test
 ";
             await Fixer.VerifyCodeFixAsync(test, fix);
         }
+
+        [Fact]
+        public async Task RecordNotPartialWithAutoGuidFix()
+        {
+            var test = @$"
+using DexieNET;
+using System;
+
+namespace Test
+{{
+    public record {{|{GeneratorDiagnostic.NotPartialAutoGuid.Id}:Person|}}
+    (
+        [property: Index(IsPrimary = true, IsAuto = true)] Guid? ID = null
+    ) : IDBStore;
+}}
+";
+
+            var fix = @"
+using DexieNET;
+using System;
+
+namespace Test
+{
+    public partial record Person
+    (
+        [property: Index(IsPrimary = true, IsAuto = true)] Guid? ID = null
+    ) : IDBStore;
+}
+";
+            await Fixer.VerifyCodeFixAsync(test, fix);
+        }
     }
 }

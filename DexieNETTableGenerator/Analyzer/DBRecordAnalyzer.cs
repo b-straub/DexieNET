@@ -33,14 +33,17 @@ namespace DNTGenerator.Analyzer
         public static DiagnosticDescriptor[] Diagnostics =
         {
             GeneratorDiagnostic.NotPartial,
+            GeneratorDiagnostic.NotPartialAutoGuid,
             GeneratorDiagnostic.AutoIncrementNotNullable,
             GeneratorDiagnostic.AutoIncrementNotNumeric,
+            GeneratorDiagnostic.AutoWithoutPrimaryKeyArgument,
             GeneratorDiagnostic.MultiEntryNotIEnumerable,
             GeneratorDiagnostic.NonMultiEntryNotArray,
             GeneratorDiagnostic.DuplicatePrimaryKeyMember,
             GeneratorDiagnostic.DuplicatePrimaryKeySchemaArgument,
             GeneratorDiagnostic.MultiplePrimaryKeysArgument,
-            GeneratorDiagnostic.MultiplePrimaryKeysSchemaArgument,
+            GeneratorDiagnostic.ReservedGeneratedPKNameSchemaArgument,
+            GeneratorDiagnostic.ReservedGeneratedPKGuidSchemaArgument,
             GeneratorDiagnostic.ReservedPrimaryKeyNameMember,
             GeneratorDiagnostic.ReservedPrimaryKeyNameSchemaArgument,
             GeneratorDiagnostic.CompoundIndexNotFound,

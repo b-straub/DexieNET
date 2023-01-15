@@ -26,6 +26,7 @@ using System;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace DNTGenerator.CodeFix
 {
@@ -38,7 +39,9 @@ namespace DNTGenerator.CodeFix
             {
                 return ImmutableArray.Create(GeneratorDiagnostic.DuplicatePrimaryKeySchemaArgument.Id,
                     GeneratorDiagnostic.MultiplePrimaryKeysArgument.Id,
-                    GeneratorDiagnostic.MultiplePrimaryKeysSchemaArgument.Id,
+                    GeneratorDiagnostic.AutoWithoutPrimaryKeyArgument.Id,
+                    GeneratorDiagnostic.ReservedGeneratedPKNameSchemaArgument.Id,
+                    GeneratorDiagnostic.ReservedGeneratedPKGuidSchemaArgument.Id,
                     GeneratorDiagnostic.ReservedPrimaryKeyNameSchemaArgument.Id);
             }
         }
@@ -81,6 +84,8 @@ namespace DNTGenerator.CodeFix
                 throw new ArgumentNullException(nameof(argumentSyntax), nameof(argumentSyntax));
             }
 
+            var argumentListDeclaration = node.FirstAncestorOrSelf<AttributeArgumentListSyntax>();
+
             switch (diagnostic.Descriptor)
             {
                 case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.ReservedPrimaryKeyNameSchemaArgument):
@@ -105,8 +110,28 @@ namespace DNTGenerator.CodeFix
                        diagnostic);
 
                     break;
+                case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.AutoWithoutPrimaryKeyArgument):
+
+                    if (argumentListDeclaration is null)
+                    {
+                        throw new ArgumentNullException(nameof(argumentListDeclaration), nameof(argumentListDeclaration));
+                    }
+
+                    codeFixMessage = diagnostic.Descriptor.CodeFixMessage("Argument");
+                    if (string.IsNullOrEmpty(codeFixMessage))
+                    {
+                        throw new ArgumentException("No title for: " + diagnostic.Descriptor.Id);
+                    }
+
+                    context.RegisterCodeFix(
+                        CodeAction.Create(
+                            title: codeFixMessage,
+                            createChangedDocument: _ => Task.FromResult(context.Document.AddAttributeArgument(root, argumentListDeclaration, "IsPrimary = true")),
+                            equivalenceKey: diagnostic.Descriptor.Id),
+                        diagnostic);
+
+                    break;
                 default:
-                    var argumentListDeclaration = node.FirstAncestorOrSelf<AttributeArgumentListSyntax>();
 
                     if (argumentListDeclaration is null)
                     {

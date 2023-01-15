@@ -18,6 +18,7 @@ limitations under the License.
 
 using DNTGenerator.Helpers;
 using DNTGenerator.Matcher;
+using DNTGenerator.Query;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -31,7 +32,7 @@ namespace DNTGenerator.Verifier
         public static string IndexAttributeName = DexieNETNamespace + "." + "IndexAttribute";
         public static string SchemaAttributeName = DexieNETNamespace + "." + "SchemaAttribute";
 
-        public record IndexDescriptor(IPropertySymbol Symbol, string Name, string TypeName, Location AttributeLocation, Location PKLocation, string? IndexConverter, bool IsIndex, bool IsPrimary = false, bool IsAuto = false, bool IsUniqe = false, bool IsMultiEntry = false);
+        public record IndexDescriptor(IPropertySymbol Symbol, string Name, string TypeName, Location AttributeLocation, Location PKLocation, string? IndexConverter, bool IsIndex, bool IsPrimary = false, bool IsAuto = false, bool IsAutoGuidPrimary = false, bool IsUniqe = false, bool IsMultiEntry = false);
         public class IndexDescriptorComparer : IComparer<IndexDescriptor>
         {
             public int Compare(IndexDescriptor x, IndexDescriptor y)
@@ -50,7 +51,7 @@ namespace DNTGenerator.Verifier
             }
         }
 
-        public record struct SchemaDescriptor(string StoreName, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, bool PrimaryKeyGuid, Location PKNameLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, Location Location);
+        public record struct SchemaDescriptor(string StoreName, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, Location PKNameLocation, bool? PrimaryKeyGuid, Location PKGuidLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, Location Location);
 
         public static SchemaDescriptor GetSchemaDescriptor(this INamedTypeSymbol symbol, bool isInterface, Compilation compilation, CancellationToken cancellationToken)
         {
@@ -60,7 +61,7 @@ namespace DNTGenerator.Verifier
 
             if (attr is null)
             {
-                return new(storeName, null, null, true, Location.None, false, false, Location.None);
+                return new(storeName, null, null, Location.None, null, Location.None, false, false, Location.None);
             }
 
             var node = attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken);
@@ -75,18 +76,25 @@ namespace DNTGenerator.Verifier
 
             string? primaryKeyName = null;
             Location? pkNameLocation = null;
+            bool? primaryKeyGuid = null;
+            Location? pkGuidLocation = null;
 
             if (attr.NamedArguments.Where(na => na.Key == "PrimaryKeyName").Any())
             {
                 primaryKeyName = (string?)attr.NamedArguments.Where(na => na.Key == "PrimaryKeyName").FirstOrDefault().Value.Value;
                 pkNameLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "PrimaryKeyName").FirstOrDefault().GetLocation();
             }
-            var primaryKeyGuid = (bool?)attr.NamedArguments.Where(na => na.Key == "PrimaryKeyGuid").FirstOrDefault().Value.Value;
+
+            if (attr.NamedArguments.Where(na => na.Key == "PrimaryKeyGuid").Any())
+            {
+                primaryKeyGuid = ((bool?)attr.NamedArguments.Where(na => na.Key == "PrimaryKeyGuid").FirstOrDefault().Value.Value);
+                pkGuidLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "PrimaryKeyGuid").FirstOrDefault().GetLocation();
+            }
 
             var outboundPrimaryKey = ((bool?)attr.NamedArguments.Where(na => na.Key == "OutboundPrimaryKey").FirstOrDefault().Value.Value).True();
 
             var location = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
-            return new(storeAttributeName ?? storeName, updateStore, primaryKeyName, primaryKeyGuid ?? true, pkNameLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, location);
+            return new(storeAttributeName ?? storeName, updateStore, primaryKeyName, pkNameLocation ?? Location.None, primaryKeyGuid, pkGuidLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, location);
         }
 
         public static IEnumerable<(IEnumerable<(string Name, Location Location)> Keys, bool IsPrimary, Location PKLocation)> GetCompoundKeys(this INamedTypeSymbol symbol, Compilation compilation, CancellationToken cancellationToken)
@@ -141,9 +149,14 @@ namespace DNTGenerator.Verifier
                 !record.CompoundKeys.Where(p => p.IsPrimary).Any();
         }
 
+        public static bool HasGeneratedGuidPrimaryKey(this DBRecord record)
+        {
+            return record.HasGeneratedPrimaryKey() && !record.SchemaDescriptor.PrimaryKeyGuid.False();
+        }
+
         public static bool HasGuidPrimaryKey(this DBRecord record)
         {
-            return record.HasGeneratedPrimaryKey() && record.SchemaDescriptor.PrimaryKeyGuid;
+            return record.HasGeneratedGuidPrimaryKey() || record.Properties.Where(p => p.IsAutoGuidPrimary).Any();
         }
 
         public static bool HasGeneratedPrimaryKeys(this IEnumerable<DBRecord> records)
@@ -194,12 +207,12 @@ namespace DNTGenerator.Verifier
                 {
                     if (record.SchemaDescriptor.PrimaryKeyName is null)
                     {
-                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid ? "++ID" 
+                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid.True() ? "++ID" 
                             : "ID";
                     }
                     else
                     {
-                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid ? $"++{record.SchemaDescriptor.PrimaryKeyName}"
+                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid.True() ? $"++{record.SchemaDescriptor.PrimaryKeyName}"
                             : record.SchemaDescriptor.PrimaryKeyName;
                     }
                 }
@@ -219,7 +232,7 @@ namespace DNTGenerator.Verifier
             {
                 var name = i.Name.ToLowerInvariant();
 
-                if (i.IsAuto)
+                if (i.IsAuto && !i.IsAutoGuidPrimary)
                 {
                     return "++" + name;
                 }
@@ -368,12 +381,16 @@ namespace DNTGenerator.Verifier
             var pkLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsPrimary").FirstOrDefault()?.GetLocation();
 
             var isAuto = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsAuto").FirstOrDefault().Value.Value).True();
+            pkLocation ??= arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsAuto").FirstOrDefault()?.GetLocation();
+
+            var isAutoGuidPrimary = (isPrimary && isAuto && symbol.IsGuidType());
+         
             var isUnique = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsUnique").FirstOrDefault().Value.Value).True();
             var isMultiEntry = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsMultiEntry").FirstOrDefault().Value.Value).True();
             var indexConverter = symbol.GetIndexConverter(compilation);
 
             var attrLocation = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
-            var id = new IndexDescriptor(symbol, name, typeName, attrLocation, pkLocation ?? Location.None, indexConverter, true, isPrimary, isAuto, isUnique, isMultiEntry);
+            var id = new IndexDescriptor(symbol, name, typeName, attrLocation, pkLocation ?? Location.None, indexConverter, true, isPrimary, isAuto, isAutoGuidPrimary, isUnique, isMultiEntry);
 
             return id;
         }
