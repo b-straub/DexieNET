@@ -125,9 +125,8 @@ namespace DNTGenerator.Matcher
             }
 
             INamedTypeSymbol? constructedFromSymbol = context.Compilation.GetTypeByMetadataName(constructedFromName);
-            INamedTypeSymbol? symbol = context.SemanticModel.GetSymbolInfo(node, context.CancellationToken).Symbol?.ContainingSymbol as INamedTypeSymbol;
 
-            if (symbol is null)
+            if (context.SemanticModel.GetSymbolInfo(node, context.CancellationToken).Symbol?.ContainingSymbol is not INamedTypeSymbol symbol)
             {
                 return false;
             }
