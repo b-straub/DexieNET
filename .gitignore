@@ -18,3 +18,5 @@ payload.json
 DexieNETHelloWorld
 Nuget
 DexieNET/npm/src/*.js
+DexieNET/npm/dexie-cloud.json
+DexieNET/npm/dexie-cloud.key
