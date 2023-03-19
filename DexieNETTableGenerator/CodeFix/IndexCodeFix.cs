@@ -115,12 +115,7 @@ namespace DNTGenerator.CodeFix
                         break;
                     case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.ReservedPrimaryKeyNameMember):
 
-                        var parameter = diagnostic.CodeFixProperty("UniqueNonIDName");
-                        if (parameter is null)
-                        {
-                            throw new ArgumentException("No parameter for: " + diagnostic.Descriptor.Id);
-                        }
-
+                        var parameter = diagnostic.CodeFixProperty("UniqueNonIDName") ?? throw new ArgumentException("No parameter for: " + diagnostic.Descriptor.Id);
                         codeFixMessage = diagnostic.Descriptor.CodeFixMessage(parameter);
                         if (string.IsNullOrEmpty(codeFixMessage))
                         {
@@ -236,12 +231,7 @@ namespace DNTGenerator.CodeFix
                     throw new ArgumentNullException(nameof(identifierNameSyntax), nameof(identifierNameSyntax));
                 }
 
-                var parameter = diagnostic.CodeFixProperty("Attribute");
-                if (parameter is null)
-                {
-                    throw new ArgumentException("No parameter for: " + diagnostic.Descriptor.Id);
-                }
-
+                var parameter = diagnostic.CodeFixProperty("Attribute") ?? throw new ArgumentException("No parameter for: " + diagnostic.Descriptor.Id);
                 codeFixMessage = diagnostic.Descriptor.CodeFixMessage(parameter);
                 if (string.IsNullOrEmpty(codeFixMessage))
                 {

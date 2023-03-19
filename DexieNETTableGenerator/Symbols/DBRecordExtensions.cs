@@ -64,11 +64,7 @@ namespace DNTGenerator.Verifier
                 return new(storeName, null, null, Location.None, null, Location.None, false, false, Location.None);
             }
 
-            var node = attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken);
-            if (node is null)
-            {
-                throw new InvalidOperationException($"Invalid Schema name for: {nameof(symbol)}");
-            }
+            var node = (attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken)) ?? throw new InvalidOperationException($"Invalid Schema name for: {nameof(symbol)}");
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
             var storeAttributeName = (string?)attr.NamedArguments.Where(na => na.Key == "StoreName").FirstOrDefault().Value.Value;
@@ -105,12 +101,7 @@ namespace DNTGenerator.Verifier
 
             foreach (var attr in attrs)
             {
-                var node = attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken);
-                if (node is null)
-                {
-                    throw new InvalidOperationException($"Invalid CompoundKey name for: {nameof(symbol)}");
-                }
-
+                var node = (attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken)) ?? throw new InvalidOperationException($"Invalid CompoundKey name for: {nameof(symbol)}");
                 var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
                 if (arguments.Count() < attr.ConstructorArguments.Length)
                 {
@@ -278,13 +269,7 @@ namespace DNTGenerator.Verifier
                 return record.SchemaDescriptor.StoreName.ToLowerInvariant();
             }
 
-            var baseStore = records.Where(r => r.Symbol.Equals(record.SchemaDescriptor.UpdateStore, SymbolEqualityComparer.Default)).FirstOrDefault();
-
-            if (baseStore is null)
-            {
-                throw new InvalidOperationException($"Invalid UpdateStore for: {nameof(record.Symbol.Name)}");
-            }
-
+            var baseStore = records.Where(r => r.Symbol.Equals(record.SchemaDescriptor.UpdateStore, SymbolEqualityComparer.Default)).FirstOrDefault() ?? throw new InvalidOperationException($"Invalid UpdateStore for: {nameof(record.Symbol.Name)}");
             return baseStore.SchemaDescriptor.StoreName.ToLowerInvariant();
         }
 
@@ -369,12 +354,7 @@ namespace DNTGenerator.Verifier
                 return generated ? null : new(symbol, name, typeName, Location.None, Location.None, null, false);
             }
 
-            var node = attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken);
-            if (node is null)
-            {
-                throw new InvalidOperationException($"Invalid CompoundKey name for: {nameof(symbol)}");
-            }
-
+            var node = (attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken)) ?? throw new InvalidOperationException($"Invalid CompoundKey name for: {nameof(symbol)}");
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
             var isPrimary = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsPrimary").FirstOrDefault().Value.Value).True();

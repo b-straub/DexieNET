@@ -40,13 +40,7 @@ namespace DNTGenerator.CodeFix
                     }
 
                     var recordDeclaration = (RecordDeclarationSyntax)typeDeclaration;
-                    var parameterList = recordDeclaration.ParameterList;
-
-                    if (parameterList is null)
-                    {
-                        throw new ArgumentException("No record", nameof(typeDeclaration));
-                    }
-
+                    var parameterList = recordDeclaration.ParameterList ?? throw new ArgumentException("No record", nameof(typeDeclaration));
                     var newParameters = parameterList.Parameters.RemoveKeepTrivia(parameter);
 
                     var newParameterList = parameterList.WithParameters(newParameters);
@@ -56,13 +50,7 @@ namespace DNTGenerator.CodeFix
 
                 case SyntaxKind.PropertyDeclaration:
 
-                    var property = (PropertyDeclarationSyntax)typeSyntax;
-
-                    if (property is null)
-                    {
-                        throw new ArgumentException("No property", nameof(typeDeclaration));
-                    }
-
+                    var property = (PropertyDeclarationSyntax)typeSyntax ?? throw new ArgumentException("No property", nameof(typeDeclaration));
                     var members = typeDeclaration.Members;
 
                     var newMembers = members.RemoveKeepTrivia(property);
@@ -140,7 +128,7 @@ namespace DNTGenerator.CodeFix
             arguments = arguments.Any() ? newArgument + ", " + arguments : newArgument;
 
             arguments = $"({arguments})";
-            var argumentList = SyntaxFactory.ParseAttributeArgumentList(arguments);
+            var argumentList = SyntaxFactory.ParseAttributeArgumentList(arguments) ?? throw new InvalidOperationException("ArgumentList can not be null!");
             var newArgumentListDeclaration = argumentListDeclaration.WithArguments(argumentList.Arguments);
 
             return document.WithSyntaxRoot(root.ReplaceNode(argumentListDeclaration, newArgumentListDeclaration));
@@ -164,21 +152,12 @@ namespace DNTGenerator.CodeFix
             switch (syntaxNode.Kind())
             {
                 case SyntaxKind.Parameter:
-                    var parameter = (ParameterSyntax)syntaxNode;
-                    if (parameter is null)
-                    {
-                        throw new ArgumentNullException(syntaxNode.ToString());
-                    }
+                    var parameter = ((ParameterSyntax)syntaxNode ?? throw new InvalidCastException("Failed to cast to ParameterSyntax!")) ?? throw new ArgumentNullException(syntaxNode.ToString());
                     newNameToken = SyntaxFactory.Identifier(name).WithTriviaFrom(parameter.Identifier);
                     newSyntaxNode = parameter.WithIdentifier((SyntaxToken)newNameToken);
                     break;
                 case SyntaxKind.PropertyDeclaration:
-                    var property = (PropertyDeclarationSyntax)syntaxNode;
-                    if (property is null)
-                    {
-                        throw new ArgumentNullException(syntaxNode.ToString());
-                    }
-
+                    var property = (PropertyDeclarationSyntax)syntaxNode ?? throw new InvalidCastException("Failed to cast to PropertyDeclarationSyntax!");
                     newNameToken = SyntaxFactory.Identifier(name).WithTriviaFrom(property.Identifier);
                     newSyntaxNode = property.WithIdentifier((SyntaxToken)newNameToken);
                     break;
@@ -255,13 +234,7 @@ namespace DNTGenerator.CodeFix
 
         public static Document ReplaceType(this Document document, SyntaxNode root, SyntaxNode syntaxNode, string newType)
         {
-            var type = SyntaxFactory.ParseTypeName(newType);
-
-            if (type is null)
-            {
-                throw new ArgumentNullException(newType.ToString());
-            }
-
+            var type = SyntaxFactory.ParseTypeName(newType) ?? throw new ArgumentNullException(newType.ToString());
             SyntaxNode? newNode = null;
 
             switch (syntaxNode.Kind())

@@ -90,13 +90,7 @@ namespace {namespaceName}
             {
                 if (record.HasGeneratedPrimaryKey() || record.HasGuidPrimaryKey())
                 {
-                    var primaryIndexName = record.GetPrimaryIndexName(false);
-
-                    if (primaryIndexName is null)
-                    {
-                        throw new InvalidOperationException($"No primaryIndexName for {record.Symbol.Name}.");
-                    }
-
+                    var primaryIndexName = record.GetPrimaryIndexName(false) ?? throw new InvalidOperationException($"No primaryIndexName for {record.Symbol.Name}.");
                     if (record.HasGuidPrimaryKey())
                     {
                         if (record.Type is DBRecord.RecordType.Record || record.Type is DBRecord.RecordType.RecordStruct || record.Type is DBRecord.RecordType.Struct)
