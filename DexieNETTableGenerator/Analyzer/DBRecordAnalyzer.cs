@@ -33,6 +33,8 @@ namespace DNTGenerator.Analyzer
         public static DiagnosticDescriptor[] Diagnostics =
         {
             GeneratorDiagnostic.NotPartial,
+            GeneratorDiagnostic.NotPartialAutoGuid,
+            GeneratorDiagnostic.NotPartialCloud,
             GeneratorDiagnostic.AutoIncrementNotNullable,
             GeneratorDiagnostic.AutoIncrementNotAllowedType,
             GeneratorDiagnostic.AutoWithoutPrimaryKeyArgument,

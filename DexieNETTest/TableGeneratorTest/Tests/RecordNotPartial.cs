@@ -192,7 +192,7 @@ using System;
 
 namespace Test
 {{
-    public record {{|{GeneratorDiagnostic.NotPartial.Id}:Person|}}
+    public record {{|{GeneratorDiagnostic.NotPartialAutoGuid.Id}:Person|}}
     (
         [property: Index(IsPrimary = true, IsAuto = true)] string? ID = null
     ) : IDBStore;
@@ -224,7 +224,7 @@ using System;
 namespace Test
 {{
     [Schema(CloudSync = true)]
-    public record {{|{GeneratorDiagnostic.NotPartial.Id}:Person|}}
+    public record {{|{GeneratorDiagnostic.NotPartialCloud.Id}:Person|}}
     (
         [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
     ) : IDBStore;
