@@ -18,20 +18,39 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-import Dexie, {
-    DBCore, DBCoreMutateRequest, DBCoreMutateResponse, DBCoreTable, Middleware
-} from 'dexie';
+import Dexie from 'dexie';
 
-export class DB extends Dexie {
-    constructor(name: string) {
-        super(name);
+import DexieCloudDB from 'dexie';
+import DexieCloud from "dexie-cloud-addon";
+import { DexieCloudOptions } from "dexie-cloud-addon/dist/types/DexieCloudOptions";
+import { Observable, Subscription } from 'rxjs';
+
+// @ts-ignore
+export class DB extends DexieCloudDB {
+    constructor(name: string, cloudSync: boolean) {
+        if (cloudSync) {
+            super(name, { addons: [DexieCloud] });
+        }
+        else {
+            super(name);
+        }
     }
 }
 
-export function Create(name: string): DB {
-    let db = new DB(name);
-    db.use(NETMiddleware);
+export function Create(name: string, cloudSync: boolean): DB {
+    let db = new DB(name, cloudSync);
     return db;
+}
+
+export function ConfigureCloud(db: DB, cloudOptions: DexieCloudOptions): string | null {
+    try {
+        db.cloud.configure(cloudOptions);
+    }
+    catch (err) {
+        return err.message
+    }
+
+    return null;
 }
 
 export function Delete(name: string): Promise<void> {
@@ -46,45 +65,20 @@ export function Version(db: DB): number {
     return db.verno;
 }
 
-const NETMiddleware: Middleware<DBCore> = {
-    stack: 'dbcore',
-    name: 'NETMiddleware',
-    create: createNETMiddleware,
+export function UnSubscribeJSObservable(disposable: Subscription): void {
+
+    disposable.unsubscribe();
 }
 
-// middleware to remove c# null values for autoincrement primary keys
-// this will allow inbound autoincrement keys for c# objects
-function createNETMiddleware(core: DBCore): DBCore {
-    return {
-        ...core,
-        table(tableName: string): DBCoreTable {
-            const table = core.table(tableName)
-            return {
-                ...table,
-                async mutate(req: DBCoreMutateRequest): Promise<DBCoreMutateResponse> {
-                    if (req.type === 'add') {
-                        const addRequest = { ...req };
-                        const { primaryKey } = table.schema;
+export function DotNetObservable<T>(observable: Observable<T>, action: (input: T) => any, dotnetRef: any): Subscription {
 
-                        if (primaryKey.autoIncrement && primaryKey.keyPath != null) {
-                            const keys = new Array<string>().concat(primaryKey.keyPath);
-                            keys.map(k => {
-                                req.values = req.values.map(v => {
-                                    if (typeof v === 'object' && v.hasOwnProperty(k)) {
-                                        if (v[k] === null) {
-                                            delete v[k];
-                                        }
-                                    }
-                                })
-                            });
-                        }
-
-                        return table.mutate(addRequest);
-                    }
-
-                    return table.mutate(req);
-                }
+    return observable.subscribe({
+        next: (v) => {
+            if (v != undefined) {
+                dotnetRef.invokeMethod('OnNext', action(v))
             }
-        }
-    };
+        },
+        error: (e) => dotnetRef.invokeMethod('OnError', e.message),
+        complete: () => dotnetRef.invokeMethod('OnCompleted')
+    });
 }

@@ -1,0 +1,107 @@
+﻿@inherits OwningComponentBase
+
+<MudStack Row=@true>
+    <MudIcon Icon=@_statusIcon />
+    <MudIcon Icon=@_phaseIcon />
+</MudStack>
+<MudSpacer />
+<HandleLogin />
+<MudSpacer />
+
+@code {
+    [Inject]
+    IDialogService? DialogService { get; set; }
+
+    [Inject]
+    DexieCloudService? Service { get; set; }
+
+    private string _statusIcon = @Icons.Material.Outlined.QuestionMark;
+    private string _phaseIcon = @Icons.Material.Outlined.QuestionMark;
+    private IDisposable? _sDisposable;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        ArgumentNullException.ThrowIfNull(Service);
+        ArgumentNullException.ThrowIfNull(DialogService);
+
+        _sDisposable = Service
+            .Select(async c =>
+            {
+                switch (c)
+                {
+                    case DBChangedMessage.SyncState:
+                        if (Service.SyncState is not null)
+                        {
+                            _statusIcon = GetStatusIcon(Service.SyncState);
+                            _phaseIcon = GetPhaseIcon(Service.SyncState);
+                            await InvokeAsync(StateHasChanged);
+                        }
+                        break;
+                    case DBChangedMessage.UIInteraction:
+                        ArgumentNullException.ThrowIfNull(Service.DB);
+                        ArgumentNullException.ThrowIfNull(Service.UIInteraction);
+                        if (Service.DB is not null && Service.UIInteraction is not null)
+                        {
+                            await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction, DialogService);
+                        }
+                        break;
+                    case DBChangedMessage.Closed:
+                        await OpenDB();
+                        break;
+                }
+            })
+        .Subscribe();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _sDisposable?.Dispose();
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private async Task OpenDB()
+    {
+        ArgumentNullException.ThrowIfNull(DialogService);
+        ArgumentNullException.ThrowIfNull(Service);
+
+        await Service.OpenDB();
+        ArgumentNullException.ThrowIfNull(Service.DB);
+
+        Service.ConfigureCloud("https://zjkqksqdy.dexie.cloud");
+    }
+
+    private string GetPhaseIcon(SyncState s)
+    {
+        return s.Phase switch
+        {
+            SyncState.SyncStatePhase.INITIAL => Icons.Material.Outlined.QuestionMark,
+            SyncState.SyncStatePhase.OFFLINE => Icons.Material.Outlined.CloudOff,
+            SyncState.SyncStatePhase.NOT_IN_SYNC => Icons.Material.Outlined.CloudOff,
+            SyncState.SyncStatePhase.IN_SYNC => Icons.Material.Outlined.CloudDone,
+            SyncState.SyncStatePhase.PULLING => Icons.Material.Outlined.CloudDownload,
+            SyncState.SyncStatePhase.PUSHING => Icons.Material.Outlined.CloudUpload,
+            SyncState.SyncStatePhase.ERROR => Icons.Material.Outlined.CloudOff,
+            _ => throw new ArgumentOutOfRangeException(nameof(s.Phase))
+        };
+    }
+
+    private string GetStatusIcon(SyncState s)
+    {
+        return s.Status switch
+        {
+            SyncState.SyncStatus.NOT_STARTED => Icons.Material.Filled.QuestionMark,
+            SyncState.SyncStatus.CONNECTING => Icons.Material.Filled.SignalWifi0Bar,
+            SyncState.SyncStatus.CONNECTED => Icons.Material.Outlined.SignalWifi4Bar,
+            SyncState.SyncStatus.DISCONNECTED => Icons.Material.Filled.SignalWifiStatusbarConnectedNoInternet4,
+            SyncState.SyncStatus.ERROR => Icons.Material.Filled.SignalWifiOff,
+            SyncState.SyncStatus.OFFLINE => Icons.Material.Filled.SignalWifiOff,
+            _ => throw new ArgumentOutOfRangeException(nameof(s.Status))
+        };
+    }
+}

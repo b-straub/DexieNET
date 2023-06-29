@@ -1,0 +1,116 @@
+﻿@using DexieNET
+@inherits RxBLComponent<ToDoListMemberService>
+
+<MudTd DataLabel="Member">
+    <MudText>@MemberName(Member)</MudText>
+</MudTd>
+<MudTd DataLabel="Role">
+    <RxMudBlazorLight.Inputs.Select.MudSelectAsyncPRx Parameter=@Member RxInputGroupAsyncFactory=@(() => Service.MemberRoleSelection)
+        HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
+</MudTd>
+<MudTd>
+    <MudFabAsyncPRx Color=@(_currentState is MemberState.ACCEPT || _currentState is MemberState.REINVITE ? Color.Success : Color.Error)
+        StartIcon=@GetMemberStateIcon() Size="Size.Small" ConfirmExecution=@(async () => await ConfirmChangeMember()) RxCommandAsyncFactory=@(() => Service.ChangeMemberState) Parameter=@Member />
+</MudTd>
+
+@code {
+    [Inject]
+    private DexieCloudService? DBService { get; set; }
+
+    [Inject]
+    private IDialogService? DialogService { get; set; }
+
+    [Parameter]
+    public ToDoDBList? List { get; set; }
+
+    [Parameter]
+    [NotNull]
+    public Member? Member { get; set; }
+
+    private MemberState _currentState = MemberState.NONE;
+
+    protected override void OnInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(Member);
+
+        _currentState = Service.GetMemberState(Member);
+
+        base.OnInitialized();
+    }
+
+    private string MemberName(Member? member)
+    {
+        ArgumentNullException.ThrowIfNull(DBService?.DB);
+        ArgumentNullException.ThrowIfNull(member);
+
+        var name = member.UserId;
+
+        name ??= member.Email;
+        name ??= "Unknown";
+
+        if (member.UserId == DBService.DB.CurrentUserId())
+        {
+            name += " (Me)";
+        }
+
+        return name;
+    }
+
+    private string GetMemberStateIcon()
+    {
+        return _currentState switch
+        {
+            MemberState.DELETE => Icons.Material.Outlined.Delete,
+            MemberState.LEAVE => Icons.Material.Outlined.ExitToApp,
+            MemberState.ACCEPT => Icons.Material.Outlined.PersonAdd,
+            MemberState.REINVITE => Icons.Material.Outlined.AddCircleOutline,
+            MemberState.OWNER => Icons.Material.Outlined.People,
+            MemberState.NONE => Icons.Material.Outlined.Error,
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+        };
+    }
+
+    private async Task<bool> ConfirmChangeMember()
+    {
+        ArgumentNullException.ThrowIfNull(DialogService);
+
+        var message = _currentState switch
+        {
+            MemberState.DELETE => "Delete Member",
+            MemberState.LEAVE => "Leave List",
+            MemberState.ACCEPT => "Accept Invite",
+            MemberState.REINVITE => "Invite again",
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+        };
+
+        var button = _currentState switch
+        {
+            MemberState.DELETE => "Delete",
+            MemberState.LEAVE => "Leave",
+            MemberState.ACCEPT => "Accept",
+            MemberState.REINVITE => "Invite",
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+        };
+
+        bool successOnConfirm = _currentState switch
+        {
+            MemberState.DELETE => false,
+            MemberState.LEAVE => false,
+            MemberState.ACCEPT => true,
+            MemberState.REINVITE => true,
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+        };
+
+        var parameters = new DialogParameters { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = successOnConfirm };
+        var dialog = DialogService.Show<ConfirmDialog>("Member", parameters);
+
+        var res = await dialog.Result;
+
+        if (res.Canceled)
+        {
+            return false;
+        }
+
+        return true;
+    }
+}

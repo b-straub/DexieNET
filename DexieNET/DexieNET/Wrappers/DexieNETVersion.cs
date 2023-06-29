@@ -31,13 +31,13 @@ namespace DexieNET
 
         internal Transaction Transaction { get; }
 
-        internal JSObject VersionJS { get; }
+        internal DexieJSObject VersionJS { get; }
 
         private readonly DotNetObjectReference<Version> _dotnetRef;
 
         private Func<Transaction, Task>? _upgrade;
 
-        public Version(DBBase db, Dictionary<string, string> stores, Dictionary<string, (string, string)> updateStores, IJSObjectReference reference)
+        public Version(DBBase db, Dictionary<string, string> stores, Dictionary<string, (string, string)> updateStores, IJSInProcessObjectReference reference)
         {
             VersionJS = new(db.DBBaseJS.Module, reference);
             _dotnetRef = DotNetObjectReference.Create(this);
@@ -50,7 +50,7 @@ namespace DexieNET
         [JSInvokable]
         public async ValueTask UpgradeCallback()
         {
-            Transaction.SetJSO(Transaction.Module.Invoke<IJSObjectReference>("CurrentTransaction"));
+            Transaction.SetReference(Transaction.Module.Invoke<IJSInProcessObjectReference>("CurrentTransaction"));
 
             if (_upgrade is not null)
             {
@@ -69,9 +69,9 @@ namespace DexieNET
         public async ValueTask Upgrade(Func<Transaction, Task> upgrade)
         {
             _upgrade = upgrade;
-            var reference = await VersionJS.Module.InvokeAsync<IJSObjectReference>("Upgrade", VersionJS.Reference, _dotnetRef);
+            var reference = await VersionJS.Module.InvokeAsync<IJSInProcessObjectReference>("Upgrade", VersionJS.Reference, _dotnetRef);
 
-            VersionJS.SetJSO(reference);
+            VersionJS.SetReference(reference);
         }
 
         public void Dispose()
@@ -120,7 +120,7 @@ namespace DexieNET
 
         public static async ValueTask<Version> Stores(this Version version)
         {
-            var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", version.Stores);
+            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", version.Stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
@@ -128,7 +128,7 @@ namespace DexieNET
         {
             Dictionary<string, string> stores = new();
 
-            if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToLowerInvariant(), out var store1))
+            if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToCamelCase(), out var store1))
             {
                 stores.Add(store1.StoreName, store1.Schema);
             }
@@ -137,7 +137,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T1)}.");
             }
 
-            var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", stores);
+            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
@@ -145,7 +145,7 @@ namespace DexieNET
         {
             Dictionary<string, string> stores = new();
 
-            if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToLowerInvariant(), out var store1))
+            if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToCamelCase(), out var store1))
             {
                 stores.Add(store1.StoreName, store1.Schema);
             }
@@ -154,7 +154,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T1)}.");
             }
 
-            if (version.UpdateStores.TryGetValue(typeof(T2).Name.ToLowerInvariant(), out var store2))
+            if (version.UpdateStores.TryGetValue(typeof(T2).Name.ToCamelCase(), out var store2))
             {
                 stores.Add(store2.StoreName, store2.Schema);
             }
@@ -163,7 +163,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T2)}.");
             }
 
-            var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", stores);
+            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
@@ -171,7 +171,7 @@ namespace DexieNET
         {
             Dictionary<string, string> stores = new();
 
-            if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToLowerInvariant(), out var store1))
+            if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToCamelCase(), out var store1))
             {
                 stores.Add(store1.StoreName, store1.Schema);
             }
@@ -180,7 +180,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T1)}.");
             }
 
-            if (version.UpdateStores.TryGetValue(typeof(T2).Name.ToLowerInvariant(), out var store2))
+            if (version.UpdateStores.TryGetValue(typeof(T2).Name.ToCamelCase(), out var store2))
             {
                 stores.Add(store2.StoreName, store2.Schema);
             }
@@ -189,7 +189,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T2)}.");
             }
 
-            if (version.UpdateStores.TryGetValue(typeof(T3).Name.ToLowerInvariant(), out var store3))
+            if (version.UpdateStores.TryGetValue(typeof(T3).Name.ToCamelCase(), out var store3))
             {
                 stores.Add(store3.StoreName, store3.Schema);
             }
@@ -198,7 +198,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T3)}.");
             }
 
-            var reference = await version.VersionJS.InvokeAsync<IJSObjectReference>("stores", stores);
+            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
     }

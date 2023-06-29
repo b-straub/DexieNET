@@ -110,7 +110,7 @@ namespace DexieNETTest.TestBase.Test
                 var persons = await tablePersons.ToArray();
                 student = (await tableStudents.ToArray()).FirstOrDefault();
 
-                return persons.Where(p => (int?)p.ID == student?.ID).Select(p => p.Age);
+                return persons.Where(p => (int?)p.Id == student?.Id).Select(p => p.Age);
             });
 
             int executionCountP = 0;
@@ -216,7 +216,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException(firstError);
             }
 
-            if (executionCountP != 4)
+            if (executionCountP != 5)
             {
                 throw new InvalidOperationException($"executionCountP : {executionCountP}-> LiveQuery failed.");
             }

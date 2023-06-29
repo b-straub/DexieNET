@@ -20,6 +20,7 @@ export function CurrentTransaction(): any | null {
     return Dexie.currentTransaction;
 }
 
+// @ts-ignore
 export function TopLevelTransaction(db: DB, tables: string[], mode: TransactionMode, dotnetRef: any): void {
     db.transaction(mode, tables, _ => dotnetRef.invokeMethod('TransactionCallback'));
 }

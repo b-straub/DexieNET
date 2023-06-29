@@ -52,6 +52,10 @@ namespace DNTGenerator.Verifier
             {
                 diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.NotPartialAutoGuid, dBRecord));
             }
+            else if (!dBRecord.IsPartial && dBRecord.SchemaDescriptor.HasCloudSync)
+            {
+                diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.NotPartialCloud, dBRecord));
+            }
 
             var duplicatePKIndexes = dBRecord.Properties
                 .Where(i => !i.IsPrimary && i.Name.ToLowerInvariant() == dBRecord.SchemaDescriptor.PrimaryKeyName?.ToLowerInvariant() &&
@@ -116,13 +120,21 @@ namespace DNTGenerator.Verifier
                 }
             }
 
-            var propertyNames = dBRecord.Properties.Select(p => p.Name.ToLowerInvariant());
+            var propertyNames = dBRecord.Properties.Select(p => p.Name.ToCamelCase());
+            string[] cloudKeys = { "realmId", "owner" };
 
             foreach (var (Keys, IsPrimary, Location) in dBRecord.CompoundKeys)
             {
                 foreach (var key in Keys)
                 {
-                    if (!propertyNames.Contains(key.Name))
+                    if (dBRecord.SchemaDescriptor.HasCloudSync)
+                    {
+                        if (!propertyNames.Contains(key.Name) && !cloudKeys.Contains(key.Name))
+                        {
+                            diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.CompoundIndexNotFound, key.Location, dBRecord.Symbol.Name));
+                        }
+                    }
+                    else if (!propertyNames.Contains(key.Name))
                     {
                         diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.CompoundIndexNotFound, key.Location, dBRecord.Symbol.Name));
                     }
@@ -135,7 +147,7 @@ namespace DNTGenerator.Verifier
                 {
                     if (!index.IsAutoGuidPrimary && !index.Symbol.IsNumeric())
                     {
-                        diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.AutoIncrementNotNumeric, index));
+                        diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.AutoIncrementNotAllowedType, index));
                     }
                     else if (index.Symbol.NullableAnnotation is not NullableAnnotation.Annotated)
                     {
@@ -157,7 +169,7 @@ namespace DNTGenerator.Verifier
 
                 var indexConverter = GetIndexConverterAttributeName(index.Symbol.Type, compilation);
 
-                if (indexConverter is not null && (index.IndexConverter is null || !indexConverter.StartsWith(index.IndexConverter)))
+                if (indexConverter is not null && index.IsIndex && (index.IndexConverter is null || !indexConverter.StartsWith(index.IndexConverter)))
                 {
                     indexConverter = indexConverter.TrimEnd("Attribute");
                     var diagnostic = new GeneratorDiagnostic(GeneratorDiagnostic.MissingIndexConverter, index.AttributeLocation, index.Name, indexConverter);

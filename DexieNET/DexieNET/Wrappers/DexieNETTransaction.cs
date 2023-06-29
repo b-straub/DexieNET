@@ -51,7 +51,7 @@ namespace DexieNET
         }
     }
 
-    public sealed class Transaction : JSObject, IDisposable
+    public sealed class Transaction : DexieJSObject, IDisposable
     {
         public DBBase DB { get; }
         public bool Collecting { get; private set; }
@@ -186,7 +186,7 @@ namespace DexieNET
         [JSInvokable]
         public async ValueTask TransactionCallback()
         {
-            SetJSO(Module.Invoke<IJSObjectReference>("CurrentTransaction"));
+            SetReference(Module.Invoke<IJSInProcessObjectReference>("CurrentTransaction"));
 
             if (_create is not null)
             {
@@ -206,9 +206,10 @@ namespace DexieNET
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _dotnetRef.Dispose();
+            Dispose();
         }
     }
 }

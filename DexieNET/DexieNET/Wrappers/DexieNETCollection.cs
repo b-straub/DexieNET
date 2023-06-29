@@ -182,7 +182,8 @@ namespace DexieNET
                 throw new InvalidOperationException($"Collection invalid Modify callBack.");
             }
 
-            return _modify(item).FromObject();
+            var modified = _modify(item).FromObject();
+            return modified;
         }
 
         public void Dispose()
@@ -195,27 +196,27 @@ namespace DexieNET
     {
         internal CollectionJS<T, I, Q> CollectionJS { get; }
 
-        public Collection(Table<T, I> table, IJSObjectReference? reference, params string[] keyArray) : base(table, reference, keyArray)
+        public Collection(Table<T, I> table, IJSInProcessObjectReference? reference, params string[] keyArray) : base(table, reference, keyArray)
         {
             CollectionJS = new();
-            JSObject.SetJSO(reference);
+            JSObject.SetReference(reference);
         }
 
-        public Collection(WhereClause<T, I, Q> whereClause, IJSObjectReference? reference) : base(whereClause.Table, whereClause.JSObject?.Reference, whereClause.Keys)
+        public Collection(WhereClause<T, I, Q> whereClause, IJSInProcessObjectReference? reference) : base(whereClause.Table, whereClause.JSObject?.Reference, whereClause.Keys)
         {
             CollectionJS = new();
-            JSObject.SetJSO(reference);
+            JSObject.SetReference(reference);
         }
 
-        public Collection(Collection<T, I, Q> other, IJSObjectReference? reference) : base(other.Table, reference, other.Keys)
+        public Collection(Collection<T, I, Q> other, IJSInProcessObjectReference? reference) : base(other.Table, reference, other.Keys)
         {
             CollectionJS = new(other.CollectionJS);
-            JSObject.SetJSO(reference);
+            JSObject.SetReference(reference);
         }
 
-        internal void SetJSO(IJSObjectReference reference)
+        internal void SetJSO(IJSInProcessObjectReference reference)
         {
-            JSObject.SetJSO(reference);
+            JSObject.SetReference(reference);
         }
     }
 
@@ -248,7 +249,7 @@ namespace DexieNET
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSObjectReference>("clone");
+            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("clone");
             var newCollection = new Collection<T, I, Q>(collection, reference);
             return newCollection;
         }
@@ -323,7 +324,7 @@ namespace DexieNET
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSObjectReference>("distinct");
+            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("distinct");
             collection.SetJSO(reference);
             return collection;
         }
@@ -422,7 +423,7 @@ namespace DexieNET
             var filterIndex = collection.CollectionJS.AddFilter(filter);
 
 
-            var reference = await collection.JSObject.Module.InvokeAsync<IJSObjectReference>("CollectionFilter", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, filterIndex);
+            var reference = await collection.JSObject.Module.InvokeAsync<IJSInProcessObjectReference>("CollectionFilter", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, filterIndex);
             collection.SetJSO(reference);
             return collection;
         }
@@ -619,7 +620,7 @@ namespace DexieNET
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSObjectReference>("limit", count);
+            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("limit", count);
             collection.SetJSO(reference);
             return collection;
         }
@@ -708,7 +709,7 @@ namespace DexieNET
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSObjectReference>("offset", count);
+            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("offset", count);
             collection.SetJSO(reference);
             return collection;
         }
@@ -731,7 +732,7 @@ namespace DexieNET
                 return collection.Table.EmptyWhereClause<Q>(key);
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSObjectReference>("or", query.GetKey());
+            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("or", query.GetKey());
             return new WhereClause<T, I, Q>(collection.Table, reference, key)
             {
                 MixedType = typeof(K) != typeof(Q)
@@ -779,7 +780,7 @@ namespace DexieNET
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSObjectReference>("reverse");
+            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("reverse");
             collection.SetJSO(reference);
             return collection;
         }
@@ -960,7 +961,7 @@ namespace DexieNET
             }
 
             var untilIndex = collection.CollectionJS.AddUntil(until);
-            var reference = await collection.JSObject.Module.InvokeAsync<IJSObjectReference>("CollectionUntil", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, includeStopEntry, untilIndex);
+            var reference = await collection.JSObject.Module.InvokeAsync<IJSInProcessObjectReference>("CollectionUntil", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, includeStopEntry, untilIndex);
             collection.SetJSO(reference);
             return collection;
         }

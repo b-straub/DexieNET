@@ -102,6 +102,7 @@ namespace DexieNETTest.TestBase.Test
                 .Select(_ => random.Next(-5, 5))
                 .Select(r => new FieldTest(
                     r >= 0,
+                    r < 0,
                     new bool[] { true, r > 0 },
                     new DateOnly(2000 + r, 1, 1),
                     new TimeOnly(12 + r, 0), new TimeSpan(r * 1000),

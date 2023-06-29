@@ -86,6 +86,17 @@ namespace DNTGenerator.Diagnostics
               "Store with Guid auto primary key must be partial.",
               null,
               "Add partial modifier to '{0}'");
+        public static DiagnosticDescriptor NotPartialCloud =
+         new DiagnosticDescriptor(
+             "DNTGG102",
+             "Store error",
+             "'{0}' is not partial but store with 'CloudSync' be partial",
+             "DNTGenerator",
+             DiagnosticSeverity.Error,
+             isEnabledByDefault: true,
+             "Store with Guid auto primary key must be partial.",
+             null,
+             "Add partial modifier to '{0}'");
         #endregion
 
         #region DBIndex
@@ -101,21 +112,22 @@ namespace DNTGenerator.Diagnostics
                 null,
                 "Make '{0}' nullable");
 
-        public static DiagnosticDescriptor AutoIncrementNotNumeric =
+        public static DiagnosticDescriptor AutoIncrementNotAllowedType =
             new DiagnosticDescriptor(
                 "DNTGG201",
                 "Index error",
-                "Autoincrement '{0}' is not numeric",
+                "Autoincrement '{0}' is not numeric or string",
                 "DNTGenerator",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                "Autoincrement index type is not numeric.",
+                "Autoincrement index type is not numeric or string.",
                 null,
                 new[] {
                     "Change '{0}'",
                     "Change '{0}' to 'ushort?'",
                     "Change '{0}' to 'uint?'",
-                    "Change '{0}' to 'ulong?'"});
+                    "Change '{0}' to 'ulong?'",
+                    "Change '{0}' to 'string?'"});
 
         public static DiagnosticDescriptor MultiEntryNotIEnumerable =
             new DiagnosticDescriptor(
@@ -217,7 +229,7 @@ namespace DNTGenerator.Diagnostics
           new DiagnosticDescriptor(
               "DNTGG230",
               "Primary key error",
-              "'ID' is a reserved name for auto-generated primary key",
+              "'Id' is a reserved name for auto-generated primary key",
               "DNTGenerator",
               DiagnosticSeverity.Error,
               isEnabledByDefault: true,
@@ -229,7 +241,7 @@ namespace DNTGenerator.Diagnostics
           new DiagnosticDescriptor(
               "DNTGG231",
               "Primary key error",
-              "'ID' is a reserved name for auto-generated primary key",
+              "'Id' is a reserved name for auto-generated primary key",
               "DNTGenerator",
               DiagnosticSeverity.Error,
               isEnabledByDefault: true,

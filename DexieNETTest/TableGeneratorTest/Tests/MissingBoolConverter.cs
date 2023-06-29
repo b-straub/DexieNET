@@ -17,6 +17,27 @@ namespace DNTGeneratorTest.Tests
 
         //No diagnostics expected to show up
         [Fact]
+        public async Task BoolNoIndex()
+        {
+            var test = @$"
+using System;
+using DexieNET;
+
+namespace Test
+{{
+    public partial record Test
+    (
+        bool BoolNoIndex,
+        [property: BoolIndex] bool BoolIndex
+    ) : IDBStore;
+}}
+";
+
+            await Fixer.VerifyAnalyzerAsync(test);
+        }
+
+        //No diagnostics expected to show up
+        [Fact]
         public async Task ByteConverterProvided()
         {
             var test = @$"

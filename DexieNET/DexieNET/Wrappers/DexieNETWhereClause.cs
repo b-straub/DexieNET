@@ -26,13 +26,13 @@ namespace DexieNET
     {
         internal Table<T, I> Table { get; }
 
-        internal JSObject JSObject { get; }
+        internal DexieJSObject JSObject { get; }
 
         internal ITypeConverter TypeConverter { get; }
 
         internal bool MixedType { get; set; }
 
-        public WhereClause(Table<T, I> table, IJSObjectReference? reference, params string[] keyArray) : base(table.TypeConverter, keyArray)
+        public WhereClause(Table<T, I> table, IJSInProcessObjectReference? reference, params string[] keyArray) : base(table.TypeConverter, keyArray)
         {
             if (reference is null && !table.TransactionCollectMode)
             {
@@ -57,13 +57,10 @@ namespace DexieNET
                     return;
                 }
             }
-            else
-            {
-                key = keyArray.Aggregate("[", (current, next) => current + next.ToString() + "+");
-                key = key.TrimEnd('+') + "]";
-            }
+           
+            var keyIntersection = keys.Intersect(keyArray);
 
-            if (!keys.Any(k => k == key))
+            if (!keyIntersection.Any())
             {
                 throw new InvalidOperationException($"Can not create WhereClause for table '{Table.Name}' with '{key}'.");
             }
@@ -91,7 +88,7 @@ namespace DexieNET
             }
 
             var lowerBoundQ = KeyFactory.AsQuery(lowerBound, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("above", lowerBoundQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("above", lowerBoundQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -109,7 +106,7 @@ namespace DexieNET
             }
 
             var lowerBoundQ = KeyFactory.AsQuery(lowerBound, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("aboveOrEqual", lowerBoundQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("aboveOrEqual", lowerBoundQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -127,7 +124,7 @@ namespace DexieNET
             }
 
             var keysQ = KeyFactory.AsQuery(keys, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("anyOf", keysQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("anyOf", keysQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -145,7 +142,7 @@ namespace DexieNET
             }
 
             var keysQ = KeyFactory.AsQuery(keys, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("anyOfIgnoreCase", keysQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("anyOfIgnoreCase", keysQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -163,7 +160,7 @@ namespace DexieNET
             }
 
             var upperBoundQ = KeyFactory.AsQuery(upperBound, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("below", upperBoundQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("below", upperBoundQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -181,7 +178,7 @@ namespace DexieNET
             }
 
             var upperBoundQ = KeyFactory.AsQuery(upperBound, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("belowOrEqual", upperBoundQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("belowOrEqual", upperBoundQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -203,7 +200,7 @@ namespace DexieNET
             var lowerBoundQ = KeyFactory.AsQuery(lowerBound, whereClause.TypeConverter);
             var upperBoundQ = KeyFactory.AsQuery(upperBound, whereClause.TypeConverter);
 
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("between", lowerBoundQ, upperBoundQ, includeLower, includeUpper);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("between", lowerBoundQ, upperBoundQ, includeLower, includeUpper);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -222,7 +219,7 @@ namespace DexieNET
             }
 
             var keyQ = KeyFactory.AsQuery(key, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("equals", keyQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("equals", keyQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -240,7 +237,7 @@ namespace DexieNET
                 return whereClause.EmptyCollection();
             }
 
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("equalsIgnoreCase", key);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("equalsIgnoreCase", key);
             return new Collection<T, I, string>(whereClause, reference);
         }
 
@@ -269,7 +266,7 @@ namespace DexieNET
             var rangesQ = KeyFactory.AsQuery(ranges, whereClause.TypeConverter);
             var options = new AnyRangeOptions(includeLower, includeUpper);
 
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("inAnyRange", rangesQ, options);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("inAnyRange", rangesQ, options);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -287,7 +284,7 @@ namespace DexieNET
             }
 
             var keysQ = KeyFactory.AsQuery(keys, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("noneOf", keysQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("noneOf", keysQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -305,7 +302,7 @@ namespace DexieNET
             }
 
             var keyQ = KeyFactory.AsQuery(key, whereClause.TypeConverter);
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("notEqual", keyQ);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("notEqual", keyQ);
             return new Collection<T, I, Q>(whereClause, reference);
         }
 
@@ -322,7 +319,7 @@ namespace DexieNET
                 return whereClause.EmptyCollection();
             }
 
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("startsWith", prefix);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("startsWith", prefix);
             return new Collection<T, I, string>(whereClause, reference);
         }
 
@@ -339,7 +336,7 @@ namespace DexieNET
                 return whereClause.EmptyCollection();
             }
 
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("startsWithIgnoreCase", prefix);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("startsWithIgnoreCase", prefix);
             return new Collection<T, I, string>(whereClause, reference);
         }
 
@@ -356,7 +353,7 @@ namespace DexieNET
                 return whereClause.EmptyCollection();
             }
 
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("startsWithAnyOf", prefixes);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("startsWithAnyOf", prefixes);
             return new Collection<T, I, string>(whereClause, reference);
         }
 
@@ -373,7 +370,7 @@ namespace DexieNET
                 return whereClause.EmptyCollection();
             }
 
-            var reference = await whereClause.JSObject.InvokeAsync<IJSObjectReference>("startsWithAnyOfIgnoreCase", prefixes);
+            var reference = await whereClause.JSObject.InvokeAsync<IJSInProcessObjectReference>("startsWithAnyOfIgnoreCase", prefixes);
             return new Collection<T, I, string>(whereClause, reference);
         }
     }

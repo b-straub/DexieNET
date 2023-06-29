@@ -18,8 +18,6 @@ limitations under the License.
 
 using DNTGenerator.Verifier;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Reflection;
 using System.Text;
 
 namespace DNTGenerator.SourceDump
@@ -77,82 +75,43 @@ namespace {namespaceName}
 
         private static string DumpRecords(this IEnumerable<DBRecord> records, string dbName)
         {
-            var name = Assembly.GetExecutingAssembly().GetName().Name;
-            var version = Assembly.GetExecutingAssembly().GetName().Version;
-
-            var attribute = @$"[GeneratedCode(""{name}"", ""{version}"")]";
-
             StringBuilder sb = new();
 
             _ = sb.Append(records.MakeDBBuilder(dbName));
 
             foreach (DBRecord record in records)
             {
-                if (record.HasGeneratedPrimaryKey() || record.HasGuidPrimaryKey())
+                if (record.HasGeneratedPrimaryKey() || record.HasNonCloudGuidPrimaryKey() || record.SchemaDescriptor.HasCloudSync)
                 {
-                    var primaryIndexName = record.GetPrimaryIndexName(false);
-
-                    if (primaryIndexName is null)
+                    if (record.HasNonCloudGuidPrimaryKey())
                     {
-                        throw new InvalidOperationException($"No primaryIndexName for {record.Symbol.Name}.");
-                    }
-
-                    if (record.HasGuidPrimaryKey())
-                    {
-                        if (record.Type is DBRecord.RecordType.Record || record.Type is DBRecord.RecordType.RecordStruct || record.Type is DBRecord.RecordType.Struct)
-                        {
-                            _ = sb.Append($@"
-    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore<{record.Symbol.Name}>
-    {{");
-                            if (record.HasGeneratedGuidPrimaryKey())
-                            {
-                                _ = sb.Append($@"
-        {attribute}
-        public Guid? {primaryIndexName} {{ get; init; }}
-");
-                            }
-                            _ = sb.Append($@"
-        public {record.Symbol.Name} AssignPrimaryKey()
-        {{
-            if ({primaryIndexName} is null)
-            {{
-                return this with {{ {primaryIndexName} = Guid.NewGuid() }};
-            }}
-            return this;
-        }}
-    }}                      
-");
-                        }
-                        else
-                        {
-                            _ = sb.Append($@"
-    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore<{record.Symbol.Name}>
+                        _ = sb.Append($@"
+    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore <{record.Symbol.Name}>
     {{
-        {attribute}
-        public Guid? {primaryIndexName} {{ get; set; }}
-        
-        public {record.Symbol.Name} AssignPrimaryKey()
-        {{
-            if ({primaryIndexName} is null)
-            {{
-                {primaryIndexName} = Guid.NewGuid();
-            }}
-            return this;
-        }}
-    }}                      
 ");
-                        }
+                    }
+                    else if (record.SchemaDescriptor.HasCloudSync)
+                    {
+                        _ = sb.Append($@"
+    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IDBCloudEntity
+    {{
+");
                     }
                     else
                     {
                         _ = sb.Append($@"
     {record.AccessToString} partial {record.TypeName} {record.Symbol.Name}
     {{
-        {attribute}
-        public ulong? {primaryIndexName} {{ get; init; }}
-    }}
 ");
                     }
+
+                    _ = sb.Append(record.DumpProperties());
+                    _ = sb.Append(record.DumpMethods());
+
+
+                    _ = sb.Append($@"
+    }}
+");
                 }
             }
 

@@ -1,0 +1,68 @@
+﻿@using DexieNET
+@inherits RxBLComponent<ToDoListMemberService>
+
+<MudCard Class="ma-8" Elevation="0" Outlined="true">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Inherit">
+                <MudIcon Icon="@Icons.Material.Filled.People" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.subtitle2">Share with</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Service.Members.Any())
+        {
+            <MemberForm List=@List />
+        }
+        @if (Service.CanAddMember())
+        {
+            <InviteForm />
+        }
+    </MudCardContent>
+</MudCard>
+
+
+@code {
+    [Inject]
+    private DexieCloudService? DBService { get; set; }
+
+    [Parameter]
+    public ToDoDBList? List { get; set; }
+
+    private readonly CompositeDisposable _dbDisposeBag = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        ArgumentNullException.ThrowIfNull(DBService);
+        ArgumentNullException.ThrowIfNull(List);
+
+        Service.SetList.Execute(List);
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ArgumentNullException.ThrowIfNull(List);
+
+        if (Service.List != List)
+        {
+            Service.SetList.Execute(List);
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _dbDisposeBag?.Dispose();
+        }
+
+        base.Dispose(disposing);
+    }
+}

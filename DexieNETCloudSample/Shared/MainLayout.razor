@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="0">
+        <DBContainer />
+        <MudIconButton Icon="@Icons.Material.Outlined.Info" Color="Color.Inherit" OnClick="@OpenAboutDialog" />
+    </MudAppBar>
+    <MudMainContent Class="pt-16 pl-13 pr-12">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    [Inject]
+    IDialogService? DialogService { get; set; }
+
+    private void OpenAboutDialog()
+    {
+        DialogService?.Show<AboutDialog>("About DexieNETCloudSample");
+    }
+}

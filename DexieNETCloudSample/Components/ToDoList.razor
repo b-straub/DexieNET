@@ -1,0 +1,110 @@
+﻿@inherits RxBLComponent<ToDoListService>
+
+<MudCard Class="mt-16">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Primary">
+                <MudIcon Icon="@Icons.Material.Filled.List" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h3" GutterBottom="true">ToDoList</MudText>
+            @if (Service.CommandExceptions.Any())
+            {
+                <MudText Class="mt-4" Color="Color.Error">Error: @Service.CommandExceptions.FirstOrDefault()?.Message</MudText>
+            }
+        </CardHeaderContent>
+        <CardHeaderActions>
+            @if (Service.IsDBOpen)
+            {
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <MudFabAsyncPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" RxCommandAsyncFactory=@(() => Service.AddList) PrepareExecutionAsync=@AddOrUpdate />
+                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecution=@(async () => await ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearLists) />
+                </MudHidden>
+            }
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Service.IsDBOpen)
+        {
+            @if (Service.Invites.Any())
+            {
+                <InvitesForm />
+            }
+
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudContainer Class="ml-n3 mb-8">
+                    <MudFabAsyncPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" RxCommandAsyncFactory=@(() => Service.AddList) PrepareExecutionAsync=@AddOrUpdate />
+                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecution=@(async () => await ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearLists) />
+                </MudContainer>
+            </MudHidden>
+            <MudTable T="ToDoDBList" Items=@(Service.Lists)>
+                <ColGroup>
+                    <col style="width:50px;" />
+                    <col />
+                    <col style="width:50px;" />
+                    <col style="width:50px;" />
+                    <col style="width:50px;" />
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh Style="text-align:center">
+                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowRight" />
+                    </MudTh>
+                    <MudTh>ToDoList</MudTh>
+                    <MudTh Style="text-align:center">
+                        <MudIcon Icon="@Icons.Material.Filled.Share" />
+                    </MudTh>
+                    <MudTh Style="text-align:center">
+                        <MudIcon Icon="@Icons.Material.Filled.Edit" />
+                    </MudTh>
+                    <MudTh Style="text-align:center">
+                        <MudIcon Color="Color.Error" Icon="@Icons.Material.Filled.Delete" />
+                    </MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="ToggleItemOpenClose" Style="text-align:center">
+                        <MudButtonAsyncPRx Color="Color.Info" StartIcon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
+                                       RxCommandAsyncFactory=@(() => Service.ToggleListItemsOpenClose) Parameter=@context />
+                    </MudTd>
+                    <MudTd DataLabel="ToDoList"><MudText>@context.Title</MudText></MudTd>
+                    <MudTd DataLabel="Share" Style="text-align:center">
+                        <MudIconButtonAsyncPRx Color="Color.Info" Icon=@(Service.IsListShareOpen(context) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share)
+                                               RxCommandAsyncFactory=@(() => Service.ToggleListShareOpenClose) Parameter=@context />
+                    </MudTd>
+                    <MudTd DataLabel="Edit" Style="text-align:center">
+                        <MudIconButtonAsyncPRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit RxCommandAsyncFactory=@(() => Service.UpdateList) Parameter=@context PrepareExecutionAsync=@AddOrUpdate />
+                    </MudTd>
+                    <MudTd DataLabel="DeleteItem" Style="text-align:center">
+                        <MudIconButtonAsyncPRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete Parameter=@context RxCommandAsyncFactory=@(() => Service.DeleteList) ConfirmExecution=@(async () => await ConfirmDelete(DeleteType.One)) />
+                    </MudTd>
+                </RowTemplate>
+                <ChildRowContent>
+                    @if (Service.IsListItemsOpen(context))
+                    {
+                        @if (Service.IsListShareOpen(context))
+                        {
+                            <MudTr>
+                                <td colspan="4">
+                                    <RxBLService TService=@ToDoListMemberService>
+                                        <Share List=@context />
+                                    </RxBLService>
+                                </td>
+                            </MudTr>
+                        }
+                        <MudTr>
+                            <td colspan="4">
+                                <RxBLService TService=@ToDoItemService>
+                                    <ToDoItem List=@context />
+                                </RxBLService>
+                            </td>
+                        </MudTr>
+                    }
+                </ChildRowContent>
+            </MudTable>
+        }
+        else// if (false)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Default" Rounded="true" Size="Size.Medium" Class="my-7" />
+        }
+    </MudCardContent>
+</MudCard>

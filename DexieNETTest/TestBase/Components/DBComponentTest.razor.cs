@@ -1,5 +1,6 @@
 ﻿using DexieNET;
 using DexieNETTest.TestBase.Test;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -8,6 +9,7 @@ using System.Reactive.Subjects;
 
 namespace DexieNETTest.TestBase.Components
 {
+    [Schema(CloudSync = true)]
     public partial record struct Friend
     (
         [property: Index] string Name,
@@ -34,9 +36,11 @@ namespace DexieNETTest.TestBase.Components
         private string _queryName = string.Empty;
         private readonly Subject<Unit> _queryChanged = new();
         private LiveQuery<IEnumerable<Friend>>? _friendsQuery = null;
-        private LiveQuery<IEnumerable<Friend>>? _searchFriendsQuery = null;
+        private UseLiveQuery<IEnumerable<Friend>>? _searchFriendsQuery = null;
         private bool _hasData = false;
         private IDisposable? _hasDataDisposable = null;
+
+        public DBComponentTest() : base("https://zs1j8ko5w.dexie.cloud") { }
 
         protected override async Task OnInitializedAsync()
         {
@@ -71,11 +75,13 @@ namespace DexieNETTest.TestBase.Components
                     return f;
                 });
 
-                _searchFriendsQuery = await Dexie.LiveQuery(async () =>
+                var lq = await Dexie.LiveQuery(async () =>
                 {
                     var sf = await Dexie.Friends().Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
                     return sf;
-                }, _queryChanged);
+                });
+
+                _searchFriendsQuery = lq.UseLiveQuery(_queryChanged);
 
                 var hasDataQuery = await Dexie.LiveQuery(async () =>
                 {
@@ -159,11 +165,6 @@ namespace DexieNETTest.TestBase.Components
             _searchedFriends = Enumerable.Empty<Friend>();
             _queryName = string.Empty;
             InvokeAsync(StateHasChanged);
-        }
-
-        async Task<bool> HasDBItems()
-        {
-            return await Dexie.Friends().Count() > 0;
         }
 
         public async ValueTask DisposeAsync()

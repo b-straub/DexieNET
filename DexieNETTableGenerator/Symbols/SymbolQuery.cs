@@ -134,7 +134,7 @@ namespace DNTGenerator.Query
 
             if (!type.IsGenericType || type.TypeArguments.Length != 1)
             {
-                return type.Name.EndsWith("Guid");
+                return type.Name.EndsWith("String");
             }
 
             var argFirst = type.TypeArguments.FirstOrDefault();
@@ -144,7 +144,7 @@ namespace DNTGenerator.Query
                 return false;
             }
 
-            return genericType.Name.EndsWith("Guid");
+            return genericType.Name.EndsWith("String");
         }
 
         public static string? GetBasicOrArrayType(this IPropertySymbol ocs)

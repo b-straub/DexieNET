@@ -21,11 +21,32 @@ limitations under the License.
 using System.Data;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace DexieNET
 {
     internal static class HelperExtensions
     {
+        public static bool True(this bool? value)
+        {
+            return value.GetValueOrDefault(false);
+        }
+
+        public static string ToCamelCase(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return str;
+            }
+
+            var parts = str.Split('.');
+
+            return parts
+                .Select(p => JsonNamingPolicy.CamelCase.ConvertName(p))
+                .Aggregate((curr, next) => curr + "." + next)
+                .TrimEnd('.');
+        }
+
         // A key can be one of the following types: string, date, float, a binary blob, and array
         // JSInterop and dexie handle most of the conversion
         public static bool IsAllowedPrimaryIndexType(this Type t)

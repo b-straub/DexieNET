@@ -22,6 +22,7 @@ using Microsoft.JSInterop;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.CompilerServices;
 
 namespace DexieNET
 {
@@ -33,29 +34,27 @@ namespace DexieNET
         private readonly DBBase _db;
         private readonly Func<ValueTask<T>> _query;
         private readonly BehaviorSubject<T?> _changedSubject;
-        private readonly IObservable<Unit>[] _observables;
         private readonly IObservable<T> _queryObservable;
 
-        public LiveQuery(DBBase db, Func<ValueTask<T>> query, params IObservable<Unit>[] observables)
+        internal LiveQuery(DBBase db, Func<ValueTask<T>> query)
         {
             _db = db;
             _query = query;
-            _observables = observables;
             _changedSubject = new(default);
 
             _queryObservable = _changedSubject
                 .Where(t => t is not null)
                 .Select(t => t!)
-                .Merge(
-                    Observable.Merge(_observables)
-                        .Select(_ => Observable.FromAsync(ExecuteQuery))
-                        .Switch()
-                )
                 .DistinctUntilChanged()
                 .Finally(LiveQueryUnsubscribe);
 
             DotnetRef = DotNetObjectReference.Create(this);
             ID = GetHashCode();
+        }
+
+        public UseLiveQuery<T> UseLiveQuery(params IObservable<Unit>[] observables)
+        {
+             return new UseLiveQuery<T>(this, observables);
         }
 
         [JSInvokable]
@@ -87,6 +86,9 @@ namespace DexieNET
 
             if (liveQuerySubscribe)
             {
+#if DEBUG
+                Console.WriteLine($"LiveQuery subscribe: {ID}");
+#endif
                 _db.DBBaseJS.Module.InvokeVoid("LiveQuerySubscribe", ID);
                 return _changedSubject.Value is null ?
                     _queryObservable.Subscribe(observer) :
@@ -100,6 +102,9 @@ namespace DexieNET
         {
             if (!_changedSubject.HasObservers)
             {
+#if DEBUG
+                Console.WriteLine($"LiveQuery unsubscribe: {ID}");
+#endif
                 _db.DBBaseJS.Module.InvokeVoid("LiveQueryUnsubscribe", ID);
             }
         }
@@ -107,6 +112,39 @@ namespace DexieNET
         public void Dispose()
         {
             DotnetRef.Dispose();
+        }
+    }
+
+    public sealed class UseLiveQuery<T> : IObservable<T>
+    {
+        private readonly IObservable<Unit> _lqTrigger;
+        private readonly LiveQuery<T> _liveQuery;
+        private IDisposable? _lqDisposable;
+
+        internal UseLiveQuery(LiveQuery<T> liveQuery, params IObservable<Unit>[] observables) 
+        {
+            _liveQuery = liveQuery;
+
+            _lqTrigger = Observable
+                .Merge(observables)
+                .StartWith(Unit.Default)
+                .Finally(Dispose);
+        }
+
+        private void Dispose()
+        {
+            _lqDisposable?.Dispose();
+            _liveQuery.Dispose();
+        }
+
+        public IDisposable Subscribe(IObserver<T> observer)
+        {
+            return _lqTrigger
+                .Subscribe(_ =>
+                {
+                    _lqDisposable?.Dispose();
+                    _lqDisposable = _liveQuery.Subscribe(observer);
+                });
         }
     }
 }

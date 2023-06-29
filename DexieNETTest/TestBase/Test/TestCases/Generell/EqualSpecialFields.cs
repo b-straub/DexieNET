@@ -16,10 +16,10 @@ namespace DexieNETTest.TestBase.Test
             var table = await DB.FieldTests();
             await table.Clear();
 
-            var fieldsData = DataGenerator.GetFieldTestRandom().ToArray().OrderBy(f => f.ID);
+            var fieldsData = DataGenerator.GetFieldTestRandom().ToArray().OrderBy(f => f.Id);
             await table.BulkAdd(fieldsData);
 
-            var fields = await table.OrderBy(f => f.ID).ToArray();
+            var fields = await table.OrderBy(f => f.Id).ToArray();
 
             var b1 = fieldsData.Last().Blob;
             var b2 = fields.Last().Blob;
@@ -51,6 +51,14 @@ namespace DexieNETTest.TestBase.Test
             if (fieldsDataInclude.Count() != fieldsInclude.Count())
             {
                 throw new InvalidOperationException("Include Items not identical.");
+            }
+
+            var fieldsDataBoolNoIndex = fieldsData.Where(f => f.BoolNoIndex);
+            var fieldsBoolNoIndex = (await table.ToArray()).Where(f => f.BoolNoIndex);
+
+            if (fieldsDataBoolNoIndex.Count() != fieldsBoolNoIndex.Count())
+            {
+                throw new InvalidOperationException("BoolNoIndex Items not identical.");
             }
 
             var fieldsDataIncludeME = fieldsData.Where(f => f.IncludeME.Contains(false));

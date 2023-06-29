@@ -8,8 +8,9 @@
     "removeComments": false,
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "sourceMap": true
+    "moduleResolution": "node",
+    "inlineSourceMap": true,
+    "inlineSources": true
   },
   "include": ["**/*.ts"],
   "exclude": [

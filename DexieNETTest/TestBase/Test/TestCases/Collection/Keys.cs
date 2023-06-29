@@ -95,7 +95,7 @@ namespace DexieNETTest.TestBase.Test
 
             if (City != queryData.FirstOrDefault().City)
             {
-                throw new InvalidOperationException("Key not found.");
+                throw new InvalidOperationException("EntityKey not found.");
             }
 
             if (!queryData.SequenceEqual(queryKeys))

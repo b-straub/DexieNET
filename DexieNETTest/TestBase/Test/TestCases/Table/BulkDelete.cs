@@ -24,7 +24,7 @@ namespace DexieNETTest.TestBase.Test
             await table.BulkDelete(evenKeys);
 
             var keysRemain = (await table.ToArray())
-                .Select(p => p.ID)
+                .Select(p => p.Id)
                 .Where(i => i is not null)
                 .Select(i => (ulong)i!);
 
@@ -42,7 +42,7 @@ namespace DexieNETTest.TestBase.Test
                 await table.BulkDelete(evenKeys);
 
                 keysRemain = (await table.ToArray())
-                .Select(p => p.ID)
+                .Select(p => p.Id)
                 .Where(i => i is not null)
                 .Select(i => (ulong)i!);
             });

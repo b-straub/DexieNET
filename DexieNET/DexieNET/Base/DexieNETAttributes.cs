@@ -162,6 +162,8 @@ namespace DexieNET
         public string PrimaryKeyName { get; set; }
         public bool PrimaryKeyGuid { get; set; }
         public bool OutboundPrimaryKey { get; set; }
+        public bool CloudSync { get; set; }
+
 
         /// <summary>
         /// Constructor to setup default values
@@ -173,6 +175,7 @@ namespace DexieNET
             PrimaryKeyName = string.Empty;
             OutboundPrimaryKey = false;
             PrimaryKeyGuid = true;
+            CloudSync = false;
         }
     }
 }

@@ -99,7 +99,7 @@ namespace DexieNETTest.TestBase.Test
                             {
                                 await tablePersons.Add(itemU);
                             }
-                            await Log($"Updated ID: {itemU?.ID}");
+                            await Log($"Updated ID: {itemU?.Id}");
                         });
                     });
 

@@ -44,6 +44,14 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Items not identical.");
             }
 
+            var personsDataAgeNotIndexed = persons.Where(p => p.Age == 11 && p.NotIndexed == "NotIndexed");
+            var personsAgeNotIndexed = await table.Where(p => p.Age, 11, p => p.NotIndexed, "NotIndexed").ToArray();
+
+            if (!personsDataAgeNotIndexed.SequenceEqual(personsAgeNotIndexed, comparer))
+            {
+                throw new InvalidOperationException("Items not identical.");
+            }
+
             await DB.Transaction(async _ =>
             {
                 await table.Clear();
@@ -58,6 +66,7 @@ namespace DexieNETTest.TestBase.Test
                 personsAge = await collectionAge.ToArray();
                 personsName = await collectionName.ToArray();
                 personsHN = await table.Where(p => p.Address.Housenumber).Equal(personHN).ToArray();
+                personsAgeNotIndexed = await table.Where(p => p.Age, 11, p => p.NotIndexed, "NotIndexed").ToArray();
             });
 
             if (!personsAge.SequenceEqual(personsDataAge, comparer))
@@ -71,6 +80,11 @@ namespace DexieNETTest.TestBase.Test
             }
 
             if (!personsName.SequenceEqual(personsDataName, comparer))
+            {
+                throw new InvalidOperationException("Items not identical.");
+            }
+
+            if (!personsDataAgeNotIndexed.SequenceEqual(personsAgeNotIndexed, comparer))
             {
                 throw new InvalidOperationException("Items not identical.");
             }

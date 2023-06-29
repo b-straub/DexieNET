@@ -20,3 +20,6 @@ Nuget
 DexieNET/npm/src/*.js
 DexieNET/npm/dexie-cloud.json
 DexieNET/npm/dexie-cloud.key
+/DexieNETCloudSample/Dexie/dexie-cloud.json
+/DexieNETCloudSample/Dexie/dexie-cloud.key
+DexieNET/vite/node_modules

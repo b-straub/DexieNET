@@ -43,8 +43,8 @@ namespace DexieNETTest.TestBase.Test
             // EachPrimaryKey
             List<ulong> eachPrimaryKeys = new();
             var eachDataPrimaryKeys = (await table.ToArray())
-                .Where(p => p.ID is not null)
-                .Select(p => (ulong)p.ID!);
+                .Where(p => p.Id is not null)
+                .Select(p => (ulong)p.Id!);
 
             await table.ToCollection().EachPrimaryKey(k => eachPrimaryKeys.Add(k));
 
@@ -74,8 +74,8 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
                 eachDataPrimaryKeys = (await table.ToArray())
-                    .Where(p => p.ID is not null)
-                    .Select(p => (ulong)p.ID!);
+                    .Where(p => p.Id is not null)
+                    .Select(p => (ulong)p.Id!);
 
                 var collection = await table.ToCollection();
                 await collection.Each(p => eachNames.Add(p.Name));

@@ -1,8 +1,8 @@
-﻿var path = require('path');
+﻿const path = require('path')
 
 module.exports = {
     mode: 'development',
-    entry: ['./src/dexieNET.ts' ],
+    entry: ['./src/dexieNET.ts'],
     module: {
         rules: [
             {
@@ -13,13 +13,13 @@ module.exports = {
         ]
     },
     experiments: {
-        outputModule: true,
+        outputModule: true
     },
     devtool: 'source-map',
     output: {
         module: true,
         library: {
-            type: 'module',
+            type: 'module'
         },
         path: path.resolve(__dirname, '../wwwroot/js'),
         filename: 'dexieNET.js',
@@ -27,5 +27,5 @@ module.exports = {
     },
     optimization: {
         minimize: false
-    },
-};
+    }
+}

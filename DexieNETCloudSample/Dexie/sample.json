@@ -1,0 +1,36 @@
+{
+  "schema": {
+    "roles": "[realmId+name]",
+    "realms": "@realmId",
+    "members": "@id",
+    "toDoDBItems": "@id",
+    "toDoDBLists": "@id",
+    "listOpenCloses": "listID",
+    "$$logins": "claims.sub",
+    "$$baseRevs": "[tableName+clientRev]"
+  },
+  "sealed": false,
+  "demoUsers": {
+    "alice@demo.local": {},
+    "bob@demo.local": {}
+  },
+  "roles": {
+    "undefined": {
+      "sortOrder": 2,
+      "description": "Members with this role can add toDoDBItems, manage own toDoDBItems and mark other toDoDBItems as done or undone",
+      "displayName": "User",
+      "permissions": {
+        "add": [
+          "toDoDBItems"
+        ],
+        "update": {
+          "toDoDBItems": [
+            "completed"
+          ]
+        }
+      }
+    }
+  },
+  "data": {
+  }
+}

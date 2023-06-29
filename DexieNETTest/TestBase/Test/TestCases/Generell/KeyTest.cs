@@ -19,7 +19,7 @@ namespace DexieNETTest.TestBase.Test
             await tableP.Where(t => t.Age);
             await tableP.Where(t => t.Tags);
             await tableP.Where(t => t.Guid);
-            await tableP.Where(t => t.ID);
+            await tableP.Where(t => t.Id);
             await tableP.Where(t => t.Name, t => t.Age);
             await tableP.Where(t => t.Name, t => t.Address.City);
             await tableP.Where(t => t.Address.City, t => t.Address.Street);
@@ -36,7 +36,7 @@ namespace DexieNETTest.TestBase.Test
             var tableF = await DB.FieldTests();
 
             await tableF.Where(tableF.PrimaryKey);
-            await tableF.Where(t => t.ID);
+            await tableF.Where(t => t.Id);
             await tableF.Where(t => t.Include);
             await tableF.Where(t => t.IncludeME);
             await tableF.Where(t => t.DateTime);
@@ -99,9 +99,9 @@ namespace DexieNETTest.TestBase.Test
                 exceptions++;
             }
 
-            if (exceptions != 5)
+            if (exceptions != 4)
             {
-                throw new InvalidOperationException("Key test failed!");
+                throw new InvalidOperationException("EntityKey test failed!");
             }
 
             return "OK";

@@ -56,7 +56,7 @@ namespace DexieNET
         {
             if (key is null)
             {
-                throw new InvalidOperationException("Key not set.");
+                throw new InvalidOperationException("EntityKey not set.");
             }
 
             if (typeof(Q).IsAssignableTo(typeof(ITuple)))
@@ -179,7 +179,7 @@ namespace DexieNET
         {
             return new Query<T, Q>
             {
-                { query.GetKey().ToLowerInvariant(), value },
+                { query.GetKey().ToCamelCase(), value },
             };
         }
 
@@ -189,8 +189,8 @@ namespace DexieNET
         {
             return new Query<T, (Q1, Q2)>
             {
-                { query1.GetKey().ToLowerInvariant(), value1 },
-                { query2.GetKey().ToLowerInvariant(), value2 }
+                { query1.GetKey().ToCamelCase(), value1 },
+                { query2.GetKey().ToCamelCase(), value2 }
             };
         }
 
@@ -208,9 +208,9 @@ namespace DexieNET
         {
             return new Query<T, (Q1, Q2, Q3)>
             {
-                { query1.GetKey().ToLowerInvariant(), value1 },
-                { query2.GetKey().ToLowerInvariant(), value2 },
-                { query3.GetKey().ToLowerInvariant(), value3 }
+                { query1.GetKey().ToCamelCase(), value1 },
+                { query2.GetKey().ToCamelCase(), value2 },
+                { query3.GetKey().ToCamelCase(), value3 }
             };
         }
 
@@ -418,7 +418,7 @@ namespace DexieNET
                 }
             }
 
-            return propertyName.ToLowerInvariant();
+            return propertyName.ToCamelCase();
         }
     }
 }

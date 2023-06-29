@@ -143,31 +143,5 @@ namespace DNTGenerator
             }
 #endif
         }
-
-
-        /// <summary>
-        /// Created on demand before each generation pass
-        /// </summary>
-        private class SyntaxReceiver : ISyntaxReceiver
-        {
-            private readonly List<TypeDeclarationSyntax> _typeList = new();
-
-            public IEnumerable<TypeDeclarationSyntax> TypeList => _typeList;
-
-            public SyntaxReceiver()
-            {
-            }
-
-            /// <summary>
-            /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
-            /// </summary>
-            public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-            {
-                if (syntaxNode is TypeDeclarationSyntax typeDeclaration)
-                {
-                    _typeList.Add(typeDeclaration);
-                }
-            }
-        }
     }
 }

@@ -1,0 +1,85 @@
+﻿@using DexieNET
+@inherits RxBLComponent<ToDoListMemberService>
+
+<MudTable Class="mt-2" T="string" Items=@(Service.Users)>
+    <ColGroup>
+        <col />
+        <col style="width:50px;" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Invite User</MudTh>
+        <MudTh Style="text-align:center">
+            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" />
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Invite User"><MudText>@context</MudText></MudTd>
+        <MudTd DataLabel="Invite" Style="text-align:center">
+            <MudIconButtonAsyncPRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd
+                                   RxCommandAsyncFactory=@(() => Service.InviteUser) Parameter=@context PrepareExecutionAsync=@GetUser ConfirmExecution=@(async () => await ConfirmAdd(context)) />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Inject]
+    private DexieCloudService? DBService { get; set; }
+
+    [Inject]
+    private IDialogService? DialogService { get; set; }
+
+    private IEnumerable<string> users = Enumerable.Empty<string>();
+
+    protected override Task OnInitializedAsync()
+    {
+        ArgumentNullException.ThrowIfNull(DBService);
+        return base.OnInitializedAsync();
+    }
+
+    private async Task<bool> GetUser(ICommandAsync<string> cmd, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(DBService);
+
+        var user = cmd.Parameter;
+        if (user == Service.Users.Last())
+        {
+            ArgumentNullException.ThrowIfNull(DialogService);
+
+            EmailData data = new("email@mydomain.com");
+
+            var parameters = new DialogParameters { ["Item"] = data };
+            var dialog = DialogService.Show<AuthenticateEMail>("Email for Invite", parameters);
+
+            var result = await dialog.Result;
+            if (result.Canceled)
+            {
+                return false;
+            }
+            else
+            { 
+                user = data.Email; 
+            }
+        }
+
+        cmd.SetParameter(user);
+        return true;
+    }
+
+    private async Task<bool> ConfirmAdd(string user)
+    {
+        ArgumentNullException.ThrowIfNull(DialogService);
+
+        var parameters = new DialogParameters
+            { ["Message"] = $"Invite {user}", ["ConfirmButton"] = "Invite", ["SuccessOnConfirm"] = true };
+        var dialog = DialogService.Show<ConfirmDialog>("Invite USER", parameters);
+
+        var res = await dialog.Result;
+
+        if (res.Canceled)
+        {
+            return false;
+        }
+
+        return true;
+    }
+}

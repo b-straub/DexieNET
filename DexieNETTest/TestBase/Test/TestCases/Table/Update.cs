@@ -26,7 +26,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Item not identical.");
             }
 
-            if (personAdded?.ID is null || personAdded.ID != res)
+            if (personAdded?.Id is null || personAdded.Id != res)
             {
                 throw new InvalidOperationException("Updated preparation failed.");
             }

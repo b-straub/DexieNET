@@ -141,6 +141,11 @@ namespace DNTGenerator.CodeFix
 
             arguments = $"({arguments})";
             var argumentList = SyntaxFactory.ParseAttributeArgumentList(arguments);
+
+            if (argumentList is null)
+            {
+                throw new ArgumentNullException(nameof(argumentList), nameof(argumentList));
+            }
             var newArgumentListDeclaration = argumentListDeclaration.WithArguments(argumentList.Arguments);
 
             return document.WithSyntaxRoot(root.ReplaceNode(argumentListDeclaration, newArgumentListDeclaration));
@@ -215,6 +220,12 @@ namespace DNTGenerator.CodeFix
         public static Document MakeULong(this Document document, SyntaxNode root, SyntaxNode syntaxNode)
         {
             var syntaxToken = SyntaxFactory.Token(SyntaxKind.ULongKeyword);
+            return MakeNullableType(document, root, syntaxToken, syntaxNode);
+        }
+
+        public static Document MakeString(this Document document, SyntaxNode root, SyntaxNode syntaxNode)
+        {
+            var syntaxToken = SyntaxFactory.Token(SyntaxKind.StringKeyword);
             return MakeNullableType(document, root, syntaxToken, syntaxNode);
         }
 

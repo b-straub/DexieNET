@@ -1,0 +1,24 @@
+﻿@using DexieNET
+@inherits RxBLComponent<ToDoListMemberService>
+
+<MudTable T="Member" Items=@(Service.Members)>
+    <ColGroup>
+        <col />
+        <col style="width:150px;" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Member</MudTh>
+        <MudTh>Role</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MemberRow List=@List Member=@context />
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Inject]
+    private DexieCloudService? DBService { get; set; }
+
+    [Parameter]
+    public ToDoDBList? List { get; set; }
+}

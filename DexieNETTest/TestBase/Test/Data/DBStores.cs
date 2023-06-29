@@ -34,7 +34,7 @@ namespace DexieNETTest.TestBase.Test
     public partial record AutoGuidRecord
     (
         [property: Index] string Name,
-        [property: Index(IsPrimary = true, IsAuto = true)] Guid? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] string? Id = null
     ) : IDBStore;
 
     public interface ITestDB : IDBStore
@@ -89,13 +89,14 @@ namespace DexieNETTest.TestBase.Test
     (
         [property: Index] string Faculty,
         [property: Index] int PersonID,
-        [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] int? Id = null
     ) : ITestDB;
 
     [CompoundIndex("Date", "Include", IsPrimary = false)]
     public record FieldTest
     (
         [property: BoolIndex] bool Include,
+        bool BoolNoIndex,
         [property: BoolIndex(IsMultiEntry = true)] IEnumerable<bool> IncludeME,
         [property: Index] DateOnly Date,
         [property: Index] TimeOnly Time,
@@ -104,7 +105,7 @@ namespace DexieNETTest.TestBase.Test
         [property: ByteIndex] byte[] Blob,
         [property: ByteIndex(IsMultiEntry = true)] IEnumerable<byte[]> BlobME,
         [property: Index] int[] Array,
-        [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] int? Id = null
     ) : ITestDB;
 
     [Schema(StoreName = "Logentries")]
@@ -112,7 +113,7 @@ namespace DexieNETTest.TestBase.Test
    (
        [property: Index] string Message,
        [property: Index] DateTime DateTime,
-       [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
+       [property: Index(IsPrimary = true, IsAuto = true)] int? Id = null
    ) : ITestDB;
 
     public record AgeInfo1
@@ -130,7 +131,7 @@ namespace DexieNETTest.TestBase.Test
         [property: Index] string Name,
         int ShoeSize,
          AgeInfo1 AgeInfo,
-        [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] int? Id = null
     ) : ITestDB;
 
     [Schema(StoreName = "Friends2", UpdateStore = typeof(Friend))]
@@ -139,7 +140,7 @@ namespace DexieNETTest.TestBase.Test
         [property: Index] string Name,
         [property: Index] int ShoeSize,
         AgeInfo1 AgeInfo,
-        [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] int? Id = null
     ) : ITestDB;
 
     [Schema(StoreName = "Friends3", UpdateStore = typeof(Friend))]
@@ -148,30 +149,30 @@ namespace DexieNETTest.TestBase.Test
         [property: Index] string FirstName,
         [property: Index] string LastName,
         [property: Index] AgeInfo2 AgeInfo,
-        [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] int? Id = null
     ) : ITestDB;
 
     [Schema(StoreName = nameof(PersonWithProperties), PrimaryKeyName = "PKey")]
     public partial class PersonWithProperties : ITestDB
     {
-        [Index] public string FirstName { get; init; }
-        [Index] public string LastName { get; init; }
+        [Index] public string FirstName { get; set; }
+        [Index] public string LastName { get; set; }
         public PersonWithProperties(string firstName, string lastName)
           => (FirstName, LastName) = (firstName, lastName);
-        public void Deconstruct(out string firstName, out string lastName, out Guid? pkey)
+        public void Deconstruct(out string firstName, out string lastName, out string? pkey)
           => (firstName, lastName, pkey) = (FirstName, LastName, PKey);
     }
 
     public record FriendIBP
     (
         [property: Index] string Name,
-        [property: Index(IsPrimary = true)] string ID
+        [property: Index(IsPrimary = true)] string Id
     ) : ITestDB;
 
     public record FriendIBBP
   (
       [property: Index] string Name,
-      [property: ByteIndex(IsPrimary = true)] byte[] ID
+      [property: ByteIndex(IsPrimary = true)] byte[] Id
   ) : ITestDB;
 
     [Schema(OutboundPrimaryKey = true)]
@@ -203,7 +204,7 @@ namespace DexieNETTest.TestBase.Test
                 return false;
             }
 
-            var IDEquals = _ignoreID || x.ID == y.ID;
+            var IDEquals = _ignoreID || x.Id == y.Id;
 
             return x.Name == y.Name && x.Age == y.Age && x.Address == y.Address && x.Phone == y.Phone &&
                 x.Guid == y.Guid && IDEquals && Enumerable.SequenceEqual(x.Tags, y.Tags);
@@ -225,7 +226,7 @@ namespace DexieNETTest.TestBase.Test
 
             if (!_ignoreID)
             {
-                hash.Add(obj.ID);
+                hash.Add(obj.Id);
             }
 
             return hash.ToHashCode();
@@ -248,7 +249,7 @@ namespace DexieNETTest.TestBase.Test
                 return false;
             }
 
-            var IDEquals = _ignoreID || x.ID == y.ID;
+            var IDEquals = _ignoreID || x.Id == y.Id;
 
             return x.Faculty == y.Faculty && IDEquals;
         }
@@ -260,7 +261,7 @@ namespace DexieNETTest.TestBase.Test
 
             if (!_ignoreID)
             {
-                hash.Add(obj.ID);
+                hash.Add(obj.Id);
             }
 
             return hash.ToHashCode();

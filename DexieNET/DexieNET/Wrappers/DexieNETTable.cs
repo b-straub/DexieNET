@@ -20,6 +20,7 @@ limitations under the License.
 
 using Microsoft.JSInterop;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text.Json;
 
 namespace DexieNET
@@ -29,19 +30,26 @@ namespace DexieNET
         public T AssignPrimaryKey();
     }
 
-    internal sealed class TableJS : JSObject
+    public interface ITable
     {
-        public TableJS(IJSInProcessObjectReference module, IJSObjectReference reference) : base(module, reference)
+        public string Name { get; }
+        public bool CloudSync { get; }
+    }
+
+    internal sealed class TableJS : DexieJSObject
+    {
+        public TableJS(IJSInProcessObjectReference module, IJSInProcessObjectReference reference) : base(module, reference)
         {
         }
     }
 
-    public class Table<T, I> where T : IDBStore
+    public class Table<T, I> : ITable where T : IDBStore
     {
         public Expression<Func<T, I>> PrimaryKey => _ => DefaultPrimaryKey;
+        public string Name { get; }
+        public bool CloudSync { get; }
 
         internal DBBase DB { get; }
-        internal string Name { get; }
         internal bool PKGuid { get; }
         internal string[] Keys { get; }
         internal string[] MultiEntry { get; }
@@ -54,7 +62,7 @@ namespace DexieNET
         private readonly Dictionary<Type, object> _emptyCollection;
         private readonly Dictionary<Type, object> _emptyWhereClause;
 
-        public Table(DBBase db, IJSObjectReference reference, string name, ITypeConverter typeConverter, string[] keys, string[] multiEntry, bool pkGuid)
+        public Table(DBBase db, IJSInProcessObjectReference reference, string name, ITypeConverter typeConverter, string[] keys, string[] multiEntry, bool pkGuid, bool cloudSync)
         {
             if (!typeof(I).IsAllowedPrimaryIndexType())
             {
@@ -68,6 +76,7 @@ namespace DexieNET
             TypeConverter = typeConverter;
             Keys = keys;
             MultiEntry = multiEntry;
+            CloudSync = cloudSync;
             _emptyCollection = new();
             _emptyWhereClause = new();
             DefaultPrimaryKey = HelperExtensions.GetDefaultPrimaryKey<I>();
@@ -84,7 +93,7 @@ namespace DexieNET
         }
 
         internal bool AddTableInfo((string Name, TAMode Mode) tableInfo)
-        {   
+        {
             if (DB.CurrentTransaction is not null)
             {
                 return DB.CurrentTransaction.AddTableInfo(tableInfo);
@@ -124,13 +133,26 @@ namespace DexieNET
                 return EmptyCollection<Q>(Keys.First());
             }
 
-            var reference = await TableJS.InvokeAsync<IJSObjectReference>("toCollection");
+            var reference = await TableJS.InvokeAsync<IJSInProcessObjectReference>("toCollection");
             return new(this, reference, Keys.First());
         }
     }
 
     public static class TableExtensions
     {
+        #region Cloud
+        public async static ValueTask<IUsePermissions<T>> CreateUsePermissions<T, I>(this ValueTask<Table<T, I>> tableT) where T : IDBStore, IDBCloudEntity
+        {
+            var table = await tableT;
+            return table.CreateUsePermissions();
+        }
+
+        public static IUsePermissions<T> CreateUsePermissions<T, I>(this Table<T, I> table) where T : IDBStore, IDBCloudEntity
+        {
+            return UsePermissions<T, I>.Create(table);
+        }
+        #endregion
+
         #region Add
         public static async ValueTask<I> Add<T, I>(this ValueTask<Table<T, I>> tableT, T? item, I primaryKey) where T : IDBStore
         {
@@ -150,15 +172,15 @@ namespace DexieNET
                 throw new ArgumentNullException(nameof(item));
             }
 
-            var json = item.FromObject(); // ensure lowerCase keys
+            var jsi = item.FromObject();
 
             if (typeof(I).Equals(typeof(byte[])))
             {
-                return await table.TableJS.Module.InvokeAsync<I>("AddByteArray", table.TableJS.Reference, json, primaryKey);
+                return await table.TableJS.Module.InvokeAsync<I>("AddByteArray", table.TableJS.Reference, jsi, primaryKey);
             }
 
             var keyQ = KeyFactory.AsQuery(primaryKey, table.TypeConverter);
-            var key = await table.TableJS.InvokeAsync<JsonElement>("add", json, keyQ);
+            var key = await table.TableJS.InvokeAsync<JsonElement>("add", jsi, keyQ);
             var query = new DBQuery<T, I, I>(table.TypeConverter);
             return query.AsObject<I>(key);
         }
@@ -186,8 +208,8 @@ namespace DexieNET
                 item = ((IGuidStore<T>)item).AssignPrimaryKey();
             }
 
-            var json = item.FromObject(); // ensure lowerCase keys
-            return await table.TableJS.InvokeAsync<I>("add", json);
+            var jsi = item.FromObject();
+            return await table.TableJS.InvokeAsync<I>("add", jsi);
         }
         #endregion
 
@@ -205,11 +227,11 @@ namespace DexieNET
                 return Enumerable.Empty<I>();
             }
 
-            var json = items.FromObject(); // ensure lowerCase keys
+            var jsi = items.FromObject();
 
             if (typeof(I).Equals(typeof(byte[])))
             {
-                return await table.TableJS.Module.InvokeAsync<IEnumerable<I>>("BulkAddByteArray", table.TableJS.Reference, json, primaryKeys, allKeys);
+                return await table.TableJS.Module.InvokeAsync<IEnumerable<I>>("BulkAddByteArray", table.TableJS.Reference, jsi, primaryKeys, allKeys);
             }
 
             Dictionary<string, bool> options = new() { { "allKeys", allKeys } };
@@ -217,13 +239,13 @@ namespace DexieNET
 
             if (allKeys)
             {
-                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", json, queries, options);
+                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", jsi, queries, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return query.AsEnumerable(keys);
             }
             else
             {
-                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", json, queries, options);
+                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", jsi, queries, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return new[] { query.AsObject<I>(key) };
             }
@@ -249,17 +271,17 @@ namespace DexieNET
                 items = items.Select(i => ((IGuidStore<T>)i).AssignPrimaryKey());
             }
 
-            var json = items.FromObject(); // ensure lowerCase keys
+            var jsi = items.FromObject();
 
             if (allKeys)
             {
-                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", json, options);
+                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", jsi, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return query.AsEnumerable(keys);
             }
             else
             {
-                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", json, options);
+                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkAdd", jsi, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return new[] { query.AsObject<I>(key) };
             }
@@ -317,11 +339,11 @@ namespace DexieNET
                 return Enumerable.Empty<I>();
             }
 
-            var json = items.FromObject(); // ensure lowerCase keys
+            var jsi = items.FromObject();
 
             if (typeof(I).Equals(typeof(byte[])))
             {
-                return await table.TableJS.Module.InvokeAsync<IEnumerable<I>>("BulkPutByteArray", table.TableJS.Reference, json, primaryKeys, allKeys);
+                return await table.TableJS.Module.InvokeAsync<IEnumerable<I>>("BulkPutByteArray", table.TableJS.Reference, jsi, primaryKeys, allKeys);
             }
 
             Dictionary<string, bool> options = new() { { "allKeys", allKeys } };
@@ -329,13 +351,13 @@ namespace DexieNET
 
             if (allKeys)
             {
-                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", json, queries, options);
+                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", jsi, queries, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return query.AsEnumerable(keys);
             }
             else
             {
-                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", json, queries, options);
+                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", jsi, queries, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return new[] { query.AsObject<I>(key) };
             }
@@ -354,19 +376,24 @@ namespace DexieNET
                 return Enumerable.Empty<I>();
             }
 
-            var json = items.FromObject(); // ensure lowerCase keys
-
             Dictionary<string, bool> options = new() { { "allKeys", allKeys } };
+
+            if (table.PKGuid)
+            {
+                items = items.Select(i => ((IGuidStore<T>)i).AssignPrimaryKey());
+            }
+
+            var jsi = items.FromObject();
 
             if (allKeys)
             {
-                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", json, options);
+                var keys = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", jsi, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return query.AsEnumerable(keys);
             }
             else
             {
-                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", json, options);
+                var key = await table.TableJS.InvokeAsync<JsonElement>("bulkPut", jsi, options);
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return new[] { query.AsObject<I>(key) };
             }
@@ -580,7 +607,7 @@ namespace DexieNET
                 return table.EmptyCollection<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("orderBy", key);
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", key);
             return new(table, reference, key);
         }
 
@@ -599,7 +626,7 @@ namespace DexieNET
                 return table.EmptyCollection<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("orderBy", query.GetKey());
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", query.GetKey());
             return new(table, reference, key);
         }
 
@@ -618,7 +645,7 @@ namespace DexieNET
 
             object keys = new[] { query1.GetKey(), query2.GetKey() };
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("orderBy", keys);
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", keys);
             return new(table, reference, query1.GetKey(), query2.GetKey());
         }
 
@@ -639,7 +666,7 @@ namespace DexieNET
 
             object keys = new[] { query1.GetKey(), query2.GetKey(), query3.GetKey() };
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("orderBy", keys);
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", keys);
             return new(table, reference, query1.GetKey(), query2.GetKey(), query3.GetKey());
         }
         #endregion
@@ -663,15 +690,15 @@ namespace DexieNET
                 throw new ArgumentNullException(nameof(item));
             }
 
-            var json = item.FromObject(); // ensure lowerCase keys
+            var jsi = item.FromObject();
 
             if (typeof(I).Equals(typeof(byte[])))
             {
-                return await table.TableJS.Module.InvokeAsync<I>("PutByteArray", table.TableJS.Reference, json, primaryKey);
+                return await table.TableJS.Module.InvokeAsync<I>("PutByteArray", table.TableJS.Reference, jsi, primaryKey);
             }
 
             var keyQ = KeyFactory.AsQuery(primaryKey, table.TypeConverter);
-            var key = await table.TableJS.InvokeAsync<JsonElement>("put", json, keyQ);
+            var key = await table.TableJS.InvokeAsync<JsonElement>("put", jsi, keyQ);
             var query = new DBQuery<T, I, I>(table.TypeConverter);
             return query.AsObject<I>(key);
         }
@@ -694,9 +721,13 @@ namespace DexieNET
                 throw new ArgumentNullException(nameof(item));
             }
 
-            var json = item.FromObject(); // ensure lowerCase keys
+            if (table.PKGuid)
+            {
+                item = ((IGuidStore<T>)item).AssignPrimaryKey();
+            }
 
-            return await table.TableJS.InvokeAsync<I>("put", json); ;
+            var jsi = item.FromObject();
+            return await table.TableJS.InvokeAsync<I>("put", jsi); ;
         }
         #endregion
 
@@ -823,7 +854,7 @@ namespace DexieNET
             }
 
             var queryConverted = table.TypeConverter?.Convert(query) ?? query;
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("where", queryConverted);
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", queryConverted);
             return new(table, reference, query.Keys.ToArray());
         }
 
@@ -882,7 +913,7 @@ namespace DexieNET
                 return table.EmptyWhereClause<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("where", query.GetKey());
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", query.GetKey());
             return new(table, reference, key);
         }
         #endregion
@@ -908,7 +939,7 @@ namespace DexieNET
                 return table.EmptyWhereClause<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("where", key);
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", key);
             return new(table, reference, key);
         }
         #endregion
@@ -934,7 +965,7 @@ namespace DexieNET
                 return table.EmptyWhereClause<(Q1, Q2)>(keys);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("where", (object)keys);
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", (object)keys);
             return new(table, reference, keys);
         }
 
@@ -960,7 +991,7 @@ namespace DexieNET
                 return table.EmptyWhereClause<(Q1, Q2, Q3)>(keys);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSObjectReference>("where", (object)keys);
+            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", (object)keys);
             return new(table, reference, keys);
         }
         #endregion

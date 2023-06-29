@@ -18,6 +18,8 @@ limitations under the License.
 
 using Humanizer;
 using System;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace DNTGenerator.Helpers
 {
@@ -31,6 +33,21 @@ namespace DNTGenerator.Helpers
         public static bool False(this bool? value)
         {
             return !value.GetValueOrDefault(true);
+        }
+
+        public static string ToCamelCase(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return str;
+            }
+
+            var parts = str.Split('.');
+            
+            return parts
+                .Select(p => JsonNamingPolicy.CamelCase.ConvertName(p))
+                .Aggregate((curr, next) => curr + "." + next)
+                .TrimEnd('.');
         }
 
         public static string TrimEnd(this string source, string trimString)

@@ -192,9 +192,9 @@ using System;
 
 namespace Test
 {{
-    public record {{|{GeneratorDiagnostic.NotPartialAutoGuid.Id}:Person|}}
+    public record {{|{GeneratorDiagnostic.NotPartial.Id}:Person|}}
     (
-        [property: Index(IsPrimary = true, IsAuto = true)] Guid? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] string? ID = null
     ) : IDBStore;
 }}
 ";
@@ -207,7 +207,40 @@ namespace Test
 {
     public partial record Person
     (
-        [property: Index(IsPrimary = true, IsAuto = true)] Guid? ID = null
+        [property: Index(IsPrimary = true, IsAuto = true)] string? ID = null
+    ) : IDBStore;
+}
+";
+            await Fixer.VerifyCodeFixAsync(test, fix);
+        }
+
+        [Fact]
+        public async Task RecordNotPartialWithCloudSyncFix()
+        {
+            var test = @$"
+using DexieNET;
+using System;
+
+namespace Test
+{{
+    [Schema(CloudSync = true)]
+    public record {{|{GeneratorDiagnostic.NotPartial.Id}:Person|}}
+    (
+        [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
+    ) : IDBStore;
+}}
+";
+
+            var fix = @"
+using DexieNET;
+using System;
+
+namespace Test
+{
+    [Schema(CloudSync = true)]
+    public partial record Person
+    (
+        [property: Index(IsPrimary = true, IsAuto = true)] int? ID = null
     ) : IDBStore;
 }
 ";

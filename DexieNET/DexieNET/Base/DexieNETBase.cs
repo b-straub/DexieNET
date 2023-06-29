@@ -20,6 +20,8 @@ limitations under the License.
 
 using Microsoft.JSInterop;
 using System.Reactive;
+using System.Runtime.InteropServices.JavaScript;
+using JSException = Microsoft.JSInterop.JSException;
 
 namespace DexieNET
 {
@@ -29,12 +31,11 @@ namespace DexieNET
 
     public interface IDBBase
     {
-        public static abstract IDBBase Create(IJSInProcessObjectReference module, IJSObjectReference reference);
-
+        public static abstract IDBBase Create(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, bool cloudSync);
         public static abstract string Name { get; }
     }
 
-    public enum PersistanceType
+	public enum PersistenceType
     {
         Default = -1,
         Never = 0,
@@ -42,17 +43,17 @@ namespace DexieNET
         Prompt = 2,
     }
 
-    public record struct StorageEstimate(double Quota, double Usage);
+    public record StorageEstimate(double Quota, double Usage);
 
-    public sealed class Persistance : JSObject
+    public sealed class Persistance : DexieJSObject
     {
-        public Persistance(IJSInProcessObjectReference module, IJSObjectReference? reference) : base(module, reference)
+        public Persistance(IJSInProcessObjectReference module, IJSInProcessObjectReference? reference) : base(module, reference)
         {
         }
 
-        public async ValueTask<PersistanceType> GetPersistanceType()
+        public async ValueTask<PersistenceType> GetPersistanceType()
         {
-            return await Module.InvokeAsync<PersistanceType>("InitStoragePersistence");
+            return await Module.InvokeAsync<PersistenceType>("InitStoragePersistence");
         }
 
         public async ValueTask<StorageEstimate> GetStorageEstimate()
@@ -69,9 +70,11 @@ namespace DexieNET
     public abstract class DBBase
     {
         public abstract ValueTask<Version> Version(double versionNumber);
+        public bool CloudSync { get; }
+        public abstract string[] UnsyncedTables { get; }
 
         internal bool LiveQueryRunning { get; set; } = false;
-        internal JSObject DBBaseJS { get; }
+        internal DexieJSObject DBBaseJS { get; }
         internal Transaction? CurrentTransaction { get; set; }
         internal Stack<Transaction> TransactionCollectStack { get; }
         internal Dictionary<int, Transaction> TransactionDict { get; }
@@ -80,12 +83,13 @@ namespace DexieNET
 
         internal TAState TransactionState { get; set; } = TAState.Collecting;
 
-        protected DBBase(IJSInProcessObjectReference module, IJSObjectReference reference)
+        protected DBBase(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, bool cloudSync)
         {
             DBBaseJS = new(module, reference);
             TransactionCollectStack = new();
             TransactionDict = new();
             TransactionTasks = new();
+            CloudSync = cloudSync;
         }
 
         public Persistance Persistance()
@@ -99,7 +103,7 @@ namespace DexieNET
         private readonly Lazy<Task<IJSInProcessObjectReference>> _moduleTask;
         public DexieNETFactory(IJSRuntime jsRuntime)
         {
-            if (jsRuntime is not IJSInProcessRuntime)
+            if (!OperatingSystem.IsBrowser())
             {
                 throw new InvalidOperationException("This IndexedDB wrapper is only designed for Webassembly usage!");
             }
@@ -107,12 +111,12 @@ namespace DexieNET
                "import", @"./_content/DexieNET/js/dexieNET.js").AsTask());
         }
 
-        public async ValueTask<T> Create()
+        public async ValueTask<T> Create(bool cloudSync = false)
         {
             var module = await _moduleTask.Value;
-            var reference = await module.InvokeAsync<IJSObjectReference>("Create", T.Name);
+			var reference = await module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name, cloudSync);
 
-            return (T)T.Create(module, reference);
+            return (T)T.Create(module, reference, cloudSync);
         }
 
         public async ValueTask Delete()
@@ -133,9 +137,9 @@ namespace DexieNET
 
     public static class DBExtensions
     {
-        public static async ValueTask<LiveQuery<T>> LiveQuery<T>(this DBBase db, Func<ValueTask<T>> query, params IObservable<Unit>[] observables)
+        public static async ValueTask<LiveQuery<T>> LiveQuery<T>(this DBBase db, Func<ValueTask<T>> query)
         {
-            var lq = new LiveQuery<T>(db, query, observables);
+            var lq = new LiveQuery<T>(db, query);
             await db.DBBaseJS.Module.InvokeVoidAsync("LiveQuery", lq.DotnetRef, lq.ID);
             return lq;
         }
@@ -297,8 +301,8 @@ namespace DexieNET
 
         public static async ValueTask<T> Open<T>(this T dexie) where T : DBBase, IDBBase
         {
-            var reference = await dexie.DBBaseJS.InvokeAsync<IJSObjectReference>("open");
-            return (T)T.Create(dexie.DBBaseJS.Module, reference);
+            var reference = await dexie.DBBaseJS.InvokeAsync<IJSInProcessObjectReference>("open");
+            return (T)T.Create(dexie.DBBaseJS.Module, reference, dexie.CloudSync);
         }
 
         public static async ValueTask<bool> IsOpen(this DBBase dexie)

@@ -21,8 +21,8 @@ namespace DexieNETTest.TestBase.Test
             var personsData = await table.ToArray();
 
             var primaryKeysData = personsData
-                .Where(p => p.ID is not null)
-                .Select(p => (ulong)p.ID!);
+                .Where(p => p.Id is not null)
+                .Select(p => (ulong)p.Id!);
 
             var primaryKeys = await table.ToCollection().PrimaryKeys();
 
@@ -32,8 +32,8 @@ namespace DexieNETTest.TestBase.Test
             }
 
             var primaryKeysDataAge = personsData
-               .Where(p => p.Age > 30 && p.ID is not null)
-               .Select(p => (ulong)p.ID!)
+               .Where(p => p.Age > 30 && p.Id is not null)
+               .Select(p => (ulong)p.Id!)
                .OrderBy(p => p);
 
             var primaryKeysAge = await table.Where(p => p.Age).Above(30).PrimaryKeys();
