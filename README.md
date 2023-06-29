@@ -1,9 +1,16 @@
 DexieNET
 ========
 
-DexieNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB see https://dexie.org
+DexieNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB see [Dexie](https://dexie.org)
 
 *'DexieNET' used with permission of David Fahlander*
+
+##  News
+
+- Coming soon [DexieCloud](https://dexie.org/cloud/)
+- Published a new helper library [RxBlazorLight](https://github.com/b-straub/RxBlazorLight)  
+
+---
 
 ##  Basic
 
