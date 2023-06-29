@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Components;
-using MudBlazor;
+﻿using DexieNETCloudSample.Dexie.Services;
 using DexieNETCloudSample.Dialogs;
 using DexieNETCloudSample.Logic;
-using DexieNETCloudSample.Dexie.Services;
+using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using RxBlazorLightCore;
 
 namespace DexieNETCloudSample.Components

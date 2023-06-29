@@ -1,7 +1,7 @@
-﻿using DexieNETCloudSample.Extensions;
+﻿using DexieNET;
+using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
-using DexieNET;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
@@ -96,7 +96,7 @@ namespace DexieNETCloudSample.Dexie.Services
             private static readonly MemberRoleSelection[] _roleSelections =
             {
                 new MemberRoleSelection(MemberRole.OWNER),
-                new MemberRoleSelection(MemberRole.ADMIN), 
+                new MemberRoleSelection(MemberRole.ADMIN),
                 new MemberRoleSelection(MemberRole.USER),
                 new MemberRoleSelection(MemberRole.GUEST),
             };

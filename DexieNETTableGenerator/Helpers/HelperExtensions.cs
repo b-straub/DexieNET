@@ -18,7 +18,6 @@ limitations under the License.
 
 using Humanizer;
 using System;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace DNTGenerator.Helpers
@@ -43,7 +42,7 @@ namespace DNTGenerator.Helpers
             }
 
             var parts = str.Split('.');
-            
+
             return parts
                 .Select(p => JsonNamingPolicy.CamelCase.ConvertName(p))
                 .Aggregate((curr, next) => curr + "." + next)

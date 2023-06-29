@@ -87,7 +87,7 @@ namespace DexieNET
         public bool CanAdd(IDBCloudEntity? item = null, params ITable[] tables)
         {
             var tableNameList = tables.Select(t => t.Name).ToList();
-            
+
             if (!tableNameList.Any())
             {
                 tableNameList.Add(_table.Name);

@@ -19,7 +19,6 @@ limitations under the License.
 */
 
 using Microsoft.JSInterop;
-using System.Diagnostics.CodeAnalysis;
 
 namespace DexieNET
 {
@@ -159,7 +158,7 @@ namespace DexieNET
 
             if (Collecting)
             {
-               await waitFor();
+                await waitFor();
             }
             else
             {

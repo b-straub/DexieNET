@@ -22,7 +22,6 @@ using Microsoft.JSInterop;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.CompilerServices;
 
 namespace DexieNET
 {
@@ -54,7 +53,7 @@ namespace DexieNET
 
         public UseLiveQuery<T> UseLiveQuery(params IObservable<Unit>[] observables)
         {
-             return new UseLiveQuery<T>(this, observables);
+            return new UseLiveQuery<T>(this, observables);
         }
 
         [JSInvokable]
@@ -121,7 +120,7 @@ namespace DexieNET
         private readonly LiveQuery<T> _liveQuery;
         private IDisposable? _lqDisposable;
 
-        internal UseLiveQuery(LiveQuery<T> liveQuery, params IObservable<Unit>[] observables) 
+        internal UseLiveQuery(LiveQuery<T> liveQuery, params IObservable<Unit>[] observables)
         {
             _liveQuery = liveQuery;
 

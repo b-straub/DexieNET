@@ -60,7 +60,7 @@ namespace DexieNETCloudSample.Dexie.Services
                }).Subscribe(_ => StateHasChanged());
         }
 
-       
+
         public bool CanUpdate<Q>(T? item, Expression<Func<T, Q>> query)
         {
             return item is not null && (Permissions?.CanUpdate(item, query)).True();
@@ -72,7 +72,7 @@ namespace DexieNETCloudSample.Dexie.Services
             GC.SuppressFinalize(this);
         }
 
-       
+
         protected virtual void Dispose(bool disposing)
         {
             DBDisposeBag.Clear();

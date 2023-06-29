@@ -191,7 +191,7 @@ namespace DexieNETTest.TestBase.Test
                .Subscribe(
                    onNext: d =>
                    {
-                       if ((d == 12) || firstError is not null)
+                       if (_exThrown || firstError is not null)
                        {
                            testFinished();
                        }
@@ -216,7 +216,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException(firstError);
             }
 
-            if (executionCountP != 5)
+            if (executionCountP != 7)
             {
                 throw new InvalidOperationException($"executionCountP : {executionCountP}-> LiveQuery failed.");
             }
@@ -226,7 +226,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException($"executionCountS: {executionCountS} -> LiveQuery failed.");
             }
 
-            if (executionCountSP != 5)
+            if (executionCountSP != 7)
             {
                 throw new InvalidOperationException($"executionCountSP: {executionCountSP} -> LiveQuery failed.");
             }

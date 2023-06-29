@@ -1,5 +1,4 @@
 ﻿using DexieNET;
-using System.Diagnostics;
 
 namespace DexieNETTest.TestBase.Test
 {
@@ -75,7 +74,7 @@ namespace DexieNETTest.TestBase.Test
             var count = await table.Count();
 
             if (Fail)
-            {   
+            {
                 if (!exThrown || await table.Count() != 0)
                 {
                     throw new InvalidOperationException("Failed Transaction with WaitFor failed.");

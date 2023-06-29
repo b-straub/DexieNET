@@ -1,6 +1,5 @@
 ﻿using DexieNET;
 using DexieNETTest.TestBase.Test;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Reactive;
 using System.Reactive.Disposables;

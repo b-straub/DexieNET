@@ -57,7 +57,7 @@ namespace DexieNET
                     return;
                 }
             }
-           
+
             var keyIntersection = keys.Intersect(keyArray);
 
             if (!keyIntersection.Any())

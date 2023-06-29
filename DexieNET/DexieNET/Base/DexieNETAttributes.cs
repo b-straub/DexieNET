@@ -81,7 +81,7 @@ namespace DexieNET
 
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-    public abstract class IndexConverterAttribute<T, C1, C2> : JsonConverterAttribute, IIndexAttribute 
+    public abstract class IndexConverterAttribute<T, C1, C2> : JsonConverterAttribute, IIndexAttribute
         where C1 : IndexConverter<T>, new() where C2 : IndexConverter<IEnumerable<T>>, new()
     {
         public bool IsPrimary { get; set; }

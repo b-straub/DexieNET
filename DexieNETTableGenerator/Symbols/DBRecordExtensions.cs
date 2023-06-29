@@ -174,7 +174,7 @@ namespace DNTGenerator.Verifier
 
         public static string? PrimaryIndexTypeName(this DBRecord record)
         {
-            var typeName = record.HasGeneratedPrimaryKey() ? 
+            var typeName = record.HasGeneratedPrimaryKey() ?
                 (record.HasGeneratedGuidPrimaryKey() || record.HasNonCloudGuidPrimaryKey()) ? "string" : "ulong"
                 : record.GetPrimaryIndexTypeName();
 
@@ -253,20 +253,20 @@ namespace DNTGenerator.Verifier
             {
                 var name = i.Name.ToCamelCase();
 
-                
-				if (i.IsAuto)
-				{
+
+                if (i.IsAuto)
+                {
                     if (record.SchemaDescriptor.HasCloudSync)
                     {
-						return '@' + name;
-					}
-					else if (!record.HasNonCloudGuidPrimaryKey())
-					{
-						return "++" + name;
-					}
-				}
-               
-				if (i.IsUniqe && !i.IsPrimary)
+                        return '@' + name;
+                    }
+                    else if (!record.HasNonCloudGuidPrimaryKey())
+                    {
+                        return "++" + name;
+                    }
+                }
+
+                if (i.IsUniqe && !i.IsPrimary)
                 {
                     return "&" + name;
                 }
@@ -413,7 +413,7 @@ namespace DNTGenerator.Verifier
             pkLocation ??= arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsAuto").FirstOrDefault()?.GetLocation();
 
             var isAutoGuidPrimary = (isPrimary && isAuto && symbol.IsGuidType());
-         
+
             var isUnique = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsUnique").FirstOrDefault().Value.Value).True();
             var isMultiEntry = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsMultiEntry").FirstOrDefault().Value.Value).True();
             var indexConverter = symbol.GetIndexConverter(compilation);

@@ -40,7 +40,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Item invalid.");
             }
 
-            person1.FirstName  = "Update";
+            person1.FirstName = "Update";
 
             var key2 = await table.Put(person1);
             var (firstName2, lastName2, id2) = (await table.ToArray()).First();

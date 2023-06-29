@@ -1,5 +1,4 @@
 ﻿using DexieNET;
-using System.Text;
 
 namespace DexieNETTest.TestBase.Test
 {

@@ -1,6 +1,6 @@
-﻿using DexieNETCloudSample.Logic;
+﻿using DexieNET;
+using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
-using DexieNET;
 
 namespace DexieNETCloudSample.Dexie.Services
 {

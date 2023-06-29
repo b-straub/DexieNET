@@ -16,7 +16,7 @@ namespace DexieNET.Component
         public DexieNET(string? cloudURL = null)
         {
             _cloudURL = cloudURL;
-        }   
+        }
 
         protected async override Task OnInitializedAsync()
         {
@@ -24,12 +24,12 @@ namespace DexieNET.Component
             {
                 DexieCloudOptions? cloudOptions = null;
 
-				if (_cloudURL is not null)
-				{
-					cloudOptions = new(_cloudURL);
-				}
+                if (_cloudURL is not null)
+                {
+                    cloudOptions = new(_cloudURL);
+                }
 
-				Dexie = await DexieNETService.DexieNETFactory.Create(cloudOptions is not null);
+                Dexie = await DexieNETService.DexieNETFactory.Create(cloudOptions is not null);
 
                 if (Dexie is null)
                 {

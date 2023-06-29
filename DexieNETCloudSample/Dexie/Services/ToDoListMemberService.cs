@@ -3,12 +3,10 @@ using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using Microsoft.Extensions.Options;
 using RxBlazorLightCore;
-using System.Net.Http.Headers;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection.Metadata;
 
 namespace DexieNETCloudSample.Dexie.Services
 {

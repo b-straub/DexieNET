@@ -46,11 +46,11 @@ namespace DexieNET
         {
             var message = Message;
             var messageParams = Params;
-			var messageFormated = UIInteractionRegex.Params().Replace(message, m =>
-			{
-				return messageParams[m.Value[1..^1]];
-			});
-			return messageFormated;
+            var messageFormated = UIInteractionRegex.Params().Replace(message, m =>
+            {
+                return messageParams[m.Value[1..^1]];
+            });
+            return messageFormated;
         }
     }
 

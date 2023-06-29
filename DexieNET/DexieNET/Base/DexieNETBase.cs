@@ -19,8 +19,6 @@ limitations under the License.
 */
 
 using Microsoft.JSInterop;
-using System.Reactive;
-using System.Runtime.InteropServices.JavaScript;
 using JSException = Microsoft.JSInterop.JSException;
 
 namespace DexieNET
@@ -35,7 +33,7 @@ namespace DexieNET
         public static abstract string Name { get; }
     }
 
-	public enum PersistenceType
+    public enum PersistenceType
     {
         Default = -1,
         Never = 0,
@@ -114,7 +112,7 @@ namespace DexieNET
         public async ValueTask<T> Create(bool cloudSync = false)
         {
             var module = await _moduleTask.Value;
-			var reference = await module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name, cloudSync);
+            var reference = await module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name, cloudSync);
 
             return (T)T.Create(module, reference, cloudSync);
         }

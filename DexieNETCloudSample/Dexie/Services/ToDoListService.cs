@@ -20,7 +20,7 @@ namespace DexieNETCloudSample.Dexie.Services
         public ICommandAsync ClearLists => ClearItems;
         public ICommandAsync<ToDoDBList> ToggleListItemsOpenClose => new ToggleListItemsOpenCloseCmd(this);
         public ICommandAsync<ToDoDBList> ToggleListShareOpenClose => new ToggleListShareOpenCloseCmd(this);
-        public ICommand<Invite> AcceptInvite  => new AcceptInviteCmd(this);
+        public ICommand<Invite> AcceptInvite => new AcceptInviteCmd(this);
         public ICommand<Invite> RejectInvite => new RejectInviteCmd(this);
 
         private ToDoDB? _db;

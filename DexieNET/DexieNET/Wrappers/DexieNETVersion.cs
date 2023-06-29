@@ -19,7 +19,6 @@ limitations under the License.
 */
 
 using Microsoft.JSInterop;
-using System.Reflection;
 
 namespace DexieNET
 {

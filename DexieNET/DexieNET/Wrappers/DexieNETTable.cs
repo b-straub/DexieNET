@@ -20,7 +20,6 @@ limitations under the License.
 
 using Microsoft.JSInterop;
 using System.Linq.Expressions;
-using System.Runtime.InteropServices.JavaScript;
 using System.Text.Json;
 
 namespace DexieNET
