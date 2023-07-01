@@ -97,56 +97,42 @@ namespace DexieNETCloudSample.Dexie.Services
             return await _db.ListOpenCloses().ToArray();
         }
 
-        protected override async Task PostAddAction(string id)
+        protected override async Task PostAddAction(string listID)
         {
             ArgumentNullException.ThrowIfNull(_db);
-
-            await _db.Transaction(async _ =>
-            {
-                var oc = new ListOpenClose(false, false, id);
-                await _db.ListOpenCloses().Put(oc);
-            });
+           
+            var oc = new ListOpenClose(false, false, listID);
+            await _db.ListOpenCloses().Put(oc);
         }
 
-        protected override async Task PreClearAction(IEnumerable<ToDoDBList> lists)
+        protected override async Task PreDeleteAction(string listID)
         {
             ArgumentNullException.ThrowIfNull(_db);
+            ArgumentNullException.ThrowIfNull(listID);
 
-            await _db.Transaction(async t =>
-            {
-                foreach (var list in lists)
-                {
-                    await PreDeleteAction(list);
-                }
-            });
+            await _db.ListOpenCloses()
+                .Where(l => l.ListID, listID)
+                .Delete();
+
+            // Delete todo items
+            await _db.ToDoDBItems()
+                .Where(i => i.ListID, listID)
+                .Delete();
         }
 
-        protected override async Task PreDeleteAction(ToDoDBList list)
+        protected override async Task PostDeleteAction(string listID)
         {
             ArgumentNullException.ThrowIfNull(_db);
-            ArgumentNullException.ThrowIfNull(list.ID);
 
-            await _db.Transaction(async _ =>
-            {
-                await _db.ListOpenCloses()
-                    .Where(l => l.ListID, list.ID)
-                    .Delete();
-
-                // Delete todo items
-                await _db.ToDoDBItems()
-                    .Where(i => i.ListID, list.ID)
-                    .Delete();
-
-                // Delete any tied realm and related access.
-                // If it wasn't shared, this is a no-op but do
-                // it anyway to make this operation consistent
-                // in case it was shared by other offline
-                // client and then syncs.
-                // No need to delete members - they will be deleted
-                // automatically when the realm is deleted.
-                var tiedRealmId = _db.GetTiedRealmID(list.ID);
-                await _db.Realms().Delete(tiedRealmId);
-            });
+            // Delete any tied realm and related access.
+            // If it wasn't shared, this is a no-op but do
+            // it anyway to make this operation consistent
+            // in case it was shared by other offline
+            // client and then syncs.
+            // No need to delete members - they will be deleted
+            // automatically when the realm is deleted.
+            var tiedRealmId = _db.GetTiedRealmID(listID);
+            await _db.Realms().Delete(tiedRealmId);
         }
     }
 }

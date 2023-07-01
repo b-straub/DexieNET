@@ -112,7 +112,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 return _roleSelections;
             }
 
-            public override void Initialize()
+            public override async Task InitializeAsync()
             {
                 ArgumentNullException.ThrowIfNull(Parameter);
                 var role = Service.GetRole(Parameter);
@@ -130,10 +130,10 @@ namespace DexieNETCloudSample.Dexie.Services
                 }
 
                 ArgumentNullException.ThrowIfNull(initialSelection);
-                SetValue(initialSelection);
+                await SetInitialValueAsync(initialSelection);
             }
 
-            protected override async Task OnValueChangedAsync(MemberRoleSelection oldValue, MemberRoleSelection newValue)
+            protected override async Task OnValueChangingAsync(MemberRoleSelection oldValue, MemberRoleSelection newValue)
             {
                 ArgumentNullException.ThrowIfNull(Parameter);
                 await Service.ChangeAccess((Parameter, oldValue.Role, newValue.Role));

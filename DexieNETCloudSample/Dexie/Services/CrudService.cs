@@ -117,9 +117,8 @@ namespace DexieNETCloudSample.Dexie.Services
                 StateHasChanged();
             }));
         }
-
         protected virtual Task PostAddAction(string id) { return Task.CompletedTask; }
-        protected virtual Task PreDeleteAction(T item) { return Task.CompletedTask; }
-        protected virtual Task PreClearAction(IEnumerable<T> items) { return Task.CompletedTask; }
+        protected virtual Task PreDeleteAction(string id) { return Task.CompletedTask; }
+        protected virtual Task PostDeleteAction(string id) { return Task.CompletedTask; }
     }
 }

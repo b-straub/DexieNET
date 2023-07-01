@@ -65,8 +65,9 @@ namespace DexieNETCloudSample.Dexie.Services
 
                 await Service.DbService.DB.Transaction(async _ =>
                 {
-                    await Service.PreDeleteAction(parameter);
+                    await Service.PreDeleteAction(parameter.ID);
                     await Service.GetTable().Delete(parameter.ID);
+                    await Service.PostDeleteAction(parameter.ID);
                 });
             }
 
@@ -90,11 +91,10 @@ namespace DexieNETCloudSample.Dexie.Services
                 ArgumentNullException.ThrowIfNull(Service.DbService.DB);
                 var itemsToClear = await Service.GetTable().ToArray();
 
-                await Service.DbService.DB.Transaction(async _ =>
+                foreach (var item in itemsToClear)
                 {
-                    await Service.PreClearAction(itemsToClear);
-                    await Service.GetTable().Clear();
-                });
+                    await Service.DeleteItem.Execute(item);
+                }
             }
 
             public override bool CanExecute()
