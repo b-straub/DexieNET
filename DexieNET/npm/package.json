@@ -14,7 +14,7 @@
   "dependencies": {
     "@microsoft/dotnet-js-interop": "^7.0.4",
     "dexie": "^4.0.1-alpha.22",
-    "dexie-cloud-addon": "^4.0.1-beta.40",
+    "dexie-cloud-addon": "^4.0.1-beta.43",
     "dexie-cloud-common": "^1.0.26"
   },
   "devDependencies": {
@@ -22,7 +22,7 @@
     "css-loader": "^6.7.3",
     "eslint": "^8.43.0",
     "eslint-config-standard-with-typescript": "^34.0.1",
-    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.6.1",
     "eslint-plugin-promise": "^6.1.1",
     "file-loader": "^6.2.0",
