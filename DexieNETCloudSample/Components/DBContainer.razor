@@ -15,6 +15,9 @@
     [Inject]
     DexieCloudService? Service { get; set; }
 
+    [Inject]
+    private IOptions<DemoSettings>? Settings { get; set; }
+
     private string _statusIcon = @Icons.Material.Outlined.QuestionMark;
     private string _phaseIcon = @Icons.Material.Outlined.QuestionMark;
     private IDisposable? _sDisposable;
@@ -73,7 +76,8 @@
         await Service.OpenDB();
         ArgumentNullException.ThrowIfNull(Service.DB);
 
-        Service.ConfigureCloud("https://zjkqksqdy.dexie.cloud");
+        ArgumentNullException.ThrowIfNull(Settings?.Value?.CloudURL);
+        Service.ConfigureCloud(Settings.Value.CloudURL);
     }
 
     private string GetPhaseIcon(SyncState s)
