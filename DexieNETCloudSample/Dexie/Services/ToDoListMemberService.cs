@@ -39,14 +39,21 @@ namespace DexieNETCloudSample.Dexie.Services
         GUEST
     }
 
-    public enum MemberState
+    public enum MemberAction
     {
         NONE,
         OWNER,
-        REINVITE,
         ACCEPT,
         DELETE,
         LEAVE,
+    }
+
+    public enum MemberState
+    {
+        NONE,
+        PENDING,
+        ACCEPTED,
+        REJECTED,
     }
 
     public sealed partial class ToDoListMemberService : RxBLServiceBase, IDisposable
@@ -67,8 +74,6 @@ namespace DexieNETCloudSample.Dexie.Services
         private ITable? _membersTable;
         private readonly CompositeDisposable _dbDisposeBag = new();
         private readonly IOptions<DemoSettings>? _settings;
-        private string? _reinvite = null;
-        private readonly Subject<string?> _reinviteSubject = new();
         private readonly CompositeDisposable _permissionsDisposeBag = new();
         private IUsePermissions<Member>? _permissionsMember;
         private IUsePermissions<Realm>? _permissionsRealm;
@@ -132,24 +137,8 @@ namespace DexieNETCloudSample.Dexie.Services
                 })
                 .Append("by eMail");
 
-                if (_reinvite is not null)
-                {
-                    _reinviteSubject.OnNext(_reinvite);
-                }
-
                 StateHasChanged();
             }));
-
-
-            _dbDisposeBag.Add(
-                _reinviteSubject.Select(async ri =>
-                {
-                    if (_reinvite is not null && !Members.Any(m => m.Name == _reinvite))
-                    {
-                        await DoInviteUser(_reinvite);
-                        _reinvite = null;
-                    }
-                }).Subscribe());
         }
 
         public bool CanAddMember()
@@ -160,7 +149,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public bool CanUpdateRole(Member Member)
         {
-            var isOwner = GetRole(Member) is MemberRole.OWNER;
+            var isOwner = GetMemberRole(Member) is MemberRole.OWNER;
 
             return !isOwner && (_permissionsMember?.CanUpdate(Member, m => m.Roles)).True();
         }
@@ -181,11 +170,11 @@ namespace DexieNETCloudSample.Dexie.Services
             };
         }
 
-        public MemberState GetMemberState(Member? member)
+        public MemberAction GetMemberAction(Member? member)
         {
             if (member is null)
             {
-                return MemberState.NONE;
+                return MemberAction.NONE;
             }
 
             ArgumentNullException.ThrowIfNull(_dbService.DB);
@@ -198,32 +187,50 @@ namespace DexieNETCloudSample.Dexie.Services
 
             if (isOwner)
             {
-                return MemberState.OWNER;
+                return MemberAction.OWNER;
             }
             else if (!isCurrentUser && (_permissionsMember?.CanDelete(member)).True())
             {
-                if (member.Rejected is not null)
-                {
-                    return MemberState.REINVITE;
-                }
-
-                return MemberState.DELETE;
+                return MemberAction.DELETE;
             }
 
             if (isCurrentUser)
             {
                 if (aTime >= rTime)
                 {
-                    return MemberState.LEAVE;
+                    return MemberAction.LEAVE;
                 }
                 else
-                    return MemberState.ACCEPT;
+                    return MemberAction.ACCEPT;
+            }
+
+            return MemberAction.NONE;
+        }
+
+        public MemberState GetMemberState(Member? member)
+        {
+            if (member is null)
+            {
+                return MemberState.NONE;
+            }
+
+            if (member.Accepted is null && member.Rejected is null)
+            {
+                return MemberState.PENDING;
+            }
+            else if (member.Accepted is not null && member.Rejected is null)
+            {
+                return MemberState.ACCEPTED;
+            }
+            else if (member.Rejected is not null && member.Accepted is null)
+            {
+                return MemberState.REJECTED;
             }
 
             return MemberState.NONE;
         }
 
-        public MemberRole GetRole(Member member)
+        public MemberRole GetMemberRole(Member member)
         {
             ArgumentNullException.ThrowIfNull(_dbService?.Roles);
             ArgumentNullException.ThrowIfNull(List);

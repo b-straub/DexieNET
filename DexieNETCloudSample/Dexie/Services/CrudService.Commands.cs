@@ -105,8 +105,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         private bool CanClearItemsDo()
         {
-            var item = Items.FirstOrDefault();
-            return CanDeleteItemDo(item);
+            return Items.Any(i => CanDeleteItemDo(i));
         }
     }
 }

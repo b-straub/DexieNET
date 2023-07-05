@@ -6,11 +6,15 @@
 </MudTd>
 <MudTd DataLabel="Role">
     <RxMudBlazorLight.Inputs.Select.MudSelectAsyncPRx Parameter=@Member RxInputGroupAsyncFactory=@(() => Service.MemberRoleSelection)
-        HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
+                                                      HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
 </MudTd>
 <MudTd>
-    <MudFabAsyncPRx Color=@(_currentState is MemberState.ACCEPT || _currentState is MemberState.REINVITE ? Color.Success : Color.Error)
-        StartIcon=@GetMemberStateIcon() Size="Size.Small" ConfirmExecution=@(async () => await ConfirmChangeMember()) RxCommandAsyncFactory=@(() => Service.ChangeMemberState) Parameter=@Member />
+    <MudFabAsyncPRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
+                    StartIcon=@GetMemberActionIcon() Size="Size.Small" ConfirmExecution=@(async () => await ConfirmChangeMember()) RxCommandAsyncFactory=@(() => Service.ChangeMemberState) Parameter=@Member />
+    @if (_isOwnList && _currentMemberAction is not MemberAction.OWNER)
+    {
+        <MudIcon Class="ml-4" Color=@(_currentMemberState is MemberState.ACCEPTED ? Color.Success : Color.Error) Icon=@GetMemberStateIcon() />
+    }
 </MudTd>
 
 @code {
@@ -27,13 +31,17 @@
     [NotNull]
     public Member? Member { get; set; }
 
-    private MemberState _currentState = MemberState.NONE;
+    private MemberAction _currentMemberAction = MemberAction.NONE;
+    private MemberState _currentMemberState = MemberState.NONE;
+    private bool _isOwnList = false;
 
     protected override void OnInitialized()
     {
         ArgumentNullException.ThrowIfNull(Member);
 
-        _currentState = Service.GetMemberState(Member);
+        _currentMemberAction = Service.GetMemberAction(Member);
+        _currentMemberState = Service.GetMemberState(Member);
+        _isOwnList = List?.Owner == DBService?.DB?.CurrentUserId();
 
         base.OnInitialized();
     }
@@ -56,17 +64,28 @@
         return name;
     }
 
+    private string GetMemberActionIcon()
+    {
+        return _currentMemberAction switch
+        {
+            MemberAction.DELETE => Icons.Material.Outlined.Delete,
+            MemberAction.LEAVE => Icons.Material.Outlined.ExitToApp,
+            MemberAction.ACCEPT => Icons.Material.Outlined.PersonAdd,
+            MemberAction.OWNER => Icons.Material.Outlined.People,
+            MemberAction.NONE => Icons.Material.Outlined.Error,
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
+        };
+    }
+
     private string GetMemberStateIcon()
     {
-        return _currentState switch
+        return _currentMemberState switch
         {
-            MemberState.DELETE => Icons.Material.Outlined.Delete,
-            MemberState.LEAVE => Icons.Material.Outlined.ExitToApp,
-            MemberState.ACCEPT => Icons.Material.Outlined.PersonAdd,
-            MemberState.REINVITE => Icons.Material.Outlined.AddCircleOutline,
-            MemberState.OWNER => Icons.Material.Outlined.People,
+            MemberState.PENDING => Icons.Material.Outlined.Pending,
+            MemberState.ACCEPTED => Icons.Material.Outlined.Check,
+            MemberState.REJECTED => Icons.Material.Outlined.Clear,
             MemberState.NONE => Icons.Material.Outlined.Error,
-            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberState))
         };
     }
 
@@ -74,31 +93,28 @@
     {
         ArgumentNullException.ThrowIfNull(DialogService);
 
-        var message = _currentState switch
+        var message = _currentMemberAction switch
         {
-            MemberState.DELETE => "Delete Member",
-            MemberState.LEAVE => "Leave List",
-            MemberState.ACCEPT => "Accept Invite",
-            MemberState.REINVITE => "Invite again",
-            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+            MemberAction.DELETE => "Delete Member",
+            MemberAction.LEAVE => "Leave List",
+            MemberAction.ACCEPT => "Accept Invite",
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
         };
 
-        var button = _currentState switch
+        var button = _currentMemberAction switch
         {
-            MemberState.DELETE => "Delete",
-            MemberState.LEAVE => "Leave",
-            MemberState.ACCEPT => "Accept",
-            MemberState.REINVITE => "Invite",
-            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+            MemberAction.DELETE => "Delete",
+            MemberAction.LEAVE => "Leave",
+            MemberAction.ACCEPT => "Accept",
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
         };
 
-        bool successOnConfirm = _currentState switch
+        bool successOnConfirm = _currentMemberAction switch
         {
-            MemberState.DELETE => false,
-            MemberState.LEAVE => false,
-            MemberState.ACCEPT => true,
-            MemberState.REINVITE => true,
-            _ => throw new ArgumentOutOfRangeException(nameof(_currentState))
+            MemberAction.DELETE => false,
+            MemberAction.LEAVE => false,
+            MemberAction.ACCEPT => true,
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
         };
 
         var parameters = new DialogParameters { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = successOnConfirm };

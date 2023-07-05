@@ -58,6 +58,11 @@ namespace DexieNETCloudSample.Dexie.Services
 
                 Service._db.AcceptInvite(parameter);
             }
+
+            public override bool CanExecute(Invite? parameter)
+            {
+                return parameter?.Accepted is null;
+            }
         }
 
         private class RejectInviteCmd : CommandService<ToDoListService, Invite>
@@ -70,6 +75,11 @@ namespace DexieNETCloudSample.Dexie.Services
                 ArgumentNullException.ThrowIfNull(parameter.Id);
 
                 Service._db.RejectInvite(parameter);
+            }
+
+            public override bool CanExecute(Invite? parameter)
+            {
+                return parameter?.Rejected is null;
             }
         }
     }

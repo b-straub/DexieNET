@@ -205,8 +205,7 @@ namespace DexieNETCloudSample.Logic
 
             _DBServicesDisposeBag.Add(DB.InvitesObservable().Subscribe(i =>
             {
-#warning: Remove after reinvite has been fixed!
-                Invites = i.Where(i => i.InvitedBy is not null);
+                Invites = i;
                 _dbChangedSubject.OnNext(DBChangedMessage.Invites);
             }));
 

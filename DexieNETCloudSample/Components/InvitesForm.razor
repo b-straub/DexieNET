@@ -56,8 +56,8 @@
     {
         ArgumentNullException.ThrowIfNull(DialogService);
 
-        var message = accept ? "Accept Invitation" : "Decline Invitation";
-        var button = accept ? "Accept" : "Decline";
+        var message = accept ? "Accept Invitation" : "Reject Invitation";
+        var button = accept ? "Accept" : "Reject";
 
         var parameters = new DialogParameters
             { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = accept };

@@ -45,28 +45,20 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 ArgumentNullException.ThrowIfNull(Service.List);
 
-                var state = Service.GetMemberState(parameter);
+                var memberAction = Service.GetMemberAction(parameter);
 
-                if (state is MemberState.DELETE)
+                if (memberAction is MemberAction.DELETE)
                 {
                     await Service.UnShareWith(Service.List, parameter);
                 }
-                else if (state is MemberState.LEAVE)
+                else if (memberAction is MemberAction.LEAVE)
                 {
                     await Service.Leave(Service.List);
                 }
-                else if (state is MemberState.ACCEPT)
+                else if (memberAction is MemberAction.ACCEPT)
                 {
                     ArgumentNullException.ThrowIfNull(Service._dbService.DB);
                     await Service._dbService.DB.AcceptInvite(parameter);
-                }
-                else if (state is MemberState.REINVITE)
-                {
-                    ArgumentNullException.ThrowIfNull(Service._dbService.DB);
-                    ArgumentNullException.ThrowIfNull(parameter.Id);
-
-                    await Service.UnShareWith(Service.List, parameter);
-                    Service._reinvite = parameter.Name;
                 }
             }
 
@@ -77,15 +69,13 @@ namespace DexieNETCloudSample.Dexie.Services
                     return false;
                 }
 
-                var state = Service.GetMemberState(parameter);
+                var memberAction = Service.GetMemberAction(parameter);
 
-                return state switch
+                return memberAction switch
                 {
-                    MemberState.DELETE => (Service._permissionsMember?.CanDelete(parameter)).True(),
-                    MemberState.LEAVE => true,
-                    MemberState.ACCEPT => (Service._permissionsMember?.CanUpdate(parameter, m => m.Accepted)).True(),
-                    MemberState.REINVITE => (Service._permissionsMember?.CanDelete(parameter)).True() &&
-                        (Service._permissionsMember?.CanUpdate(parameter, m => m.Accepted)).True(),
+                    MemberAction.DELETE => (Service._permissionsMember?.CanDelete(parameter)).True(),
+                    MemberAction.LEAVE => true,
+                    MemberAction.ACCEPT => (Service._permissionsMember?.CanUpdate(parameter, m => m.Accepted)).True(),
                     _ => false
                 };
             }
@@ -115,7 +105,7 @@ namespace DexieNETCloudSample.Dexie.Services
             public override async Task InitializeAsync()
             {
                 ArgumentNullException.ThrowIfNull(Parameter);
-                var role = Service.GetRole(Parameter);
+                var role = Service.GetMemberRole(Parameter);
 
                 MemberRoleSelection? initialSelection = null;
 
