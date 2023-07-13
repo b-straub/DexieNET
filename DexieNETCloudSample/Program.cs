@@ -1,6 +1,7 @@
 using DexieNET;
 using DexieNETCloudSample;
 using DexieNETCloudSample.Dexie.Services;
+using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -18,6 +19,6 @@ builder.Services.AddScoped<ToDoListService>();
 builder.Services.AddScoped<ToDoItemService>();
 builder.Services.AddScoped<ToDoListMemberService>();
 
-builder.Services.Configure<DemoSettings>(settings => builder.Configuration.GetSection("DemoSettings").Bind(settings));
+await builder.LoadConfigurationAsync();
 
 await builder.Build().RunAsync();

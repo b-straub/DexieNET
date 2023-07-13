@@ -29,8 +29,21 @@
 		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
 	</ItemGroup>
 
+	<Target Name="CopyWwwroot" AfterTargets="Build">
+		<ItemGroup>
+			<CopyItems Include="Dexie\*.json" />
+		</ItemGroup>
+		<Copy
+		 SourceFiles="@(CopyItems)"
+		 DestinationFolder="wwwroot"
+		 SkipUnchangedFiles="false"
+		 OverwriteReadOnlyFiles="true"
+		 Retries="3"
+		 RetryDelayMilliseconds="300"/>
+	</Target>
+	
 	<ItemGroup>
-	  <Content Update="wwwroot\appsettings.json">
+	  <Content Update="wwwroot\*.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	</ItemGroup>

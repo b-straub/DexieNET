@@ -40,7 +40,7 @@
         ArgumentNullException.ThrowIfNull(Member);
 
         _currentMemberAction = Service.GetMemberAction(Member);
-        _currentMemberState = Service.GetMemberState(Member);
+        _currentMemberState = ToDoListMemberService.GetMemberState(Member);
         _isOwnList = List?.Owner == DBService?.DB?.CurrentUserId();
 
         base.OnInitialized();

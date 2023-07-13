@@ -73,15 +73,15 @@ namespace DexieNETCloudSample.Dexie.Services
         private readonly DexieCloudService _dbService;
         private ITable? _membersTable;
         private readonly CompositeDisposable _dbDisposeBag = new();
-        private readonly IOptions<DemoSettings>? _settings;
+        private readonly IConfiguration? _configuration;
         private readonly CompositeDisposable _permissionsDisposeBag = new();
         private IUsePermissions<Member>? _permissionsMember;
         private IUsePermissions<Realm>? _permissionsRealm;
 
-        public ToDoListMemberService(DexieCloudService databaseService, IOptions<DemoSettings>? settings)
+        public ToDoListMemberService(DexieCloudService databaseService, IConfiguration? configuration)
         {
             _dbService = databaseService;
-            _settings = settings;
+            _configuration = configuration;
 
             SetList = new SetListCmd(this);
         }
@@ -119,8 +119,6 @@ namespace DexieNETCloudSample.Dexie.Services
             var memberQuery = await _dbService.DB.LiveQuery(async () =>
                 await _dbService.DB.Members().Where(m => m.RealmId).Equal(List?.RealmId).ToArray());
 
-            ArgumentNullException.ThrowIfNull(_settings?.Value?.Users);
-
             var useMemberQuery = memberQuery.UseLiveQuery(SetList.Executed);
 
             _dbDisposeBag.Add(useMemberQuery.Subscribe(m =>
@@ -131,7 +129,7 @@ namespace DexieNETCloudSample.Dexie.Services
                     .Where(m => m.Invite.True())
                     .Select(m => m.UserId);
 
-                Users = _settings.Value.Users.Where(u =>
+                Users = _configuration.GetUsers().Where(u =>
                 {
                     return u != _dbService.UserLogin?.UserId && !usersInvited.Contains(u);
                 })
@@ -207,7 +205,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return MemberAction.NONE;
         }
 
-        public MemberState GetMemberState(Member? member)
+        public static MemberState GetMemberState(Member? member)
         {
             if (member is null)
             {
