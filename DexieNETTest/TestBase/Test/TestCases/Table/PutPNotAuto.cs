@@ -12,10 +12,10 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var tableS = await DB.FriendIBPs();
+            var tableS = DB.FriendIBPs();
             await tableS.Clear();
 
-            var tableB = await DB.FriendIBBPs();
+            var tableB = DB.FriendIBBPs();
             await tableB.Clear();
 
             var friendsS = new[] {

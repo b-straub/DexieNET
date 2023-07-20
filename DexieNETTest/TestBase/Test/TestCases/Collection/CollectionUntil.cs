@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -61,16 +61,16 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var collection = await table.OrderBy(p => p.Age);
-                collection = await collection.Until(p => p.Age >= 65);
+                var collection = table.OrderBy(p => p.Age);
+                collection = collection.Until(p => p.Age >= 65);
                 untilAge = await collection.ToArray();
 
-                var collectionI = await table.OrderBy(p => p.Age);
-                collectionI = await collectionI.Until(p => p.Age >= 65, true);
+                var collectionI = table.OrderBy(p => p.Age);
+                collectionI = collectionI.Until(p => p.Age >= 65, true);
                 untilAgeI = await collectionI.ToArray();
 
-                var collectionNA = await table.OrderBy(p => p.Name, p => p.Age);
-                collectionNA = await collectionNA.Until(p => p.Age > 60);
+                var collectionNA = table.OrderBy(p => p.Name, p => p.Age);
+                collectionNA = collectionNA.Until(p => p.Age > 60);
                 untilNA = await collectionNA.ToArray();
 
             });

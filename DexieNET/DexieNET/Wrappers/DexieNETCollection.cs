@@ -223,45 +223,27 @@ namespace DexieNET
     public static class CollectionExtensions
     {
         #region And
-        public static async ValueTask<Collection<T, I, Q>> And<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Func<T, bool> filter) where T : IDBStore
+        public static Collection<T, I, Q> And<T, I, Q>(this Collection<T, I, Q> collection, Func<T, bool> filter) where T : IDBStore
         {
-            var collection = await collectionT;
-            return await collection.And(filter);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> And<T, I, Q>(this Collection<T, I, Q> collection, Func<T, bool> filter) where T : IDBStore
-        {
-            return await collection.Filter(filter);
+            return collection.Filter(filter);
         }
         #endregion
 
         #region Clone
-        public static async ValueTask<Collection<T, I, Q>> Clone<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Clone();
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Clone<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
+        public static Collection<T, I, Q> Clone<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
             {
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("clone");
+            var reference = collection.JSObject.Invoke<IJSInProcessObjectReference>("clone");
             var newCollection = new Collection<T, I, Q>(collection, reference);
             return newCollection;
         }
         #endregion
 
         #region Count
-        public static async ValueTask<double> Count<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Count();
-        }
-
         public static async ValueTask<double> Count<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -270,12 +252,6 @@ namespace DexieNET
             }
 
             return await collection.JSObject.InvokeAsync<double>("count");
-        }
-
-        public static async ValueTask<R?> Count<T, I, Q, R>(this ValueTask<Collection<T, I, Q>> collectionT, Func<double, R?> callback) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Count(callback);
         }
 
         public static async ValueTask<R?> Count<T, I, Q, R>(this Collection<T, I, Q> collection, Func<double, R?> callback) where T : IDBStore
@@ -291,12 +267,6 @@ namespace DexieNET
         #endregion
 
         #region Delete
-        public static async ValueTask<double> Delete<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Delete();
-        }
-
         public static async ValueTask<double> Delete<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.ReadWrite)))
@@ -311,32 +281,20 @@ namespace DexieNET
         // Desc -> Deprecated
 
         #region Distinct
-        public static async ValueTask<Collection<T, I, Q>> Distinct<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Distinct();
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Distinct<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
+        public static Collection<T, I, Q> Distinct<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
             {
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("distinct");
+            var reference = collection.JSObject.Invoke<IJSInProcessObjectReference>("distinct");
             collection.SetJSO(reference);
             return collection;
         }
         #endregion
 
         #region Each
-        public static async ValueTask Each<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Action<T> each) where T : IDBStore
-        {
-            var collection = await collectionT;
-            await collection.Each(each);
-        }
-
         public static async ValueTask Each<T, I, Q>(this Collection<T, I, Q> collection, Action<T> each) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -350,12 +308,6 @@ namespace DexieNET
         #endregion
 
         #region EachKey
-        public static async ValueTask EachKey<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Action<Q> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            await collection.EachKey(query);
-        }
-
         public static async ValueTask EachKey<T, I, Q>(this Collection<T, I, Q> collection, Action<Q> query) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -369,12 +321,6 @@ namespace DexieNET
         #endregion
 
         #region EachPrimaryKey
-        public static async ValueTask EachPrimaryKey<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Action<I> key) where T : IDBStore
-        {
-            var collection = await collectionT;
-            await collection.EachPrimaryKey(key);
-        }
-
         public static async ValueTask EachPrimaryKey<T, I, Q>(this Collection<T, I, Q> collection, Action<I> key) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -388,12 +334,6 @@ namespace DexieNET
         #endregion
 
         #region EachUniqueKey
-        public static async ValueTask EachUniqueKey<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Action<Q> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            await collection.EachUniqueKey(query);
-        }
-
         public static async ValueTask EachUniqueKey<T, I, Q>(this Collection<T, I, Q> collection, Action<Q> query) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -407,13 +347,7 @@ namespace DexieNET
         #endregion
 
         #region Filter
-        public static async ValueTask<Collection<T, I, Q>> Filter<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Func<T, bool> filter) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Filter(filter);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Filter<T, I, Q>(this Collection<T, I, Q> collection, Func<T, bool> filter) where T : IDBStore
+        public static Collection<T, I, Q> Filter<T, I, Q>(this Collection<T, I, Q> collection, Func<T, bool> filter) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
             {
@@ -423,19 +357,13 @@ namespace DexieNET
             var filterIndex = collection.CollectionJS.AddFilter(filter);
 
 
-            var reference = await collection.JSObject.Module.InvokeAsync<IJSInProcessObjectReference>("CollectionFilter", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, filterIndex);
+            var reference = collection.JSObject.Module.Invoke<IJSInProcessObjectReference>("CollectionFilter", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, filterIndex);
             collection.SetJSO(reference);
             return collection;
         }
         #endregion
 
         #region First
-        public static async ValueTask<T?> First<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.First();
-        }
-
         public static async ValueTask<T?> First<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -444,12 +372,6 @@ namespace DexieNET
             }
 
             return await collection.JSObject.InvokeAsync<T?>("first");
-        }
-
-        public static async ValueTask<R?> First<T, I, Q, R>(this ValueTask<Collection<T, I, Q>> collectionT, Func<T?, R?> callback) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.First(callback);
         }
 
         public static async ValueTask<R?> First<T, I, Q, R>(this Collection<T, I, Q> collection, Func<T?, R?> callback) where T : IDBStore
@@ -465,12 +387,6 @@ namespace DexieNET
         #endregion
 
         #region Keys
-        public static async ValueTask<IEnumerable<Q>> Keys<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Keys();
-        }
-
         public static async ValueTask<IEnumerable<Q>> Keys<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.MixedType)
@@ -490,12 +406,6 @@ namespace DexieNET
 
             var js = await collection.JSObject.InvokeAsync<JsonElement>("keys");
             return collection.AsEnumerable(js);
-        }
-
-        public static async ValueTask<R?> Keys<T, I, Q, R>(this ValueTask<Collection<T, I, Q>> collectionT, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Keys(callback);
         }
 
         public static async ValueTask<R?> Keys<T, I, Q, R>(this Collection<T, I, Q> collection, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
@@ -521,12 +431,6 @@ namespace DexieNET
             return callback(keys);
         }
 
-        public static async ValueTask<IEnumerable<Q>> Keys<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Keys(query);
-        }
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
         public static async ValueTask<IEnumerable<Q>> Keys<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query) where T : IDBStore
         {
@@ -543,13 +447,6 @@ namespace DexieNET
             var js = await collection.JSObject.InvokeAsync<JsonElement>("keys");
             return collection.AsEnumerable<Q>(js);
         }
-
-        public static async ValueTask<R?> Keys<T, I, K, Q, R>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Keys(query, callback);
-        }
-
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
         public static async ValueTask<R?> Keys<T, I, K, Q, R>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
@@ -572,12 +469,6 @@ namespace DexieNET
         #endregion
 
         #region Last
-        public static async ValueTask<T?> Last<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Last();
-        }
-
         public static async ValueTask<T?> Last<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -586,12 +477,6 @@ namespace DexieNET
             }
 
             return await collection.JSObject.InvokeAsync<T?>("last");
-        }
-
-        public static async ValueTask<R?> Last<T, I, Q, R>(this ValueTask<Collection<T, I, Q>> collectionT, Func<T?, R?> callback) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Last(callback);
         }
 
         public static async ValueTask<R?> Last<T, I, Q, R>(this Collection<T, I, Q> collection, Func<T?, R?> callback) where T : IDBStore
@@ -607,20 +492,14 @@ namespace DexieNET
         #endregion
 
         #region Limit
-        public static async ValueTask<Collection<T, I, Q>> Limit<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, double count) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Limit(count);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Limit<T, I, Q>(this Collection<T, I, Q> collection, double count) where T : IDBStore
+        public static Collection<T, I, Q> Limit<T, I, Q>(this Collection<T, I, Q> collection, double count) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
             {
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("limit", count);
+            var reference = collection.JSObject.Invoke<IJSInProcessObjectReference>("limit", count);
             collection.SetJSO(reference);
             return collection;
         }
@@ -637,12 +516,6 @@ namespace DexieNET
             return await collection.JSObject.Module.InvokeAsync<double>("Modify", collection.JSObject.Reference, update);
         }
 
-        public static async ValueTask<double> Modify<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Func<T, object?> modify) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Modify(modify);
-        }
-
         public static async ValueTask<double> Modify<T, I, Q>(this Collection<T, I, Q> collection, Func<T, object?> modify) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.ReadWrite)))
@@ -654,23 +527,10 @@ namespace DexieNET
             return await collection.JSObject.Module.InvokeAsync<double>("CollectionModify", collection.JSObject.Reference, collection.CollectionJS.DotnetRef);
         }
 
-        public static async ValueTask<double> Modify<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query, Q? value) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Modify(query, value);
-        }
-
         public static async ValueTask<double> Modify<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query, Q? value) where T : IDBStore
         {
             var queryF = QueryFactory<T>.Update(query, value);
             return await collection.Modify(queryF);
-        }
-
-        public static async ValueTask<double> Modify<T, I, K, Q1, Q2>(this ValueTask<Collection<T, I, K>> collectionT,
-            Expression<Func<T, Q1>> query1, Q1? value1, Expression<Func<T, Q2>> query2, Q2? value2) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Modify(query1, value1, query2, value2);
         }
 
         public static async ValueTask<double> Modify<T, I, K, Q1, Q2>(this Collection<T, I, K> collection,
@@ -678,13 +538,6 @@ namespace DexieNET
         {
             var queryF = QueryFactory<T>.Update(query1, value1, query2, value2);
             return await collection.Modify(queryF);
-        }
-
-        public static async ValueTask<double> Modify<T, I, K, Q1, Q2, Q3>(this ValueTask<Collection<T, I, K>> collectionT,
-             Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2, Expression<Func<T, Q3>> query3, Q3 value3) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Modify(query1, value1, query2, value2, query3, value3);
         }
 
         public static async ValueTask<double> Modify<T, I, K, Q1, Q2, Q3>(this Collection<T, I, K> collection,
@@ -696,20 +549,14 @@ namespace DexieNET
         #endregion
 
         #region Offset
-        public static async ValueTask<Collection<T, I, Q>> Offset<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, double count) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Offset(count);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Offset<T, I, Q>(this Collection<T, I, Q> collection, double count) where T : IDBStore
+        public static Collection<T, I, Q> Offset<T, I, Q>(this Collection<T, I, Q> collection, double count) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
             {
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("offset", count);
+            var reference = collection.JSObject.Invoke<IJSInProcessObjectReference>("offset", count);
             collection.SetJSO(reference);
             return collection;
         }
@@ -717,13 +564,7 @@ namespace DexieNET
 
         #region Or
         // difference to Dexie Keys will return Keys from 'Or' WhereClause and not from the first one in chain
-        public static async ValueTask<WhereClause<T, I, Q>> Or<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Or(query);
-        }
-
-        public static async ValueTask<WhereClause<T, I, Q>> Or<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query) where T : IDBStore
+        public static WhereClause<T, I, Q> Or<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query) where T : IDBStore
         {
             var key = query.GetKey();
 
@@ -732,7 +573,7 @@ namespace DexieNET
                 return collection.Table.EmptyWhereClause<Q>(key);
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("or", query.GetKey());
+            var reference = collection.JSObject.Invoke<IJSInProcessObjectReference>("or", query.GetKey());
             return new WhereClause<T, I, Q>(collection.Table, reference, key)
             {
                 MixedType = typeof(K) != typeof(Q)
@@ -742,12 +583,6 @@ namespace DexieNET
         #endregion
 
         #region PrimaryKeys
-        public static async ValueTask<IEnumerable<I>> PrimaryKeys<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.PrimaryKeys();
-        }
-
         public static async ValueTask<IEnumerable<I>> PrimaryKeys<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -767,32 +602,20 @@ namespace DexieNET
         // Raw
 
         #region Reverse
-        public static async ValueTask<Collection<T, I, Q>> Reverse<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Reverse();
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Reverse<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
+        public static Collection<T, I, Q> Reverse<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
             {
                 return collection;
             }
 
-            var reference = await collection.JSObject.InvokeAsync<IJSInProcessObjectReference>("reverse");
+            var reference = collection.JSObject.Invoke<IJSInProcessObjectReference>("reverse");
             collection.SetJSO(reference);
             return collection;
         }
         #endregion
 
         #region SortBy
-        public static async ValueTask<IEnumerable<T>> SortBy<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.SortBy(query);
-        }
-
         public static async ValueTask<IEnumerable<T>> SortBy<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -802,12 +625,6 @@ namespace DexieNET
 
             var key = query.GetKey();
             return await collection.JSObject.InvokeAsync<IEnumerable<T>>("sortBy", key);
-        }
-
-        public static async ValueTask<IEnumerable<T>> SortyBy<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q[]>> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.SortBy(query);
         }
 
         public static async ValueTask<IEnumerable<T>> SortBy<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q[]>> query) where T : IDBStore
@@ -823,12 +640,6 @@ namespace DexieNET
         #endregion
 
         #region ToArray
-        public static async ValueTask<IEnumerable<T>> ToArray<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.ToArray();
-        }
-
         public static async ValueTask<IEnumerable<T>> ToArray<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
@@ -841,12 +652,6 @@ namespace DexieNET
         #endregion
 
         #region UniqueKeys
-        public static async ValueTask<IEnumerable<Q>> UniqueKeys<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.UniqueKeys();
-        }
-
         public static async ValueTask<IEnumerable<Q>> UniqueKeys<T, I, Q>(this Collection<T, I, Q> collection) where T : IDBStore
         {
             if (collection.MixedType)
@@ -866,12 +671,6 @@ namespace DexieNET
 
             var js = await collection.JSObject.InvokeAsync<JsonElement>("uniqueKeys");
             return collection.AsEnumerable(js);
-        }
-
-        public static async ValueTask<R?> UniqueKeys<T, I, Q, R>(this ValueTask<Collection<T, I, Q>> collectionT, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.UniqueKeys(callback);
         }
 
         public static async ValueTask<R?> UniqueKeys<T, I, Q, R>(this Collection<T, I, Q> collection, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
@@ -897,12 +696,6 @@ namespace DexieNET
             return callback(keys);
         }
 
-        public static async ValueTask<IEnumerable<Q>> UniqueKeys<T, I, K, Q>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.UniqueKeys(query);
-        }
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
         public static async ValueTask<IEnumerable<Q>> UniqueKeys<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query) where T : IDBStore
         {
@@ -918,12 +711,6 @@ namespace DexieNET
 
             var js = await collection.JSObject.InvokeAsync<JsonElement>("uniqueKeys");
             return collection.AsEnumerable<Q>(js);
-        }
-
-        public static async ValueTask<R?> UniqueKeys<T, I, K, Q, R>(this ValueTask<Collection<T, I, K>> collectionT, Expression<Func<T, Q>> query, Func<IEnumerable<Q>, R?> callback) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.UniqueKeys(query, callback);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Type safety")]
@@ -947,13 +734,7 @@ namespace DexieNET
         #endregion
 
         #region Until
-        public static async ValueTask<Collection<T, I, Q>> Until<T, I, Q>(this ValueTask<Collection<T, I, Q>> collectionT, Func<T, bool> until, bool includeStopEntry = false) where T : IDBStore
-        {
-            var collection = await collectionT;
-            return await collection.Until(until, includeStopEntry);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Until<T, I, Q>(this Collection<T, I, Q> collection, Func<T, bool> until, bool includeStopEntry = false) where T : IDBStore
+        public static Collection<T, I, Q> Until<T, I, Q>(this Collection<T, I, Q> collection, Func<T, bool> until, bool includeStopEntry = false) where T : IDBStore
         {
             if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.Read)))
             {
@@ -961,7 +742,7 @@ namespace DexieNET
             }
 
             var untilIndex = collection.CollectionJS.AddUntil(until);
-            var reference = await collection.JSObject.Module.InvokeAsync<IJSInProcessObjectReference>("CollectionUntil", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, includeStopEntry, untilIndex);
+            var reference = collection.JSObject.Module.Invoke<IJSInProcessObjectReference>("CollectionUntil", collection.JSObject.Reference, collection.CollectionJS.DotnetRef, includeStopEntry, untilIndex);
             collection.SetJSO(reference);
             return collection;
         }

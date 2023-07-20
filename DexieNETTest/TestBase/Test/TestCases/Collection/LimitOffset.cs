@@ -16,7 +16,7 @@ namespace DexieNETTest.TestBase.Test
 
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersonsRandom(limit * 10);
@@ -43,10 +43,10 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var collection = await table.Limit(limit);
+                var collection = table.Limit(limit);
                 limited = await collection.ToArray();
 
-                collection = await table.Offset(limit * 9);
+                collection = table.Offset(limit * 9);
                 offseted = await collection.ToArray();
             });
 

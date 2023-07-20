@@ -37,22 +37,22 @@ namespace DexieNETCloudSample.Dexie.Services
             ClearItems = new ClearItemsCmd(this);
         }
 
-        public override async Task OnInitializedAsync()
+        public override void OnInitialized()
         {
             if (IsDBOpen)
             {
-                await InitDB();
+                InitDB();
             }
 
             DbService.OnDelete += () => Dispose(false);
 
             _dbDisposable = DbService
-               .Select(async c =>
+               .Select(c =>
                {
                    switch (c)
                    {
                        case DBChangedMessage.Cloud:
-                           await InitDB();
+                           InitDB();
                            break;
                    };
 
@@ -87,11 +87,11 @@ namespace DexieNETCloudSample.Dexie.Services
             DbService.OnDelete -= () => Dispose(false);
         }
 
-        protected abstract ValueTask<Table<T, string>> GetTable();
+        protected abstract Table<T, string> GetTable();
 
-        protected abstract ValueTask<LiveQuery<IEnumerable<T>>> InitializeDB(ToDoDB db);
+        protected abstract LiveQuery<IEnumerable<T>> InitializeDB(ToDoDB db);
 
-        private async Task InitDB()
+        private void InitDB()
         {
             ArgumentNullException.ThrowIfNull(DbService.DB);
 
@@ -100,7 +100,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 throw new InvalidOperationException("DB not disposed");
             }
 
-            var allItemsQuery = await InitializeDB(DbService.DB);
+            var allItemsQuery = InitializeDB(DbService.DB);
 
             DBDisposeBag.Add(allItemsQuery.Subscribe(l =>
             {
@@ -111,7 +111,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 StateHasChanged();
             }));
 
-            Permissions = await GetTable().CreateUsePermissions();
+            Permissions = GetTable().CreateUsePermissions();
             DBDisposeBag.Add(Permissions.Subscribe(_ =>
             {
                 StateHasChanged();

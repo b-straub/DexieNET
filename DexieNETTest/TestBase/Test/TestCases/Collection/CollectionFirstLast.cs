@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
         {
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var first = await table.ToCollection().First();
@@ -50,7 +50,7 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
 
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
 
                 first = await collection.First();
                 last = await collection.Last();
@@ -58,7 +58,7 @@ namespace DexieNETTest.TestBase.Test
                 await table.BulkAdd(persons);
                 personsData = await table.ToArray();
 
-                collection = await table.ToCollection();
+                collection = table.ToCollection();
                 first = await collection.First();
                 last = await collection.Last();
             });

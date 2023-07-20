@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
         {
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -51,13 +51,13 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var where = await table.Where(p => p.Tags);
+                var where = table.Where(p => p.Tags);
 
-                var collection = await where.AnyOf(query);
+                var collection = where.AnyOf(query);
                 noDistinct = await collection.ToArray();
 
-                var collectionD = await where.AnyOf(query);
-                await collectionD.Distinct();
+                var collectionD = where.AnyOf(query);
+                collectionD.Distinct();
                 distinct = await collectionD.ToArray();
             });
 

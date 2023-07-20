@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
         {
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -41,11 +41,11 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var collection = await table.Reverse();
+                var collection = table.Reverse();
                 reversed = await collection.ToArray();
 
-                var collectionAge = await table.OrderBy(p => p.Age);
-                await collectionAge.Reverse();
+                var collectionAge = table.OrderBy(p => p.Age);
+                collectionAge.Reverse();
                 reversedO = await collectionAge.ToArray();
             });
 

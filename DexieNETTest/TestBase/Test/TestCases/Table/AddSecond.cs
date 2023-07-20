@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.TestStore<int>();
+            var table = DB.TestStore<int>();
             await table.Clear();
 
             var key = await table.Add(new TestStore("Test"), 1);

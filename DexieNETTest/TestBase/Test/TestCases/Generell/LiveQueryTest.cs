@@ -73,15 +73,15 @@ namespace DexieNETTest.TestBase.Test
             var disposeSubject = new BehaviorSubject<int>(0);
             string? firstError = null;
 
-            var tablePersons = await DB.Persons();
+            var tablePersons = DB.Persons();
             await tablePersons.Clear();
-            var tableStudents = await DB.Students();
+            var tableStudents = DB.Students();
             await tableStudents.Clear();
 
             var persons = DataGenerator.GetPersons();
             var expectedCountP = persons.Where(p => p.Age >= 50).Count();
 
-            var observableP = await DB.LiveQuery(async () =>
+            var observableP = DB.LiveQuery(async () =>
             {
                 await tablePersons.Count(); // First LiveQuery will not populate changed keys otherwise
 
@@ -93,7 +93,7 @@ namespace DexieNETTest.TestBase.Test
                 return values;
             });
 
-            var observableS = await DB.LiveQuery(async () =>
+            var observableS = DB.LiveQuery(async () =>
             {
                 var values = await tableStudents.ToArray();
                 if (values.Any() && values.Count() != 1)
@@ -103,7 +103,7 @@ namespace DexieNETTest.TestBase.Test
                 return values;
             });
 
-            var observableSP = await DB.LiveQuery(async () =>
+            var observableSP = DB.LiveQuery(async () =>
             {
                 Student? student = null;
 

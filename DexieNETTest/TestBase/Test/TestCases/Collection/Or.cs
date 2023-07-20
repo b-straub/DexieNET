@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -29,7 +29,7 @@ namespace DexieNETTest.TestBase.Test
             }
 
             var personsDataAgeNameKeys = persons.Where(p => p.Name == "Person1" || p.Age == 65).Select(p => p.Age);
-            var personsNameAgeNameCollection = await table.Where(p => p.Age).Equal(65).Or(p => p.Name).EqualIgnoreCase("person1");
+            var personsNameAgeNameCollection = table.Where(p => p.Age).Equal(65).Or(p => p.Name).EqualIgnoreCase("person1");
 
             var personsNameAgeNameKeys = await personsNameAgeNameCollection.Keys(p => p.Age);
 

@@ -1,12 +1,10 @@
 ﻿using DexieNET;
 using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
-using Microsoft.Extensions.Options;
 using RxBlazorLightCore;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
@@ -86,23 +84,23 @@ namespace DexieNETCloudSample.Dexie.Services
             SetList = new SetListCmd(this);
         }
 
-        public override async Task OnInitializedAsync()
+        public override void OnInitialized()
         {
             if (IsDBOpen)
             {
-                await InitDB();
+                InitDB();
             }
 
             _dbService.OnDelete += () => Dispose(false);
 
             _dbDisposeBag.Add(
                 _dbService
-               .Select(async c =>
+               .Select(c =>
                {
                    switch (c)
                    {
                        case DBChangedMessage.Cloud:
-                           await InitDB();
+                           InitDB();
                            break;
                        case DBChangedMessage.UserLogin:
                        case DBChangedMessage.Invites:
@@ -116,7 +114,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             ArgumentNullException.ThrowIfNull(_dbService.DB);
 
-            var memberQuery = await _dbService.DB.LiveQuery(async () =>
+            var memberQuery = _dbService.DB.LiveQuery(async () =>
                 await _dbService.DB.Members().Where(m => m.RealmId).Equal(List?.RealmId).ToArray());
 
             var useMemberQuery = memberQuery.UseLiveQuery(SetList.Executed);
@@ -286,19 +284,19 @@ namespace DexieNETCloudSample.Dexie.Services
             _dbService.OnDelete -= () => Dispose(false);
         }
 
-        private async Task InitDB()
+        private void InitDB()
         {
             ArgumentNullException.ThrowIfNull(_dbService.DB);
-            _membersTable = await _dbService.DB.Members();
+            _membersTable = _dbService.DB.Members();
 
-            _permissionsMember = await _dbService.DB.Members().CreateUsePermissions();
+            _permissionsMember = _dbService.DB.Members().CreateUsePermissions();
 
             _permissionsDisposeBag.Add(_permissionsMember.Subscribe(_ =>
             {
                 StateHasChanged();
             }));
 
-            _permissionsRealm = await _dbService.DB.Realms().CreateUsePermissions();
+            _permissionsRealm = _dbService.DB.Realms().CreateUsePermissions();
 
             _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(_ =>
             {

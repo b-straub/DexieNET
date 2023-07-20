@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -88,7 +88,7 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
                 modifiedCount = await collection.Modify(p => p.Name, "Updated", p => p.Address.Street, "Updated");
                 personUpdated = (await table.ToArray()).LastOrDefault();
             });
@@ -107,11 +107,11 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
                 modifiedCount = await collection.Modify(p => p.Name, null);
                 personUpdated = (await table.ToArray()).LastOrDefault();
-                var whereClause = await table.Where(p => p.Name);
-                var colFound = await whereClause.Equal(pName);
+                var whereClause = table.Where(p => p.Name);
+                var colFound = whereClause.Equal(pName);
                 foundPersonsCount = await colFound.Count();
             });
 
@@ -129,7 +129,7 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
 
                 foundPersonsCount = await collection.Modify(p =>
                         p with
@@ -155,7 +155,7 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
 
                 modifiedCount = await collection.Modify(_ => null);
                 foundPersonsCount = await table.Count();

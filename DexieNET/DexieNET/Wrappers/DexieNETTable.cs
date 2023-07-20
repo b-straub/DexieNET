@@ -68,6 +68,11 @@ namespace DexieNET
                 throw new InvalidOperationException($"{typeof(I).Name} can not be used as primary index.");
             }
 
+            if (cloudSync && !db.CloudSync)
+            {
+                throw new InvalidOperationException($"Table {name} has CloudSync schema but DB is not cloud based.");
+            }
+
             TableJS = new(db.DBBaseJS.Module, reference);
             DB = db;
             Name = name;
@@ -125,14 +130,14 @@ namespace DexieNET
             return (WhereClause<T, I, Q>)whereClause;
         }
 
-        internal async ValueTask<Collection<T, I, Q>> ToCollection<Q>()
+        internal Collection<T, I, Q> ToCollection<Q>()
         {
             if (AddTableInfo((Name, TAMode.Read)))
             {
                 return EmptyCollection<Q>(Keys.First());
             }
 
-            var reference = await TableJS.InvokeAsync<IJSInProcessObjectReference>("toCollection");
+            var reference = TableJS.Invoke<IJSInProcessObjectReference>("toCollection");
             return new(this, reference, Keys.First());
         }
     }
@@ -140,12 +145,6 @@ namespace DexieNET
     public static class TableExtensions
     {
         #region Cloud
-        public async static ValueTask<IUsePermissions<T>> CreateUsePermissions<T, I>(this ValueTask<Table<T, I>> tableT) where T : IDBStore, IDBCloudEntity
-        {
-            var table = await tableT;
-            return table.CreateUsePermissions();
-        }
-
         public static IUsePermissions<T> CreateUsePermissions<T, I>(this Table<T, I> table) where T : IDBStore, IDBCloudEntity
         {
             return UsePermissions<T, I>.Create(table);
@@ -153,12 +152,6 @@ namespace DexieNET
         #endregion
 
         #region Add
-        public static async ValueTask<I> Add<T, I>(this ValueTask<Table<T, I>> tableT, T? item, I primaryKey) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Add(item, primaryKey);
-        }
-
         public static async ValueTask<I> Add<T, I>(this Table<T, I> table, T? item, I primaryKey) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -184,12 +177,6 @@ namespace DexieNET
             return query.AsObject<I>(key);
         }
 
-        public static async ValueTask<I> Add<T, I>(this ValueTask<Table<T, I>> tableT, T? item) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Add(item);
-        }
-
         public static async ValueTask<I> Add<T, I>(this Table<T, I> table, T? item) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -213,12 +200,6 @@ namespace DexieNET
         #endregion
 
         #region BulkAdd
-        public static async ValueTask<IEnumerable<I>> BulkAdd<T, I>(this ValueTask<Table<T, I>> tableT, IEnumerable<T> items, IEnumerable<I> primaryKeys) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.BulkAdd(items, primaryKeys);
-        }
-
         public static async ValueTask<IEnumerable<I>> BulkAdd<T, I>(this Table<T, I> table, IEnumerable<T> items, IEnumerable<I> primaryKeys, bool allKeys = false) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -248,12 +229,6 @@ namespace DexieNET
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return new[] { query.AsObject<I>(key) };
             }
-        }
-
-        public static async ValueTask<IEnumerable<I>> BulkAdd<T, I>(this ValueTask<Table<T, I>> tableT, IEnumerable<T> items) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.BulkAdd(items);
         }
 
         public static async ValueTask<IEnumerable<I>> BulkAdd<T, I>(this Table<T, I> table, IEnumerable<T> items, bool allKeys = false) where T : IDBStore
@@ -288,12 +263,6 @@ namespace DexieNET
         #endregion
 
         #region BulkDelete
-        public static async ValueTask BulkDelete<T, I>(this ValueTask<Table<T, I>> tableT, IEnumerable<I> primaryKeys) where T : IDBStore
-        {
-            var table = await tableT;
-            await table.BulkDelete(primaryKeys);
-        }
-
         public static async ValueTask BulkDelete<T, I>(this Table<T, I> table, IEnumerable<I> primaryKeys) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -306,12 +275,6 @@ namespace DexieNET
         #endregion
 
         #region BulkGet
-        public static async ValueTask<IEnumerable<T>> BulkGet<T, I>(this ValueTask<Table<T, I>> tableT, IEnumerable<I> primaryKeys) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.BulkGet(primaryKeys);
-        }
-
         public static async ValueTask<IEnumerable<T>> BulkGet<T, I>(this Table<T, I> table, IEnumerable<I> primaryKeys) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
@@ -325,12 +288,6 @@ namespace DexieNET
         #endregion
 
         #region BulkPut
-        public static async ValueTask<IEnumerable<I>> BulkPut<T, I>(this ValueTask<Table<T, I>> tableT, IEnumerable<T> items, IEnumerable<I> primaryKeys, bool allKeys = false) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.BulkPut(items, primaryKeys, allKeys);
-        }
-
         public static async ValueTask<IEnumerable<I>> BulkPut<T, I>(this Table<T, I> table, IEnumerable<T> items, IEnumerable<I> primaryKeys, bool allKeys = false) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -360,12 +317,6 @@ namespace DexieNET
                 var query = new DBQuery<T, I, I>(table.TypeConverter);
                 return new[] { query.AsObject<I>(key) };
             }
-        }
-
-        public static async ValueTask<IEnumerable<I>> BulkPut<T, I>(this ValueTask<Table<T, I>> tableT, IEnumerable<T> items, bool allKeys = false) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.BulkPut(items, allKeys);
         }
 
         public static async ValueTask<IEnumerable<I>> BulkPut<T, I>(this Table<T, I> table, IEnumerable<T> items, bool allKeys = false) where T : IDBStore
@@ -400,12 +351,6 @@ namespace DexieNET
         #endregion
 
         #region Clear
-        public static async ValueTask Clear<T, I>(this ValueTask<Table<T, I>> tableT) where T : IDBStore
-        {
-            var table = await tableT;
-            await table.Clear();
-        }
-
         public static async ValueTask Clear<T, I>(this Table<T, I> table) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -418,12 +363,6 @@ namespace DexieNET
         #endregion
 
         #region Count
-        public static async ValueTask<double> Count<T, I>(this ValueTask<Table<T, I>> tableT) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Count();
-        }
-
         public static async ValueTask<double> Count<T, I>(this Table<T, I> table) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
@@ -432,12 +371,6 @@ namespace DexieNET
             }
 
             return await table.TableJS.InvokeAsync<double>("count");
-        }
-
-        public static async ValueTask<R?> Count<T, I, R>(this ValueTask<Table<T, I>> tableT, Func<double, R?> callback) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Count(callback);
         }
 
         public static async ValueTask<R?> Count<T, I, R>(this Table<T, I> table, Func<double, R?> callback) where T : IDBStore
@@ -453,12 +386,6 @@ namespace DexieNET
         #endregion
 
         #region Delete
-        public static async ValueTask Delete<T, I>(this ValueTask<Table<T, I>> tableT, I primaryKey) where T : IDBStore
-        {
-            var table = await tableT;
-            await table.Delete(primaryKey);
-        }
-
         public static async ValueTask Delete<T, I>(this Table<T, I> table, I primaryKey) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -471,27 +398,21 @@ namespace DexieNET
         #endregion
 
         #region Filter
-        public static async ValueTask<Collection<T, I, I>> Filter<T, I>(this Table<T, I> table, Func<T, bool> filter) where T : IDBStore
+        public static Collection<T, I, I> Filter<T, I>(this Table<T, I> table, Func<T, bool> filter) where T : IDBStore
         {
-            var collection = await table.ToCollection<I>();
+            var collection = table.ToCollection<I>();
 
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
                 return collection;
             }
 
-            collection = await collection.Filter(filter);
+            collection = collection.Filter(filter);
             return collection;
         }
         #endregion
 
         #region Get
-        public static async ValueTask<T?> Get<T, I>(this ValueTask<Table<T, I>> tableT, I primaryKey) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Get(primaryKey);
-        }
-
         public static async ValueTask<T?> Get<T, I>(this Table<T, I> table, I primaryKey) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
@@ -514,23 +435,10 @@ namespace DexieNET
             return await table.TableJS.InvokeAsync<T?>("get", queryConverted);
         }
 
-        public static async ValueTask<T?> Get<T, I, Q>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q>> query, Q value) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Get(query, value);
-        }
-
         public static async ValueTask<T?> Get<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query, Q value) where T : IDBStore
         {
             var queryF = QueryFactory<T>.Query(query, value);
             return await table.Get(queryF);
-        }
-
-        public static async ValueTask<T?> Get<T, I, Q1, Q2>(this ValueTask<Table<T, I>> tableT,
-            Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Get(query1, value1, query2, value2);
         }
 
         public static async ValueTask<T?> Get<T, I, Q1, Q2>(this Table<T, I> table,
@@ -538,13 +446,6 @@ namespace DexieNET
         {
             var queryF = QueryFactory<T>.Query(query1, value1, query2, value2);
             return await table.Get(queryF);
-        }
-
-        public static async ValueTask<T?> Get<T, I, Q1, Q2, Q3>(this ValueTask<Table<T, I>> tableT,
-             Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2, Expression<Func<T, Q3>> query3, Q3 value3) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Get(query1, value1, query2, value2, query3, value3);
         }
 
         public static async ValueTask<T?> Get<T, I, Q1, Q2, Q3>(this Table<T, I> table,
@@ -556,49 +457,31 @@ namespace DexieNET
         #endregion
 
         #region Limit
-        public static async ValueTask<Collection<T, I, I>> Limit<T, I>(this ValueTask<Table<T, I>> tableT, double count) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Limit(count);
-        }
-
-        public static async ValueTask<Collection<T, I, I>> Limit<T, I>(this Table<T, I> table, double count) where T : IDBStore
+        public static Collection<T, I, I> Limit<T, I>(this Table<T, I> table, double count) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
-                return await table.ToCollection<I>();
+                return table.ToCollection<I>();
             }
 
-            return await table.ToCollection<I>().Limit(count);
+            return table.ToCollection<I>().Limit(count);
         }
         #endregion
 
         #region Offset
-        public static async ValueTask<Collection<T, I, I>> Offset<T, I>(this ValueTask<Table<T, I>> tableT, double count) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Offset(count);
-        }
-
-        public static async ValueTask<Collection<T, I, I>> Offset<T, I>(this Table<T, I> table, double count) where T : IDBStore
+        public static Collection<T, I, I> Offset<T, I>(this Table<T, I> table, double count) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
-                return await table.ToCollection<I>();
+                return table.ToCollection<I>();
             }
 
-            return await table.ToCollection<I>().Offset(count);
+            return table.ToCollection<I>().Offset(count);
         }
         #endregion
 
         #region OrderBy
-        public static async ValueTask<Collection<T, I, Q>> OrderBy<T, I, Q>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.OrderBy(query);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> OrderBy<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query) where T : IDBStore
+        public static Collection<T, I, Q> OrderBy<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query) where T : IDBStore
         {
             var key = query.GetKey();
             if (table.AddTableInfo((table.Name, TAMode.Read)))
@@ -606,17 +489,11 @@ namespace DexieNET
                 return table.EmptyCollection<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", key);
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("orderBy", key);
             return new(table, reference, key);
         }
 
-        public static async ValueTask<Collection<T, I, Q>> OrderBy<T, I, Q>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, IEnumerable<Q>>> query) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.OrderBy(query);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> OrderBy<T, I, Q>(this Table<T, I> table, Expression<Func<T, IEnumerable<Q>>> query) where T : IDBStore
+        public static Collection<T, I, Q> OrderBy<T, I, Q>(this Table<T, I> table, Expression<Func<T, IEnumerable<Q>>> query) where T : IDBStore
         {
             var key = query.GetKey();
 
@@ -625,17 +502,11 @@ namespace DexieNET
                 return table.EmptyCollection<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", query.GetKey());
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("orderBy", query.GetKey());
             return new(table, reference, key);
         }
 
-        public static async ValueTask<Collection<T, I, (Q1, Q2)>> OrderBy<T, I, Q1, Q2>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q1>> query1, Expression<Func<T, Q2>> query2) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.OrderBy(query1, query2);
-        }
-
-        public static async ValueTask<Collection<T, I, (Q1, Q2)>> OrderBy<T, I, Q1, Q2>(this Table<T, I> table, Expression<Func<T, Q1>> query1, Expression<Func<T, Q2>> query2) where T : IDBStore
+        public static Collection<T, I, (Q1, Q2)> OrderBy<T, I, Q1, Q2>(this Table<T, I> table, Expression<Func<T, Q1>> query1, Expression<Func<T, Q2>> query2) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
@@ -644,18 +515,11 @@ namespace DexieNET
 
             object keys = new[] { query1.GetKey(), query2.GetKey() };
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", keys);
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("orderBy", keys);
             return new(table, reference, query1.GetKey(), query2.GetKey());
         }
 
-        public static async ValueTask<Collection<T, I, (Q1, Q2, Q3)>> OrderBy<T, I, Q1, Q2, Q3>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q1>> query1,
-            Expression<Func<T, Q2>> query2, Expression<Func<T, Q3>> query3) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.OrderBy(query1, query2, query3);
-        }
-
-        public static async ValueTask<Collection<T, I, (Q1, Q2, Q3)>> OrderBy<T, I, Q1, Q2, Q3>(this Table<T, I> table, Expression<Func<T, Q1>> query1,
+        public static Collection<T, I, (Q1, Q2, Q3)> OrderBy<T, I, Q1, Q2, Q3>(this Table<T, I> table, Expression<Func<T, Q1>> query1,
             Expression<Func<T, Q2>> query2, Expression<Func<T, Q3>> query3) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
@@ -665,18 +529,12 @@ namespace DexieNET
 
             object keys = new[] { query1.GetKey(), query2.GetKey(), query3.GetKey() };
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("orderBy", keys);
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("orderBy", keys);
             return new(table, reference, query1.GetKey(), query2.GetKey(), query3.GetKey());
         }
         #endregion
 
         #region Put
-        public static async ValueTask<I> Put<T, I>(this ValueTask<Table<T, I>> tableT, T? item, I primaryKey) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Put(item, primaryKey);
-        }
-
         public static async ValueTask<I> Put<T, I>(this Table<T, I> table, T? item, I primaryKey) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -702,12 +560,6 @@ namespace DexieNET
             return query.AsObject<I>(key);
         }
 
-        public static async ValueTask<I> Put<T, I>(this ValueTask<Table<T, I>> tableT, T? item) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Put(item);
-        }
-
         public static async ValueTask<I> Put<T, I>(this Table<T, I> table, T? item) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -731,30 +583,18 @@ namespace DexieNET
         #endregion
 
         #region Reverse
-        public static async ValueTask<Collection<T, I, I>> Reverse<T, I>(this ValueTask<Table<T, I>> tableT) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Reverse();
-        }
-
-        public static async ValueTask<Collection<T, I, I>> Reverse<T, I>(this Table<T, I> table) where T : IDBStore
+        public static Collection<T, I, I> Reverse<T, I>(this Table<T, I> table) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
-                return await table.ToCollection<I>();
+                return table.ToCollection<I>();
             }
 
-            return await table.ToCollection<I>().Reverse();
+            return table.ToCollection<I>().Reverse();
         }
         #endregion
 
         #region ToArray
-        public static async ValueTask<IEnumerable<T>> ToArray<T, I>(this ValueTask<Table<T, I>> tableT) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.ToArray();
-        }
-
         public static async ValueTask<IEnumerable<T>> ToArray<T, I>(this Table<T, I> table) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
@@ -767,31 +607,18 @@ namespace DexieNET
         #endregion
 
         #region ToCollection
-        public static async ValueTask<Collection<T, I, I>> ToCollection<T, I>(this ValueTask<Table<T, I>> tableT) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.ToCollection();
-        }
-
-        public static async ValueTask<Collection<T, I, I>> ToCollection<T, I>(this Table<T, I> table) where T : IDBStore
+        public static Collection<T, I, I> ToCollection<T, I>(this Table<T, I> table) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
-                return await table.ToCollection<I>();
+                return table.ToCollection<I>();
             }
 
-            return await table.ToCollection<I>();
+            return table.ToCollection<I>();
         }
         #endregion
 
         #region Update
-        internal static async ValueTask<bool> Update<T, I>(this ValueTask<Table<T, I>> tableT, I primaryKey, Update<T> update) where T : IDBStore
-        {
-            var table = await tableT;
-
-            return await table.Update(primaryKey, update);
-        }
-
         internal static async ValueTask<bool> Update<T, I>(this Table<T, I> table, I primaryKey, Update<T> update) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.ReadWrite)))
@@ -803,23 +630,10 @@ namespace DexieNET
             return res > 0;
         }
 
-        public static async ValueTask<bool> Update<T, I, Q>(this ValueTask<Table<T, I>> tableT, I primaryKey, Expression<Func<T, Q>> query, Q value) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Update(primaryKey, query, value);
-        }
-
         public static async ValueTask<bool> Update<T, I, Q>(this Table<T, I> table, I primaryKey, Expression<Func<T, Q>> query, Q value) where T : IDBStore
         {
             var queryF = QueryFactory<T>.Update(query, value);
             return await table.Update(primaryKey, queryF);
-        }
-
-        public static async ValueTask<bool> Update<T, I, Q1, Q2>(this ValueTask<Table<T, I>> tableT, I primaryKey,
-            Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Update(primaryKey, query1, value1, query2, value2);
         }
 
         public static async ValueTask<bool> Update<T, I, Q1, Q2>(this Table<T, I> table, I primaryKey,
@@ -827,13 +641,6 @@ namespace DexieNET
         {
             var queryF = QueryFactory<T>.Update(query1, value1, query2, value2);
             return await table.Update(primaryKey, queryF);
-        }
-
-        public static async ValueTask<bool> Update<T, I, Q1, Q2, Q3>(this ValueTask<Table<T, I>> tableT, I primaryKey,
-             Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2, Expression<Func<T, Q3>> query3, Q3 value3) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Update(primaryKey, query1, value1, query2, value2, query3, value3);
         }
 
         public static async ValueTask<bool> Update<T, I, Q1, Q2, Q3>(this Table<T, I> table, I primaryKey,
@@ -845,7 +652,7 @@ namespace DexieNET
         #endregion
 
         #region Where
-        internal static async ValueTask<Collection<T, I, Q>> Where<T, I, Q>(this Table<T, I> table, Query<T, Q> query) where T : IDBStore
+        internal static Collection<T, I, Q> Where<T, I, Q>(this Table<T, I> table, Query<T, Q> query) where T : IDBStore
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
@@ -853,57 +660,31 @@ namespace DexieNET
             }
 
             var queryConverted = table.TypeConverter?.Convert(query) ?? query;
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", queryConverted);
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("where", queryConverted);
             return new(table, reference, query.Keys.ToArray());
         }
 
-        public static async ValueTask<Collection<T, I, Q>> Where<T, I, Q>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q>> query, Q value) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Where(query, value);
-        }
-
-        public static async ValueTask<Collection<T, I, Q>> Where<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query, Q value) where T : IDBStore
+        public static Collection<T, I, Q> Where<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query, Q value) where T : IDBStore
         {
             var queryF = QueryFactory<T>.Query(query, value);
-            return await table.Where(queryF);
+            return table.Where(queryF);
         }
 
-        public static async ValueTask<Collection<T, I, (Q1, Q2)>> Where<T, I, Q1, Q2>(this ValueTask<Table<T, I>> tableT,
-            Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Where(query1, value1, query2, value2);
-        }
-
-        public static async ValueTask<Collection<T, I, (Q1, Q2)>> Where<T, I, Q1, Q2>(this Table<T, I> table,
+        public static Collection<T, I, (Q1, Q2)> Where<T, I, Q1, Q2>(this Table<T, I> table,
             Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2) where T : IDBStore
         {
             var queryF = QueryFactory<T>.Query(query1, value1, query2, value2);
-            return await table.Where(queryF);
+            return table.Where(queryF);
         }
 
-        public static async ValueTask<Collection<T, I, (Q1, Q2, Q3)>> Where<T, I, Q1, Q2, Q3>(this ValueTask<Table<T, I>> tableT,
-             Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2, Expression<Func<T, Q3>> query3, Q3 value3) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Where(query1, value1, query2, value2, query3, value3);
-        }
-
-        public static async ValueTask<Collection<T, I, (Q1, Q2, Q3)>> Where<T, I, Q1, Q2, Q3>(this Table<T, I> table,
+        public static Collection<T, I, (Q1, Q2, Q3)> Where<T, I, Q1, Q2, Q3>(this Table<T, I> table,
             Expression<Func<T, Q1>> query1, Q1 value1, Expression<Func<T, Q2>> query2, Q2 value2, Expression<Func<T, Q3>> query3, Q3 value3) where T : IDBStore
         {
             var queryF = QueryFactory<T>.Query(query1, value1, query2, value2, query3, value3);
-            return await table.Where(queryF);
+            return table.Where(queryF);
         }
 
-        public static async ValueTask<WhereClause<T, I, Q>> Where<T, I, Q>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q>> query) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Where(query);
-        }
-
-        public static async ValueTask<WhereClause<T, I, Q>> Where<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query) where T : IDBStore
+        public static WhereClause<T, I, Q> Where<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query) where T : IDBStore
         {
             var key = query.GetKey();
 
@@ -912,19 +693,13 @@ namespace DexieNET
                 return table.EmptyWhereClause<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", query.GetKey());
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("where", query.GetKey());
             return new(table, reference, key);
         }
         #endregion
 
         #region WhereMultiEntry
-        public static async ValueTask<WhereClause<T, I, Q>> Where<T, I, Q>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, IEnumerable<Q>>> query) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Where(query);
-        }
-
-        public static async ValueTask<WhereClause<T, I, Q>> Where<T, I, Q>(this Table<T, I> table, Expression<Func<T, IEnumerable<Q>>> query) where T : IDBStore
+        public static WhereClause<T, I, Q> Where<T, I, Q>(this Table<T, I> table, Expression<Func<T, IEnumerable<Q>>> query) where T : IDBStore
         {
             var key = query.GetKey();
 
@@ -938,19 +713,13 @@ namespace DexieNET
                 return table.EmptyWhereClause<Q>(key);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", key);
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("where", key);
             return new(table, reference, key);
         }
         #endregion
 
         #region WhereMultipleValues
-        public static async ValueTask<WhereClause<T, I, (Q1, Q2)>> Where<T, I, Q1, Q2>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q1>> query1, Expression<Func<T, Q2>> query2) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Where(query1, query2);
-        }
-
-        public static async ValueTask<WhereClause<T, I, (Q1, Q2)>> Where<T, I, Q1, Q2>(this Table<T, I> table, Expression<Func<T, Q1>> query1, Expression<Func<T, Q2>> query2) where T : IDBStore
+        public static WhereClause<T, I, (Q1, Q2)> Where<T, I, Q1, Q2>(this Table<T, I> table, Expression<Func<T, Q1>> query1, Expression<Func<T, Q2>> query2) where T : IDBStore
         {
             var keys = new[] { query1.GetKey(), query2.GetKey() };
 
@@ -964,18 +733,11 @@ namespace DexieNET
                 return table.EmptyWhereClause<(Q1, Q2)>(keys);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", (object)keys);
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("where", (object)keys);
             return new(table, reference, keys);
         }
 
-        public static async ValueTask<WhereClause<T, I, (Q1, Q2, Q3)>> Where<T, I, Q1, Q2, Q3>(this ValueTask<Table<T, I>> tableT, Expression<Func<T, Q1>> query1,
-            Expression<Func<T, Q2>> query2, Expression<Func<T, Q3>> query3) where T : IDBStore
-        {
-            var table = await tableT;
-            return await table.Where(query1, query2, query3);
-        }
-
-        public static async ValueTask<WhereClause<T, I, (Q1, Q2, Q3)>> Where<T, I, Q1, Q2, Q3>(this Table<T, I> table, Expression<Func<T, Q1>> query1,
+        public static WhereClause<T, I, (Q1, Q2, Q3)> Where<T, I, Q1, Q2, Q3>(this Table<T, I> table, Expression<Func<T, Q1>> query1,
             Expression<Func<T, Q2>> query2, Expression<Func<T, Q3>> query3) where T : IDBStore
         {
             var keys = new[] { query1.GetKey(), query2.GetKey(), query3.GetKey() };
@@ -990,7 +752,7 @@ namespace DexieNET
                 return table.EmptyWhereClause<(Q1, Q2, Q3)>(keys);
             }
 
-            var reference = await table.TableJS.InvokeAsync<IJSInProcessObjectReference>("where", (object)keys);
+            var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("where", (object)keys);
             return new(table, reference, keys);
         }
         #endregion

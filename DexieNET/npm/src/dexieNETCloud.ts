@@ -25,8 +25,8 @@ export function CurrentUserId(db: DB): string {
     return db.cloud.currentUserId;
 }
 
-export async function UserLogin(db: DB, email: string, grantType: "demo" | "otp" | undefined, userId?: string): Promise<void> {
-    await db.cloud.login({ email: email, userId: userId, grant_type: grantType });
+export function UserLogin(db: DB, email: string, grantType: "demo" | "otp" | undefined, userId?: string): void {
+    db.cloud.login({ email: email, userId: userId, grant_type: grantType });
 }
 
 export function GetTiedRealmID(id: string): string {

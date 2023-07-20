@@ -15,7 +15,7 @@ namespace DexieNETTest.TestBase.Test
 
         public async Task Log(string message)
         {
-            var tableLog = await DB.Logentries();
+            var tableLog = DB.Logentries();
 
             await DB.Transaction(async _ =>
             {
@@ -25,14 +25,14 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var tableLog = await DB.Logentries();
+            var tableLog = DB.Logentries();
             await tableLog.Clear();
             await Log("StartLogging");
 
-            var tableFieldTest = await DB.FieldTests();
+            var tableFieldTest = DB.FieldTests();
             var fieldsData = DataGenerator.GetFieldTestRandom().ToArray();
 
-            var tablePersons = await DB.Persons();
+            var tablePersons = DB.Persons();
             await tablePersons.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -56,14 +56,14 @@ namespace DexieNETTest.TestBase.Test
 
                     await tablePersons.Clear(); // for yet unknown reasons when using Playwright with Webkit clear will not work here
                     var keys = await tablePersons.BulkAdd(persons);
-                    var collection = await tablePersons.ToCollection();
+                    var collection = tablePersons.ToCollection();
                     var count1 = await collection.Count();
 
                     await DB.Transaction(async _ =>
                     {
                         await tableFieldTest.Clear(); // for yet unknown reasons when using Playwright with Webkit clear will not work here
                         await tableFieldTest.BulkAdd(fieldsData);
-                        var collection = await tableFieldTest.ToCollection();
+                        var collection = tableFieldTest.ToCollection();
 
                         await DB.Transaction(async _ =>
                         {
@@ -75,7 +75,7 @@ namespace DexieNETTest.TestBase.Test
 
                     await DB.Transaction(async transaction =>
                     {
-                        var collection = await tablePersons.ToCollection();
+                        var collection = tablePersons.ToCollection();
                         var count2 = await collection.Count();
                         var item = await tablePersons.Get(keys.FirstOrDefault());
 

@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var tableS = await DB.FriendIBPs();
+            var tableS = DB.FriendIBPs();
             await tableS.Clear();
 
             var friendsS = new[] {
@@ -20,7 +20,7 @@ namespace DexieNETTest.TestBase.Test
                 new FriendIBP("TestName2", "BB")
             };
 
-            var tableB = await DB.FriendIBBPs();
+            var tableB = DB.FriendIBBPs();
             await tableB.Clear();
 
             var friendsB = new[] {

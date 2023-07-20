@@ -37,17 +37,17 @@ namespace DNTGenerator.SourceDump
             if (primaryIndexTypeName is null)
             {
                 _ = sb.Append($@"
-        public async ValueTask<Table<{record.Symbol.Name}, I>> {record.SchemaDescriptor.StoreName}<I>()
+        public Table<{record.Symbol.Name}, I> {record.SchemaDescriptor.StoreName}<I>()
         {{  
             {record.MakeConverter()}
-            var reference = await _jso.InvokeAsync<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            var reference = _jso.Invoke<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
             return new Table<{record.Symbol.Name}, I>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasNonCloudGuidPrimaryKey() ? "true" : "false")}, {(record.SchemaDescriptor.HasCloudSync ? "true" : "false")});
         }}");
             }
             else
             {
                 _ = sb.Append($@"
-        public async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.SchemaDescriptor.StoreName}()
+        public Table<{record.Symbol.Name}, {primaryIndexTypeName}> {record.SchemaDescriptor.StoreName}()
         {{
             if ({tablePropertyName} is not null)
             {{
@@ -55,7 +55,7 @@ namespace DNTGenerator.SourceDump
             }}
 
             {record.MakeConverter()}
-            var reference = await _jso.InvokeAsync<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            var reference = _jso.Invoke<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
             var table = new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(this, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasNonCloudGuidPrimaryKey() ? "true" : "false")}, {(record.SchemaDescriptor.HasCloudSync ? "true" : "false")});
 
             {tablePropertyName} = table;
@@ -77,7 +77,7 @@ namespace DNTGenerator.SourceDump
             StringBuilder sb = new();
 
             _ = sb.Append($@"
-        public async ValueTask<Table<Realm, string>> Realms()
+        public Table<Realm, string> Realms()
         {{
             if (_realms is not null)
             {{
@@ -85,14 +85,14 @@ namespace DNTGenerator.SourceDump
             }}
 
             {MakeEmptyConverter("Realm")};
-            var reference = await _jso.InvokeAsync<IJSInProcessObjectReference>(""table"", ""realms"");
+            var reference = _jso.Invoke<IJSInProcessObjectReference>(""table"", ""realms"");
             var table = new Table<Realm, string>(this, reference, ""realms"", converter, new string[] {{""realmId""}}, Enumerable.Empty<string>().ToArray(), false, true);
 
             _realms = table;
             return table;
         }}
 
-        public async ValueTask<Table<Member, string>> Members()
+        public Table<Member, string> Members()
         {{
             if (_members is not null)
             {{
@@ -100,14 +100,14 @@ namespace DNTGenerator.SourceDump
             }}
 
             {MakeEmptyConverter("Member")};
-            var reference = await _jso.InvokeAsync<IJSInProcessObjectReference>(""table"", ""members"");
+            var reference = _jso.Invoke<IJSInProcessObjectReference>(""table"", ""members"");
             var table = new Table<Member, string>(this, reference, ""members"", converter, new string[] {{""id"", ""[userId+realmId]"", ""[email+realmId]"", ""realmId""}}, Enumerable.Empty<string>().ToArray(), false, true);
 
             _members = table;
             return table;
         }}
 
-        public async ValueTask<Table<Role, (string, string)>> Roles()
+        public Table<Role, (string, string)> Roles()
         {{
             if (_roles is not null)
             {{
@@ -115,7 +115,7 @@ namespace DNTGenerator.SourceDump
             }}
 
             {MakeEmptyConverter("Role")};
-            var reference = await _jso.InvokeAsync<IJSInProcessObjectReference>(""table"", ""roles"");
+            var reference = _jso.Invoke<IJSInProcessObjectReference>(""table"", ""roles"");
             var table = new Table<Role, (string, string)>(this, reference, ""roles"", converter, new string[] {{""[realmId+name]""}}, Enumerable.Empty<string>().ToArray(), false, true);
 
             _roles = table;
@@ -136,20 +136,20 @@ namespace DNTGenerator.SourceDump
             if (primaryIndexTypeName is null)
             {
                 _ = sb.Append($@"
-        public static async ValueTask<Table<{record.Symbol.Name}, I>> {record.SchemaDescriptor.StoreName}<I>(this Transaction transaction)
+        public static Table<{record.Symbol.Name}, I> {record.SchemaDescriptor.StoreName}<I>(this Transaction transaction)
         {{
             {record.MakeConverter()}
-            var reference = await transaction.InvokeAsync<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            var reference = transaction.Invoke<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
             return new Table<{record.Symbol.Name}, I>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasNonCloudGuidPrimaryKey() ? "true" : "false")}, {(record.SchemaDescriptor.HasCloudSync ? "true" : "false")});
         }}");
             }
             else
             {
                 _ = sb.Append($@"
-        public static async ValueTask<Table<{record.Symbol.Name}, {primaryIndexTypeName}>> {record.SchemaDescriptor.StoreName}(this Transaction transaction)
+        public static Table<{record.Symbol.Name}, {primaryIndexTypeName}> {record.SchemaDescriptor.StoreName}(this Transaction transaction)
         {{
             {record.MakeConverter()}
-            var reference = await transaction.InvokeAsync<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
+            var reference = transaction.Invoke<IJSInProcessObjectReference>(""table"", ""{record.GetStoreBaseName(records)}"");
             return new Table<{record.Symbol.Name}, {primaryIndexTypeName}>(transaction.DB, reference, ""{record.GetStoreBaseName(records)}"", converter, {record.Keys(false)}, {record.Keys(true)}, {(record.HasNonCloudGuidPrimaryKey() ? "true" : "false")}, {(record.SchemaDescriptor.HasCloudSync ? "true" : "false")});
         }}
 ");
@@ -434,9 +434,9 @@ namespace DNTGenerator.SourceDump
             return stores;
         }}
 
-        public async override ValueTask<DexieNET.Version> Version(double versionNumber)
+        public override DexieNET.Version Version(double versionNumber)
         {{
-            var reference = await _jso.InvokeAsync<IJSInProcessObjectReference>(""version"", versionNumber);
+            var reference = _jso.Invoke<IJSInProcessObjectReference>(""version"", versionNumber);
             return new DexieNET.Version(this, GetStores(), GetUpdateStores(), reference);
         }}");
 

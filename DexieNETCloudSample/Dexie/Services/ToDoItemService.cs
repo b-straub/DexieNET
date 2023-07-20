@@ -32,17 +32,17 @@ namespace DexieNETCloudSample.Dexie.Services
             return ToDoDBItem.Create(text, dueDate, list, item);
         }
 
-        protected override async ValueTask<Table<ToDoDBItem, string>> GetTable()
+        protected override Table<ToDoDBItem, string> GetTable()
         {
             ArgumentNullException.ThrowIfNull(_db);
-            return await _db.ToDoDBItems();
+            return _db.ToDoDBItems();
         }
 
-        protected override async ValueTask<LiveQuery<IEnumerable<ToDoDBItem>>> InitializeDB(ToDoDB db)
+        protected override LiveQuery<IEnumerable<ToDoDBItem>> InitializeDB(ToDoDB db)
         {
             ArgumentNullException.ThrowIfNull(List?.ID);
             _db = db;
-            return await db.LiveQuery(async () => await GetTable().Where(i => i.ListID).Equal(List.ID).ToArray());
+            return db.LiveQuery(async () => await GetTable().Where(i => i.ListID).Equal(List.ID).ToArray());
         }
 
         protected override bool CanAdd()

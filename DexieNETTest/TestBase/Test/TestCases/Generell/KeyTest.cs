@@ -10,53 +10,53 @@ namespace DexieNETTest.TestBase.Test
 
         public override string Name => "KeyTest";
 
-        public override async ValueTask<string?> RunTest()
+        public override ValueTask<string?> RunTest()
         {
-            var tableP = await DB.Persons();
+            var tableP = DB.Persons();
 
-            await tableP.Where(tableP.PrimaryKey);
-            await tableP.Where(t => t.Name);
-            await tableP.Where(t => t.Age);
-            await tableP.Where(t => t.Tags);
-            await tableP.Where(t => t.Guid);
-            await tableP.Where(t => t.Id);
-            await tableP.Where(t => t.Name, t => t.Age);
-            await tableP.Where(t => t.Name, t => t.Address.City);
-            await tableP.Where(t => t.Address.City, t => t.Address.Street);
+            tableP.Where(tableP.PrimaryKey);
+            tableP.Where(t => t.Name);
+            tableP.Where(t => t.Age);
+            tableP.Where(t => t.Tags);
+            tableP.Where(t => t.Guid);
+            tableP.Where(t => t.Id);
+            tableP.Where(t => t.Name, t => t.Age);
+            tableP.Where(t => t.Name, t => t.Address.City);
+            tableP.Where(t => t.Address.City, t => t.Address.Street);
 
-            await tableP.Where(t => t.Address.City);
-            await tableP.Where(t => t.Address.Street);
-            await tableP.Where(t => t.Address.Housenumber);
-            await tableP.Where(t => t.Address.ZIP);
-            await tableP.Where(t => t.Address.Country);
+            tableP.Where(t => t.Address.City);
+            tableP.Where(t => t.Address.Street);
+            tableP.Where(t => t.Address.Housenumber);
+            tableP.Where(t => t.Address.ZIP);
+            tableP.Where(t => t.Address.Country);
 
-            await tableP.Where(t => t.Phone.Number.Number);
-            await tableP.Where(t => t.Phone.Number.Country);
+            tableP.Where(t => t.Phone.Number.Number);
+            tableP.Where(t => t.Phone.Number.Country);
 
-            var tableF = await DB.FieldTests();
+            var tableF = DB.FieldTests();
 
-            await tableF.Where(tableF.PrimaryKey);
-            await tableF.Where(t => t.Id);
-            await tableF.Where(t => t.Include);
-            await tableF.Where(t => t.IncludeME);
-            await tableF.Where(t => t.DateTime);
-            await tableF.Where(t => t.Date);
-            await tableF.Where(t => t.Time);
-            await tableF.Where(t => t.TimeSpan);
-            await tableF.Where(t => t.Blob);
-            await tableF.Where(t => t.BlobME);
-            await tableF.Where(t => t.Array);
+            tableF.Where(tableF.PrimaryKey);
+            tableF.Where(t => t.Id);
+            tableF.Where(t => t.Include);
+            tableF.Where(t => t.IncludeME);
+            tableF.Where(t => t.DateTime);
+            tableF.Where(t => t.Date);
+            tableF.Where(t => t.Time);
+            tableF.Where(t => t.TimeSpan);
+            tableF.Where(t => t.Blob);
+            tableF.Where(t => t.BlobME);
+            tableF.Where(t => t.Array);
 
-            var tableC = await DB.PersonCompounds();
-            await tableC.Where(tableC.PrimaryKey);
-            await tableC.Where(p => p.FirstName);
-            await tableC.Where(p => p.FirstName, p => p.LastName);
+            var tableC = DB.PersonCompounds();
+            tableC.Where(tableC.PrimaryKey);
+            tableC.Where(p => p.FirstName);
+            tableC.Where(p => p.FirstName, p => p.LastName);
 
             int exceptions = 0;
 
             try
             {
-                await tableP.Where(t => t.NotIndexed);
+                tableP.Where(t => t.NotIndexed);
             }
             catch
             {
@@ -65,7 +65,7 @@ namespace DexieNETTest.TestBase.Test
 
             try
             {
-                await tableP.Where(t => t.Phone.Type);
+                tableP.Where(t => t.Phone.Type);
             }
             catch
             {
@@ -74,7 +74,7 @@ namespace DexieNETTest.TestBase.Test
 
             try
             {
-                await tableP.Where(t => t.Age, t => t.Name);
+                tableP.Where(t => t.Age, t => t.Name);
             }
             catch
             {
@@ -83,7 +83,7 @@ namespace DexieNETTest.TestBase.Test
 
             try
             {
-                await tableP.Where(t => t.Tags, t => t.Tags);
+                tableP.Where(t => t.Tags, t => t.Tags);
             }
             catch
             {
@@ -92,7 +92,7 @@ namespace DexieNETTest.TestBase.Test
 
             try
             {
-                await tableC.Where(t => t.LastName);
+                tableC.Where(t => t.LastName);
             }
             catch
             {
@@ -104,7 +104,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("EntityKey test failed!");
             }
 
-            return "OK";
+            return new("OK");
         }
     }
 }

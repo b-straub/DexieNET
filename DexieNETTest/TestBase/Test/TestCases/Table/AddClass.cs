@@ -12,11 +12,11 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            await DB.Close();
-            await DB.Version(1).Stores();
+            DB.Close();
+            DB.Version(1).Stores();
             await DB.Open();
 
-            var table = await DB.PersonWithProperties();
+            var table = DB.PersonWithProperties();
             await table.Clear();
 
             var person = new PersonWithProperties("FirstName", "LastName");

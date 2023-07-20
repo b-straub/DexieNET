@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Add(DataGenerator.GetPerson1());
             var count = await table.Count();
 

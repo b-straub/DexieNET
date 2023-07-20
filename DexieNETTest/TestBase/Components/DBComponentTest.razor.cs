@@ -8,7 +8,6 @@ using System.Reactive.Subjects;
 
 namespace DexieNETTest.TestBase.Components
 {
-    [Schema(CloudSync = true)]
     public partial record struct Friend
     (
         [property: Index] string Name,
@@ -39,7 +38,7 @@ namespace DexieNETTest.TestBase.Components
         private bool _hasData = false;
         private IDisposable? _hasDataDisposable = null;
 
-        public DBComponentTest() : base("https://zs1j8ko5w.dexie.cloud") { }
+        public DBComponentTest() : base() { }
 
         protected override async Task OnInitializedAsync()
         {
@@ -47,13 +46,13 @@ namespace DexieNETTest.TestBase.Components
 
             if (Dexie is not null)
             {
-                await Dexie.Version(1).Stores();
+                Dexie.Version(2).Stores();
                 if (await Dexie.Friends().Count() == 0)
                 {
                     await Dexie.Friends().BulkAdd(DataGenerator.GetFriends());
                 }
 
-                _friendsQuery = await Dexie.LiveQuery(async () =>
+                _friendsQuery = Dexie.LiveQuery(async () =>
                 {
                     if (CreateByTransaction)
                     {
@@ -74,7 +73,7 @@ namespace DexieNETTest.TestBase.Components
                     return f;
                 });
 
-                var lq = await Dexie.LiveQuery(async () =>
+                var lq = Dexie.LiveQuery(async () =>
                 {
                     var sf = await Dexie.Friends().Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
                     return sf;
@@ -82,7 +81,7 @@ namespace DexieNETTest.TestBase.Components
 
                 _searchFriendsQuery = lq.UseLiveQuery(_queryChanged);
 
-                var hasDataQuery = await Dexie.LiveQuery(async () =>
+                var hasDataQuery = Dexie.LiveQuery(async () =>
                 {
                     return await Dexie.Friends().Count();
                 });

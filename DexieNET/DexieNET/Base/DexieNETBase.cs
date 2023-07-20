@@ -67,7 +67,7 @@ namespace DexieNET
 
     public abstract class DBBase
     {
-        public abstract ValueTask<Version> Version(double versionNumber);
+        public abstract Version Version(double versionNumber);
         public bool CloudSync { get; }
         public abstract string[] UnsyncedTables { get; }
 
@@ -135,10 +135,10 @@ namespace DexieNET
 
     public static class DBExtensions
     {
-        public static async ValueTask<LiveQuery<T>> LiveQuery<T>(this DBBase db, Func<ValueTask<T>> query)
+        public static LiveQuery<T> LiveQuery<T>(this DBBase db, Func<ValueTask<T>> query)
         {
             var lq = new LiveQuery<T>(db, query);
-            await db.DBBaseJS.Module.InvokeVoidAsync("LiveQuery", lq.DotnetRef, lq.ID);
+            db.DBBaseJS.Module.InvokeVoid("LiveQuery", lq.DotnetRef, lq.ID);
             return lq;
         }
 
@@ -303,14 +303,14 @@ namespace DexieNET
             return (T)T.Create(dexie.DBBaseJS.Module, reference, dexie.CloudSync);
         }
 
-        public static async ValueTask<bool> IsOpen(this DBBase dexie)
+        public static bool IsOpen(this DBBase dexie)
         {
-            return await dexie.DBBaseJS.InvokeAsync<bool>("isOpen");
+            return dexie.DBBaseJS.Invoke<bool>("isOpen");
         }
 
-        public static async ValueTask Close(this DBBase dexie)
+        public static void Close(this DBBase dexie)
         {
-            await dexie.DBBaseJS.InvokeVoidAsync("close");
+            dexie.DBBaseJS.InvokeVoid("close");
         }
 
         public static async ValueTask Delete(this DBBase dexie)
@@ -318,14 +318,14 @@ namespace DexieNET
             await dexie.DBBaseJS.InvokeVoidAsync("delete");
         }
 
-        public static async ValueTask<string> Name(this DBBase dexie)
+        public static string Name(this DBBase dexie)
         {
-            return await dexie.DBBaseJS.Module.InvokeAsync<string>("Name");
+            return dexie.DBBaseJS.Module.Invoke<string>("Name");
         }
 
-        public static async ValueTask<double> Version(this DBBase dexie)
+        public static double Version(this DBBase dexie)
         {
-            return await dexie.DBBaseJS.Module.InvokeAsync<double>("Version", dexie.DBBaseJS.Reference);
+            return dexie.DBBaseJS.Module.Invoke<double>("Version", dexie.DBBaseJS.Reference);
         }
     }
 }

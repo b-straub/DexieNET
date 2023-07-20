@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace DexieNETTest.TestBase.Test
 {
-    public partial class DBTests
+    public sealed partial class DBTests : IDisposable
     {
         [Inject]
         public IDexieNETService<TestDB>? DexieNETService { get; set; }
@@ -52,7 +52,7 @@ namespace DexieNETTest.TestBase.Test
                         throw new InvalidOperationException("Can not create database.");
                     }
 
-                    await _db.Version(1).Stores();
+                    _db.Version(1).Stores();
 
                     SecondDB? _dbsecond = null;
 
@@ -66,7 +66,7 @@ namespace DexieNETTest.TestBase.Test
                             throw new InvalidOperationException("Can not create second database.");
                         }
 
-                        await _dbsecond.Version(1).Stores();
+                        _dbsecond.Version(1).Stores();
                     }
 
                     var testFactory = new TestFactory(_db);
@@ -105,12 +105,9 @@ namespace DexieNETTest.TestBase.Test
             }
         }
 
-        public async ValueTask DisposeAsync()
+        public void Dispose()
         {
-            if (_db is not null)
-            {
-                await _db.Close();
-            }
+            _db?.Close();
         }
 
         public void Cancel()

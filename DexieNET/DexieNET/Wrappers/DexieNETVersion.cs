@@ -65,10 +65,10 @@ namespace DexieNET
             }
         }
 
-        public async ValueTask Upgrade(Func<Transaction, Task> upgrade)
+        public void Upgrade(Func<Transaction, Task> upgrade)
         {
             _upgrade = upgrade;
-            var reference = await VersionJS.Module.InvokeAsync<IJSInProcessObjectReference>("Upgrade", VersionJS.Reference, _dotnetRef);
+            var reference = VersionJS.Module.Invoke<IJSInProcessObjectReference>("Upgrade", VersionJS.Reference, _dotnetRef);
 
             VersionJS.SetReference(reference);
         }
@@ -81,49 +81,23 @@ namespace DexieNET
 
     public static class VersionExtensions
     {
-        public static async ValueTask<Version> Version(this ValueTask<DBBase> dexieT, double versionNumber)
+        public static Version Version(this DBBase dexie, double versionNumber)
         {
-            var dexie = await dexieT;
-            return await dexie.Version(versionNumber);
+            return dexie.Version(versionNumber);
         }
 
-        public static async ValueTask Upgrade(this ValueTask<Version> versionT, Func<Transaction, Task> upgrade)
+        public static void Upgrade(this Version version, Func<Transaction, Task> upgrade)
         {
-            var version = await versionT;
-            await version.Upgrade(upgrade);
+            version.Upgrade(upgrade);
         }
 
-        public static async ValueTask<Version> Stores(this ValueTask<Version> versionT)
+        public static Version Stores(this Version version)
         {
-            var version = await versionT;
-            return await version.Stores();
-        }
-
-        public static async ValueTask<Version> Stores<T1>(this ValueTask<Version> versionT) where T1 : IDBStore
-        {
-            var version = await versionT;
-            return await version.Stores<T1>();
-        }
-
-        public static async ValueTask<Version> Stores<T1, T2>(this ValueTask<Version> versionT) where T1 : IDBStore where T2 : IDBStore
-        {
-            var version = await versionT;
-            return await version.Stores<T1, T2>();
-        }
-
-        public static async ValueTask<Version> Stores<T1, T2, T3>(this ValueTask<Version> versionT) where T1 : IDBStore where T2 : IDBStore where T3 : IDBStore
-        {
-            var version = await versionT;
-            return await version.Stores<T1, T2, T3>();
-        }
-
-        public static async ValueTask<Version> Stores(this Version version)
-        {
-            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", version.Stores);
+            var reference = version.VersionJS.Invoke<IJSInProcessObjectReference>("stores", version.Stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
-        public static async ValueTask<Version> Stores<T1>(this Version version) where T1 : IDBStore
+        public static Version Stores<T1>(this Version version) where T1 : IDBStore
         {
             Dictionary<string, string> stores = new();
 
@@ -136,11 +110,11 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T1)}.");
             }
 
-            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", stores);
+            var reference = version.VersionJS.Invoke<IJSInProcessObjectReference>("stores", stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
-        public static async ValueTask<Version> Stores<T1, T2>(this Version version) where T1 : IDBStore where T2 : IDBStore
+        public static Version Stores<T1, T2>(this Version version) where T1 : IDBStore where T2 : IDBStore
         {
             Dictionary<string, string> stores = new();
 
@@ -162,11 +136,11 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T2)}.");
             }
 
-            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", stores);
+            var reference = version.VersionJS.Invoke<IJSInProcessObjectReference>("stores", stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
 
-        public static async ValueTask<Version> Stores<T1, T2, T3>(this Version version) where T1 : IDBStore where T2 : IDBStore where T3 : IDBStore
+        public static Version Stores<T1, T2, T3>(this Version version) where T1 : IDBStore where T2 : IDBStore where T3 : IDBStore
         {
             Dictionary<string, string> stores = new();
 
@@ -197,7 +171,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"No schema found for {nameof(T3)}.");
             }
 
-            var reference = await version.VersionJS.InvokeAsync<IJSInProcessObjectReference>("stores", stores);
+            var reference = version.VersionJS.Invoke<IJSInProcessObjectReference>("stores", stores);
             return new Version(version.Transaction.DB, version.Stores, version.UpdateStores, reference);
         }
     }

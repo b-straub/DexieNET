@@ -2,7 +2,7 @@
 import { DB } from "./dexieNETBase";
 
 // Version upgrade
-export async function Upgrade(version: Version, dotnetRef: any): Promise<Version> {
+export function Upgrade(version: Version, dotnetRef: any): Version {
     return version.upgrade(_ => {
         dotnetRef.invokeMethod('UpgradeCallback');
     });

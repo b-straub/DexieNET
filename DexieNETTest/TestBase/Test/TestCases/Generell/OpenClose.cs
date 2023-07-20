@@ -12,19 +12,19 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear(); // open implicitly
 
-            var isOpen = await DB.IsOpen();
+            var isOpen = DB.IsOpen();
 
             if (!isOpen)
             {
                 throw new InvalidOperationException("IsOpen failed.");
             }
 
-            await DB.Close();
+            DB.Close();
 
-            isOpen = await DB.IsOpen();
+            isOpen = DB.IsOpen();
 
             if (isOpen)
             {
@@ -33,7 +33,7 @@ namespace DexieNETTest.TestBase.Test
 
             var newDBInstance = await DB.Open();
 
-            isOpen = await newDBInstance.IsOpen();
+            isOpen = newDBInstance.IsOpen();
 
             if (!isOpen)
             {

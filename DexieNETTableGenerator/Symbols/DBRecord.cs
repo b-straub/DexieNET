@@ -45,7 +45,7 @@ namespace DNTGenerator.Verifier
 
         public string Namespace => Symbol.ContainingNamespace.ToDisplayString();
 
-        public string AccessToString => Symbol.DeclaredAccessibility is Accessibility.Public ? "public" : "internal";
+        public string AccessToString => Symbol.DeclaredAccessibility.ToString().ToLowerInvariant();
 
         public RecordType Type { get; }
 

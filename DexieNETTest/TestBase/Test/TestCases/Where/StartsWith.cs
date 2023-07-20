@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -55,10 +55,10 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var whereClauseName = await table.Where(p => p.Name);
+                var whereClauseName = table.Where(p => p.Name);
 
-                var collectionName = await whereClauseName.StartsWith("A");
-                var collectionNames = await whereClauseName.StartsWithAnyOf("A", "P");
+                var collectionName = whereClauseName.StartsWith("A");
+                var collectionNames = whereClauseName.StartsWithAnyOf("A", "P");
 
                 personsName = await collectionName.ToArray();
                 personsNames = await collectionNames.ToArray();
@@ -79,10 +79,10 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var whereClauseName = await table.Where(p => p.Name);
+                var whereClauseName = table.Where(p => p.Name);
 
-                var collectionName = await whereClauseName.StartsWithIgnoreCase("a");
-                var collectionNames = await whereClauseName.StartsWithAnyOfIgnoreCase("a", "p");
+                var collectionName = whereClauseName.StartsWithIgnoreCase("a");
+                var collectionNames = whereClauseName.StartsWithAnyOfIgnoreCase("a", "p");
 
                 personsNameIgnoreCase = await collectionName.ToArray();
                 personsNamesIgnoreCase = await collectionNames.ToArray();

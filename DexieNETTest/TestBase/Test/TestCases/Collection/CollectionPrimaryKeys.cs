@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons();
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -45,11 +45,11 @@ namespace DexieNETTest.TestBase.Test
 
             await DB.Transaction(async _ =>
             {
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
                 primaryKeys = await collection.PrimaryKeys();
 
-                var whereClause = await table.Where(p => p.Age);
-                var collectionAbove = await whereClause.Above(30);
+                var whereClause = table.Where(p => p.Age);
+                var collectionAbove = whereClause.Above(30);
                 primaryKeysAge = await collectionAbove.PrimaryKeys();
             });
 

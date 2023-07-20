@@ -124,7 +124,7 @@ namespace DexieNETCloudSample.Logic
 #endif
                 await _dexieFactory.Delete();
                 DB = await _dexieFactory.Create(true);
-                await DB.Version(1).Stores();
+                DB.Version(1).Stores();
 
                 ArgumentNullException.ThrowIfNull(DB);
                 _dbChangedSubject.OnNext(DBChangedMessage.Opened);
@@ -212,12 +212,9 @@ namespace DexieNETCloudSample.Logic
             _dbChangedSubject.OnNext(DBChangedMessage.Cloud);
         }
 
-        public async ValueTask Login(LoginInformation loginInformation)
+        public void Login(LoginInformation loginInformation)
         {
-            if (DB is not null)
-            {
-                await DB.UserLogin(loginInformation);
-            }
+            DB?.UserLogin(loginInformation);
         }
 
         public IDisposable Subscribe(IObserver<DBChangedMessage> observer)

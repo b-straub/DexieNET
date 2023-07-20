@@ -57,17 +57,17 @@ namespace DexieNETCloudSample.Dexie.Services
             return false;
         }
 
-        protected override async ValueTask<Table<ToDoDBList, string>> GetTable()
+        protected override Table<ToDoDBList, string> GetTable()
         {
             ArgumentNullException.ThrowIfNull(_db);
-            return await _db.ToDoDBLists();
+            return _db.ToDoDBLists();
         }
 
-        protected override async ValueTask<LiveQuery<IEnumerable<ToDoDBList>>> InitializeDB(ToDoDB db)
+        protected override LiveQuery<IEnumerable<ToDoDBList>> InitializeDB(ToDoDB db)
         {
             _db = db;
 
-            var listOpenQuery = await _db.LiveQuery(GetListOpenCloseDo);
+            var listOpenQuery = _db.LiveQuery(GetListOpenCloseDo);
             DBDisposeBag.Add(listOpenQuery.Subscribe(i =>
             {
                 ListOpenClose = i;
@@ -88,7 +88,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 }
             }));
 
-            return await db.LiveQuery(async () => await GetTable().ToArray());
+            return db.LiveQuery(async () => await GetTable().ToArray());
         }
 
         private async ValueTask<IEnumerable<ListOpenClose>> GetListOpenCloseDo()
@@ -100,7 +100,7 @@ namespace DexieNETCloudSample.Dexie.Services
         protected override async Task PostAddAction(string listID)
         {
             ArgumentNullException.ThrowIfNull(_db);
-           
+
             var oc = new ListOpenClose(false, false, listID);
             await _db.ListOpenCloses().Put(oc);
         }

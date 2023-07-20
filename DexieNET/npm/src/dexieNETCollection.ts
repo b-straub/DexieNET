@@ -15,13 +15,13 @@ export function CollectionFilter(collection: Collection, dotnetRef: any, filterI
     return collection.filter(item => dotnetRef.invokeMethod('Filter', item, filterIndex))
 }
 
-export function Modify(collection: Collection, changes: { [keyPath: string]: any; }): Promise<number> {
+export async function Modify(collection: Collection, changes: { [keyPath: string]: any; }): Promise<number> {
     let changesK = Object.fromEntries(Object.entries(changes).map(([k, v]) => [k, v === null ? undefined : v]));
-    return collection.modify(changesK);
+    return await collection.modify(changesK);
 }
 
-export async function CollectionUntil(collection: Collection, dotnetRef: any, includeStopEntry: boolean, untilIndex: number): Promise<Collection> {
-    return await collection.until(item => dotnetRef.invokeMethod('Until', item, untilIndex), includeStopEntry)
+export function CollectionUntil(collection: Collection, dotnetRef: any, includeStopEntry: boolean, untilIndex: number): Collection {
+    return collection.until(item => dotnetRef.invokeMethod('Until', item, untilIndex), includeStopEntry)
 }
 
 export async function CollectionEach(collection: Collection, dotnetRef: any): Promise<void> {
