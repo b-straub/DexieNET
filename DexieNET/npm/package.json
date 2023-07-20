@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@microsoft/dotnet-js-interop": "^7.0.4",
-    "dexie": "^4.0.1-alpha.23",
+    "dexie": "^4.0.1-alpha.25",
     "dexie-cloud-addon": "^4.0.1-beta.45",
     "dexie-cloud-common": "^1.0.26"
   },
