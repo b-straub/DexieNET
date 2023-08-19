@@ -26,7 +26,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 ArgumentNullException.ThrowIfNull(parameter);
 
                 var completedItem = parameter with { Completed = !parameter.Completed };
-                await Service._db.ToDoDBItems().Put(completedItem);
+                await Service._db.ToDoDBItems.Put(completedItem);
             }
 
             public override bool CanExecute(ToDoDBItem? parameter)
@@ -43,13 +43,13 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 ArgumentNullException.ThrowIfNull(Service._db);
 
-                var itemsToDelete = (await Service._db.ToDoDBItems()
+                var itemsToDelete = (await Service._db.ToDoDBItems
                     .Where(i => i.Completed)
                     .Equal(true)
                     .ToArray())
                     .Select(i => i.ID!);
 
-                await Service._db.ToDoDBItems().BulkDelete(itemsToDelete);
+                await Service._db.ToDoDBItems.BulkDelete(itemsToDelete);
             }
 
             public override bool CanExecute()

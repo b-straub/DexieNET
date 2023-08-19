@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = DB.Friends();
+            var table = DB.Friends;
             await table.Clear();
             await table.BulkAdd(DataGenerator.GetFriend());
             var fs = await table.ToArray();
@@ -39,7 +39,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Version not upgraded");
             }
 
-            var table2 = DB.Friends2();
+            var table2 = DB.Friends2;
 
             var f2s = await table2.ToArray();
             var col = table2.Where(f => f.ShoeSize).Above(41);
@@ -62,7 +62,7 @@ namespace DexieNETTest.TestBase.Test
             });
             await DB.Open();
 
-            var table3 = DB.Friends3();
+            var table3 = DB.Friends3;
             var friends3 = await table3.ToArray();
 
             friends3 = await table3.OrderBy(f => f.LastName).Reverse().ToArray();

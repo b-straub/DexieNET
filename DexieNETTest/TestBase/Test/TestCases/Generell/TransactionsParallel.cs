@@ -15,7 +15,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var tablePersons = DB.Persons();
+            var tablePersons = DB.Persons;
             var personsR1 = DataGenerator.GetPersonsRandom(20, "Test1");
             var personsR2 = DataGenerator.GetPersonsRandom(20, "Test2");
             var personsR3 = DataGenerator.GetPersonsRandom(20, "Test3");

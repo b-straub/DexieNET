@@ -15,12 +15,12 @@ namespace DexieNETCloudSample.Dexie.Services
                 ArgumentNullException.ThrowIfNull(Service._db);
                 ArgumentNullException.ThrowIfNull(parameter?.ID);
 
-                var oc = await Service._db.ListOpenCloses().Get(parameter.ID);
+                var oc = await Service._db.ListOpenCloses.Get(parameter.ID);
                 oc ??= new ListOpenClose(true, false, parameter.ID);
 
                 oc = oc with { IsItemsOpen = !oc.IsItemsOpen };
 
-                await Service._db.ListOpenCloses().Put(oc);
+                await Service._db.ListOpenCloses.Put(oc);
             }
         }
 
@@ -33,12 +33,12 @@ namespace DexieNETCloudSample.Dexie.Services
                 ArgumentNullException.ThrowIfNull(Service._db);
                 ArgumentNullException.ThrowIfNull(parameter?.ID);
 
-                var oc = await Service._db.ListOpenCloses().Get(parameter.ID);
+                var oc = await Service._db.ListOpenCloses.Get(parameter.ID);
                 ArgumentNullException.ThrowIfNull(oc);
 
                 oc = oc with { IsShareOpen = !oc.IsShareOpen };
 
-                await Service._db.ListOpenCloses().Put(oc);
+                await Service._db.ListOpenCloses.Put(oc);
             }
 
             public override bool CanExecute(ToDoDBList? parameter)

@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = DB.Persons();
+            var table = DB.Persons;
             await table.Add(DataGenerator.GetPerson1());
             var count = await table.Count();
 
@@ -52,17 +52,17 @@ namespace DexieNETTest.TestBase.Test
             {
                 await DB.Transaction(async _ =>
                 {
-                    var personValues = await DB.Persons().BulkGet(personKeys);
+                    var personValues = await DB.Persons.BulkGet(personKeys);
 
                     if (!ignoreFail)
                     {
-                        await DB.Persons().Add(personValues.FirstOrDefault());
+                        await DB.Persons.Add(personValues.FirstOrDefault());
                     }
                     else
                     {
                         try
                         {
-                            await DB.Persons().Add(personValues.FirstOrDefault());
+                            await DB.Persons.Add(personValues.FirstOrDefault());
                         }
                         catch (Exception ex)
                         {

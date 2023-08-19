@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override ValueTask<string?> RunTest()
         {
-            var tableP = DB.Persons();
+            var tableP = DB.Persons;
 
             tableP.Where(tableP.PrimaryKey);
             tableP.Where(t => t.Name);
@@ -33,7 +33,7 @@ namespace DexieNETTest.TestBase.Test
             tableP.Where(t => t.Phone.Number.Number);
             tableP.Where(t => t.Phone.Number.Country);
 
-            var tableF = DB.FieldTests();
+            var tableF = DB.FieldTests;
 
             tableF.Where(tableF.PrimaryKey);
             tableF.Where(t => t.Id);
@@ -47,7 +47,7 @@ namespace DexieNETTest.TestBase.Test
             tableF.Where(t => t.BlobME);
             tableF.Where(t => t.Array);
 
-            var tableC = DB.PersonCompounds();
+            var tableC = DB.PersonCompounds;
             tableC.Where(tableC.PrimaryKey);
             tableC.Where(p => p.FirstName);
             tableC.Where(p => p.FirstName, p => p.LastName);

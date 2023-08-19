@@ -35,7 +35,7 @@ namespace DexieNETCloudSample.Dexie.Services
         protected override Table<ToDoDBItem, string> GetTable()
         {
             ArgumentNullException.ThrowIfNull(_db);
-            return _db.ToDoDBItems();
+            return _db.ToDoDBItems;
         }
 
         protected override LiveQuery<IEnumerable<ToDoDBItem>> InitializeDB(ToDoDB db)

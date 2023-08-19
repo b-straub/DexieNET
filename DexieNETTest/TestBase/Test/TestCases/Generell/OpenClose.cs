@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = DB.Persons();
+            var table = DB.Persons;
             await table.Clear(); // open implicitly
 
             var isOpen = DB.IsOpen();

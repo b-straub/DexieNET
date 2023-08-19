@@ -47,9 +47,9 @@ namespace DexieNETTest.TestBase.Components
             if (Dexie is not null)
             {
                 Dexie.Version(2).Stores();
-                if (await Dexie.Friends().Count() == 0)
+                if (await Dexie.Friends.Count() == 0)
                 {
-                    await Dexie.Friends().BulkAdd(DataGenerator.GetFriends());
+                    await Dexie.Friends.BulkAdd(DataGenerator.GetFriends());
                 }
 
                 _friendsQuery = Dexie.LiveQuery(async () =>
@@ -58,24 +58,24 @@ namespace DexieNETTest.TestBase.Components
                     {
                         await Dexie.Transaction(async ta =>
                         {
-                            await Dexie.Friends().Add(new Components.Friend("TA1", 55));
+                            await Dexie.Friends.Add(new Components.Friend("TA1", 55));
 
                             await Dexie.Transaction(async _ =>
                             {
-                                await Dexie.Friends().Add(new Components.Friend("TA2", 57));
+                                await Dexie.Friends.Add(new Components.Friend("TA2", 57));
                             }, TAType.TopLevel);
                         });
 
                         CreateByTransaction = false; // caution reset to prevent endless recursion
                     }
 
-                    var f = await Dexie.Friends().ToArray();
+                    var f = await Dexie.Friends.ToArray();
                     return f;
                 });
 
                 var lq = Dexie.LiveQuery(async () =>
                 {
-                    var sf = await Dexie.Friends().Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
+                    var sf = await Dexie.Friends.Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
                     return sf;
                 });
 
@@ -83,7 +83,7 @@ namespace DexieNETTest.TestBase.Components
 
                 var hasDataQuery = Dexie.LiveQuery(async () =>
                 {
-                    return await Dexie.Friends().Count();
+                    return await Dexie.Friends.Count();
                 });
 
                 _hasDataDisposable = hasDataQuery.Subscribe(c =>
@@ -99,7 +99,7 @@ namespace DexieNETTest.TestBase.Components
         private async Task HandleValidSubmit()
         {
             var friend = new Friend(Name, Age);
-            await Dexie.Friends().Add(friend);
+            await Dexie.Friends.Add(friend);
         }
 
         private void QueryChanged()
@@ -109,7 +109,7 @@ namespace DexieNETTest.TestBase.Components
 
         private async Task ClearDatabase()
         {
-            await Dexie.Friends().Clear();
+            await Dexie.Friends.Clear();
         }
 
         private void Subscribe()

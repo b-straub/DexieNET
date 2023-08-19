@@ -17,7 +17,7 @@ namespace DexieNETTest.TestBase.Test
         private async Task<Unit> BulkAddOp()
         {
             var persons = DataGenerator.GetPersons();
-            await DB.Persons().BulkAdd(persons);
+            await DB.Persons.BulkAdd(persons);
             return Unit.Default;
         }
 
@@ -25,24 +25,24 @@ namespace DexieNETTest.TestBase.Test
 
         private async Task PersonAddOp()
         {
-            keyP = await DB.Persons().Add(DataGenerator.GetPerson3());
+            keyP = await DB.Persons.Add(DataGenerator.GetPerson3());
         }
 
         private async Task StudentAddOp()
         {
             ArgumentNullException.ThrowIfNull(keyP);
             var student = new Student("Physics", (int)keyP);
-            await DB.Students().Add(student);
+            await DB.Students.Add(student);
         }
 
         private async Task PersonPutOp()
         {
-            var person = await DB.Persons().ToCollection().First();
+            var person = await DB.Persons.ToCollection().First();
             person = person! with { Age = 100 };
 
             await DB.Transaction(async _ =>
             {
-                await DB.Persons().Put(person);
+                await DB.Persons.Put(person);
             });
         }
 
@@ -54,10 +54,10 @@ namespace DexieNETTest.TestBase.Test
             {
                 await DB.Transaction(async ta =>
                 {
-                    var person = await DB.Persons().ToCollection().First();
+                    var person = await DB.Persons.ToCollection().First();
                     person = ta.Collecting ? person : person! with { Age = 90 };
-                    await DB.Persons().Put(person);
-                    await DB.Persons().Add(person);
+                    await DB.Persons.Put(person);
+                    await DB.Persons.Add(person);
                 });
             }
             catch (Exception ex)
@@ -73,9 +73,9 @@ namespace DexieNETTest.TestBase.Test
             var disposeSubject = new BehaviorSubject<int>(0);
             string? firstError = null;
 
-            var tablePersons = DB.Persons();
+            var tablePersons = DB.Persons;
             await tablePersons.Clear();
-            var tableStudents = DB.Students();
+            var tableStudents = DB.Students;
             await tableStudents.Clear();
 
             var persons = DataGenerator.GetPersons();

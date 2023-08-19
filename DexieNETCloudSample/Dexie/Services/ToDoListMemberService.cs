@@ -115,7 +115,7 @@ namespace DexieNETCloudSample.Dexie.Services
             ArgumentNullException.ThrowIfNull(_dbService.DB);
 
             var memberQuery = _dbService.DB.LiveQuery(async () =>
-                await _dbService.DB.Members().Where(m => m.RealmId).Equal(List?.RealmId).ToArray());
+                await _dbService.DB.Members.Where(m => m.RealmId).Equal(List?.RealmId).ToArray());
 
             var useMemberQuery = memberQuery.UseLiveQuery(SetList.Executed);
 
@@ -287,16 +287,16 @@ namespace DexieNETCloudSample.Dexie.Services
         private void InitDB()
         {
             ArgumentNullException.ThrowIfNull(_dbService.DB);
-            _membersTable = _dbService.DB.Members();
+            _membersTable = _dbService.DB.Members;
 
-            _permissionsMember = _dbService.DB.Members().CreateUsePermissions();
+            _permissionsMember = _dbService.DB.Members.CreateUsePermissions();
 
             _permissionsDisposeBag.Add(_permissionsMember.Subscribe(_ =>
             {
                 StateHasChanged();
             }));
 
-            _permissionsRealm = _dbService.DB.Realms().CreateUsePermissions();
+            _permissionsRealm = _dbService.DB.Realms.CreateUsePermissions();
 
             _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(_ =>
             {

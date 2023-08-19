@@ -15,7 +15,7 @@ namespace DexieNETTest.TestBase.Test
 
         public async Task Log(string message)
         {
-            var tableLog = DB.Logentries();
+            var tableLog = DB.Logentries;
 
             await DB.Transaction(async _ =>
             {
@@ -25,14 +25,14 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var tableLog = DB.Logentries();
+            var tableLog = DB.Logentries;
             await tableLog.Clear();
             await Log("StartLogging");
 
-            var tableFieldTest = DB.FieldTests();
+            var tableFieldTest = DB.FieldTests;
             var fieldsData = DataGenerator.GetFieldTestRandom().ToArray();
 
-            var tablePersons = DB.Persons();
+            var tablePersons = DB.Persons;
             await tablePersons.Clear();
 
             var persons = DataGenerator.GetPersons();

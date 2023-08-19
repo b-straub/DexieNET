@@ -16,7 +16,7 @@ namespace DexieNETTest.TestBase.Test
             DB.Version(1).Stores();
             await DB.Open();
 
-            var table = DB.PersonWithProperties();
+            var table = DB.PersonWithProperties;
             await table.Clear();
 
             var person = new PersonWithProperties("FirstName", "LastName");

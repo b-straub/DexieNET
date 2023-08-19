@@ -47,7 +47,7 @@ namespace DNTGenerator.SourceDump
             else
             {
                 _ = sb.Append($@"
-        public Table<{record.Symbol.Name}, {primaryIndexTypeName}> {record.SchemaDescriptor.StoreName}()
+        private Table<{record.Symbol.Name}, {primaryIndexTypeName}> Make{record.SchemaDescriptor.StoreName}()
         {{
             if ({tablePropertyName} is not null)
             {{
@@ -77,7 +77,7 @@ namespace DNTGenerator.SourceDump
             StringBuilder sb = new();
 
             _ = sb.Append($@"
-        public Table<Realm, string> Realms()
+        private Table<Realm, string> MakeRealms()
         {{
             if (_realms is not null)
             {{
@@ -92,7 +92,7 @@ namespace DNTGenerator.SourceDump
             return table;
         }}
 
-        public Table<Member, string> Members()
+        private Table<Member, string> MakeMembers()
         {{
             if (_members is not null)
             {{
@@ -107,7 +107,7 @@ namespace DNTGenerator.SourceDump
             return table;
         }}
 
-        public Table<Role, (string, string)> Roles()
+        private Table<Role, (string, string)> MakeRoles()
         {{
             if (_roles is not null)
             {{
@@ -221,6 +221,8 @@ namespace DNTGenerator.SourceDump
                 {
                     _ = sb.Append($@"
         private Table<{record.Symbol.Name}, {primaryIndexTypeName}>? {tablePropertyName};");
+                    _ = sb.Append($@"
+        public Table<{record.Symbol.Name}, {primaryIndexTypeName}> {record.SchemaDescriptor.StoreName} => Make{record.SchemaDescriptor.StoreName}();");
                 }
             }
 
@@ -228,8 +230,13 @@ namespace DNTGenerator.SourceDump
             {
                 _ = sb.Append($@"
         private Table<Realm, string>? _realms;
+        public Table<Realm, string> Realms => MakeRealms();
+
         private Table<Member, string>? _members;
-        private Table<Role, (string, string)>? _roles;");
+        public Table<Member, string> Members => MakeMembers();
+
+        private Table<Role, (string, string)>? _roles;
+        public Table<Role, (string, string)> Roles => MakeRoles();");
             }
 
             _ = sb.Append($@"

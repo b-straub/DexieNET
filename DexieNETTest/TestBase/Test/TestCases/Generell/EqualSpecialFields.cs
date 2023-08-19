@@ -12,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = DB.FieldTests();
+            var table = DB.FieldTests;
             await table.Clear();
 
             var fieldsData = DataGenerator.GetFieldTestRandom().ToArray().OrderBy(f => f.Id);

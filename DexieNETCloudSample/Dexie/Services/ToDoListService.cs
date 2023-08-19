@@ -60,7 +60,7 @@ namespace DexieNETCloudSample.Dexie.Services
         protected override Table<ToDoDBList, string> GetTable()
         {
             ArgumentNullException.ThrowIfNull(_db);
-            return _db.ToDoDBLists();
+            return _db.ToDoDBLists;
         }
 
         protected override LiveQuery<IEnumerable<ToDoDBList>> InitializeDB(ToDoDB db)
@@ -94,7 +94,7 @@ namespace DexieNETCloudSample.Dexie.Services
         private async ValueTask<IEnumerable<ListOpenClose>> GetListOpenCloseDo()
         {
             ArgumentNullException.ThrowIfNull(_db);
-            return await _db.ListOpenCloses().ToArray();
+            return await _db.ListOpenCloses.ToArray();
         }
 
         protected override async Task PostAddAction(string listID)
@@ -102,7 +102,7 @@ namespace DexieNETCloudSample.Dexie.Services
             ArgumentNullException.ThrowIfNull(_db);
 
             var oc = new ListOpenClose(false, false, listID);
-            await _db.ListOpenCloses().Put(oc);
+            await _db.ListOpenCloses.Put(oc);
         }
 
         protected override async Task PreDeleteAction(string listID)
@@ -110,12 +110,12 @@ namespace DexieNETCloudSample.Dexie.Services
             ArgumentNullException.ThrowIfNull(_db);
             ArgumentNullException.ThrowIfNull(listID);
 
-            await _db.ListOpenCloses()
+            await _db.ListOpenCloses
                 .Where(l => l.ListID, listID)
                 .Delete();
 
             // Delete todo items
-            await _db.ToDoDBItems()
+            await _db.ToDoDBItems
                 .Where(i => i.ListID, listID)
                 .Delete();
         }
@@ -132,7 +132,7 @@ namespace DexieNETCloudSample.Dexie.Services
             // No need to delete members - they will be deleted
             // automatically when the realm is deleted.
             var tiedRealmId = _db.GetTiedRealmID(listID);
-            await _db.Realms().Delete(tiedRealmId);
+            await _db.Realms.Delete(tiedRealmId);
         }
     }
 }
