@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Net.Http.Headers;
 
 namespace DexieNETCloudSample.Extensions
 {
@@ -18,6 +19,12 @@ namespace DexieNETCloudSample.Extensions
             {
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
             };
+
+            http.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue
+            {
+                NoCache = true
+            };
+
             builder.Services.AddScoped(sp => http);
 
             using var importfileR = await http.GetAsync("importfile.json");
