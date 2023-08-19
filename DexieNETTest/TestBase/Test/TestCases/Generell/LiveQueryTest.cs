@@ -180,11 +180,11 @@ namespace DexieNETTest.TestBase.Test
 
             var finished = false;
 
-            var testFinished = () =>
+            void testFinished()
             {
                 disposeBag.Dispose();
                 finished = true;
-            };
+            }
 
             disposeSubject
                .Timeout(TimeSpan.FromSeconds(10))
