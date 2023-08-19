@@ -51,7 +51,7 @@ namespace DNTGenerator.Verifier
             }
         }
 
-        public record struct SchemaDescriptor(string StoreName, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, Location PKNameLocation, bool? PrimaryKeyGuid, Location PKGuidLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, bool HasCloudSync, Location Location);
+        public record struct SchemaDescriptor(string StoreName, Location? StoreNameLocation, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, Location PKNameLocation, bool? PrimaryKeyGuid, Location PKGuidLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, bool HasCloudSync, Location Location);
 
         public static SchemaDescriptor GetSchemaDescriptor(this INamedTypeSymbol symbol, bool isInterface, Compilation compilation, CancellationToken cancellationToken)
         {
@@ -61,17 +61,15 @@ namespace DNTGenerator.Verifier
 
             if (attr is null)
             {
-                return new(storeName, null, null, Location.None, null, Location.None, false, false, false, Location.None);
+                return new(storeName, null, null, null, Location.None, null, Location.None, false, false, false, Location.None);
             }
 
-            var node = attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken);
-            if (node is null)
-            {
-                throw new InvalidOperationException($"Invalid Schema name for: {nameof(symbol)}");
-            }
+            var node = (attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken)) ?? throw new InvalidOperationException($"Invalid Schema name for: {nameof(symbol)}");
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
             var storeAttributeName = (string?)attr.NamedArguments.Where(na => na.Key == "StoreName").FirstOrDefault().Value.Value;
+            var storeNameLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "StoreName").FirstOrDefault()?.GetLocation();
+
             var updateStore = (INamedTypeSymbol?)attr.NamedArguments.Where(na => na.Key == "UpdateStore").FirstOrDefault().Value.Value;
 
             string? primaryKeyName = null;
@@ -95,7 +93,7 @@ namespace DNTGenerator.Verifier
             var cloudSync = ((bool?)attr.NamedArguments.Where(na => na.Key == "CloudSync").FirstOrDefault().Value.Value).True();
 
             var location = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
-            return new(storeAttributeName ?? storeName, updateStore, primaryKeyName, pkNameLocation ?? Location.None, primaryKeyGuid, pkGuidLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, cloudSync, location);
+            return new(storeAttributeName ?? storeName, storeNameLocation, updateStore, primaryKeyName, pkNameLocation ?? Location.None, primaryKeyGuid, pkGuidLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, cloudSync, location);
         }
 
         public static IEnumerable<(IEnumerable<(string Name, Location Location)> Keys, bool IsPrimary, Location PKLocation)> GetCompoundKeys(this INamedTypeSymbol symbol, Compilation compilation, CancellationToken cancellationToken)

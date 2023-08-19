@@ -95,6 +95,16 @@ namespace DNTGenerator.Diagnostics
              "Store with Guid auto primary key must be partial.",
              null,
              "Add partial modifier to '{0}'");
+
+        public static DiagnosticDescriptor ReservedStoreName =
+         new(
+             "DNTGG110",
+             "Store error",
+             "'{0}' is reserved for 'CloudSync'",
+             "DNTGenerator",
+             DiagnosticSeverity.Error,
+             isEnabledByDefault: true,
+             "Store name is is reserved for 'CloudSync'.");
         #endregion
 
         #region DBIndex

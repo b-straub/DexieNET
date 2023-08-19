@@ -29,6 +29,7 @@ namespace DNTGenerator.Verifier
         public static IEnumerable<GeneratorDiagnostic> Verify(this DBRecord dBRecord, Compilation compilation)
         {
             List<GeneratorDiagnostic> diagnostics = new();
+            string[] reservedStoreNames = { "realms", "members", "roles" };
 
             bool missingPrimary = false;
 
@@ -55,6 +56,17 @@ namespace DNTGenerator.Verifier
             else if (!dBRecord.IsPartial && dBRecord.SchemaDescriptor.HasCloudSync)
             {
                 diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.NotPartialCloud, dBRecord));
+            }
+            else if (dBRecord.SchemaDescriptor.HasCloudSync && reservedStoreNames.Any(s => s == dBRecord.SchemaDescriptor.StoreName.ToLowerInvariant()))
+            {
+                if (dBRecord.SchemaDescriptor.StoreNameLocation is not null)
+                {
+                    diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.ReservedStoreName, dBRecord.SchemaDescriptor.StoreNameLocation, dBRecord.SchemaDescriptor.StoreName));
+                }
+                else
+                {
+                    diagnostics.Add(new GeneratorDiagnostic(GeneratorDiagnostic.ReservedStoreName, dBRecord));
+                }
             }
 
             var duplicatePKIndexes = dBRecord.Properties
