@@ -38,7 +38,7 @@
                     <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecution=@(async () => await ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearLists) />
                 </MudContainer>
             </MudHidden>
-            <MudTable T="ToDoDBList" Items=@(Service.Lists)>
+            <MudTable T="ToDoDBList" Items=@(Service.ToDoLists)>
                 <ColGroup>
                     <col style="width:50px;" />
                     <col />

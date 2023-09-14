@@ -24,19 +24,22 @@ namespace DexieNETCloudSample.Components
 
         private SortDirection _sortDirection = SortDirection.Ascending;
 
-        protected override Task OnInitializedAsync()
+        protected override Task OnParametersSetAsync()
         {
             ArgumentNullException.ThrowIfNull(List);
 
-            Service.SetList.Execute(List);
+            if (Service.CurrentList != List)
+            {
+                Service.SetCurrentList.Execute(List);
+            }
 
-            return base.OnInitializedAsync();
+            return base.OnParametersSetAsync();
         }
 
         private async Task<bool> AddOrUpdate(ICommandAsync<ToDoDBItem> cmd, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(DialogService);
-            ArgumentNullException.ThrowIfNull(Service.List);
+            ArgumentNullException.ThrowIfNull(Service.CurrentList);
 
             var item = cmd.Parameter;
             ToDoItemData data = item is null ? new ToDoItemData(string.Empty, DateTime.Now) : new ToDoItemData(item.Text, item.DueDate);
@@ -53,8 +56,8 @@ namespace DexieNETCloudSample.Components
             {
                 data = (ToDoItemData)result.Data;
                 item = item is null ?
-                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.List) :
-                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.List, item);
+                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.CurrentList) :
+                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.CurrentList, item);
 
                 cmd.SetParameter(item);
                 return true;

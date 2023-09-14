@@ -9,21 +9,21 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoItemService : CrudService<ToDoDBItem>
     {
-        public IEnumerable<ToDoDBItem> Lists => Items;
+        public IEnumerable<ToDoDBItem> ToDoItems => Items;
 
-        public ToDoDBList? List { get; private set; }
+        public ToDoDBList? CurrentList { get; private set; }
 
         // Commands
         public ICommandAsync<ToDoDBItem> ToggledItemCompleted => new ToggledItemCompletedCmd(this);
         public ICommandAsync DeleteCompletedItems;
 
-        public ICommand<ToDoDBList> SetList;
+        public ICommand<ToDoDBList> SetCurrentList;
 
         private ToDoDB? _db;
 
         public ToDoItemService(DexieCloudService databaseService) : base(databaseService)
         {
-            SetList = new SetListCmd(this);
+            SetCurrentList = new SetListCmd(this);
             DeleteCompletedItems = new DeleteCompletedItemsCmd(this);
         }
 
@@ -40,14 +40,14 @@ namespace DexieNETCloudSample.Dexie.Services
 
         protected override LiveQuery<IEnumerable<ToDoDBItem>> InitializeDB(ToDoDB db)
         {
-            ArgumentNullException.ThrowIfNull(List?.ID);
+            ArgumentNullException.ThrowIfNull(CurrentList?.ID);
             _db = db;
-            return db.LiveQuery(async () => await GetTable().Where(i => i.ListID).Equal(List.ID).ToArray());
+            return db.LiveQuery(async () => await GetTable().Where(i => i.ListID).Equal(CurrentList.ID).ToArray());
         }
 
         protected override bool CanAdd()
         {
-            return (Permissions?.CanAdd(List)).True();
+            return (Permissions?.CanAdd(CurrentList)).True();
         }
 
         protected override bool CanUpdate(ToDoDBItem? item)

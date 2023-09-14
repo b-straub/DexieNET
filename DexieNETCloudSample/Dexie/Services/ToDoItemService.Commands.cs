@@ -12,7 +12,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             protected override void DoExecute(ToDoDBList parameter)
             {
-                Service.List = parameter;
+                Service.CurrentList = parameter;
             }
         }
 

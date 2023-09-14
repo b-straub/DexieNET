@@ -8,7 +8,7 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoListService : CrudService<ToDoDBList>
     {
-        public IEnumerable<ToDoDBList> Lists => Items;
+        public IEnumerable<ToDoDBList> ToDoLists => Items;
         public IEnumerable<Invite> Invites { get; private set; } = Enumerable.Empty<Invite>();
 
         public IEnumerable<ListOpenClose> ListOpenClose { get; private set; }
