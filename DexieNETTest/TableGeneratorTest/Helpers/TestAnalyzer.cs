@@ -4,8 +4,6 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
-using NuGet.Frameworks;
 
 namespace DNTGeneratorTest.Helpers
 {
@@ -14,10 +12,10 @@ namespace DNTGeneratorTest.Helpers
         where TCodeFix : CodeFixProvider, new()
     {
         public static DiagnosticResult Diagnostic()
-            => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, XUnitVerifier>.Diagnostic();
+            => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, DefaultVerifier>.Diagnostic();
 
         public static DiagnosticResult Diagnostic(string diagnosticId)
-            => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, XUnitVerifier>.Diagnostic(diagnosticId);
+            => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, DefaultVerifier>.Diagnostic(diagnosticId);
 
         public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
             => new(descriptor);
@@ -57,13 +55,13 @@ namespace DNTGeneratorTest.Helpers
         }
     }
 
-    internal class Test<TAnalyzer, TCodeFix> : CSharpCodeFixTest<TAnalyzer, TCodeFix, XUnitVerifier>
+    internal class Test<TAnalyzer, TCodeFix> : CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
         where TAnalyzer : DiagnosticAnalyzer, new()
         where TCodeFix : CodeFixProvider, new()
     {
         public Test()
         {
-            ReferenceAssemblies = Net70;
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net70;
 
             SolutionTransforms.Add((solution, projectId) =>
             {
@@ -73,24 +71,5 @@ namespace DNTGeneratorTest.Helpers
                 return project.Solution;
             });
         }
-
-        private static ReferenceAssemblies Net70 => _lazyNet70.Value;
-
-        private static readonly Lazy<ReferenceAssemblies> _lazyNet70 =
-                new(() =>
-                {
-                    if (!NuGetFramework.Parse("net7.0").IsPackageBased)
-                    {
-                        // The NuGet version provided at runtime does not recognize the 'net7.0' target framework
-                        throw new NotSupportedException("The 'net7.0' target framework is not supported by this version of NuGet.");
-                    }
-
-                    return new ReferenceAssemblies(
-                         "net7.0",
-                         new PackageIdentity(
-                              "Microsoft.NETCore.App.Ref",
-                              "7.0.0"),
-                         Path.Combine("ref", "net7.0"));
-                });
     }
 }
