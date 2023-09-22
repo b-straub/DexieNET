@@ -1,7 +1,4 @@
-﻿using Humanizer.Configuration;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration;
-using System;
+﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using System.Net.Http.Headers;
 
 namespace DexieNETCloudSample.Extensions

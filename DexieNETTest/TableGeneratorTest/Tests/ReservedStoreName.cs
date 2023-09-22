@@ -1,4 +1,3 @@
-using DexieNET;
 using DNTGenerator.Diagnostics;
 using Xunit;
 using Fixer = DNTGeneratorTest.Helpers.CSharpCodeFixVerifier<DNTGenerator.Analyzer.DBRecordAnalyzer, DNTGenerator.CodeFix.RecordCodeFix>;

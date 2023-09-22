@@ -162,7 +162,7 @@ namespace DNTGenerator.Diagnostics
                "Change '{0}' to {1}");
 
         public static DiagnosticDescriptor DuplicatePrimaryKeyMember =
-            new (
+            new(
                 "DNTGG210",
                 "Primary key error",
                 "'{0}' name identical to Schema 'PrimaryKeyName'",
