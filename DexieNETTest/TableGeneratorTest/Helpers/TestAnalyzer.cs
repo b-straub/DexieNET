@@ -35,7 +35,7 @@ namespace DNTGeneratorTest.Helpers
             => VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource, codeActionIndex);
 
         public static Task VerifyCodeFixAsync(string source, DiagnosticResult expected, string fixedSource, int? codeActionIndex = null)
-            => VerifyCodeFixAsync(source, new[] { expected }, fixedSource, codeActionIndex);
+            => VerifyCodeFixAsync(source, [expected], fixedSource, codeActionIndex);
 
         public static Task VerifyCodeFixAsync(string source, DiagnosticResult[] expected, string fixedSource, int? codeActionIndex = null)
         {

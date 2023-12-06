@@ -99,14 +99,14 @@ namespace DexieNETCloudSample.Logic
         public UserLogin? UserLogin { get; private set; }
         public UIInteraction? UIInteraction { get; private set; }
         public IEnumerable<Invite>? Invites { get; private set; }
-        public Dictionary<string, Role> Roles { get; private set; } = new();
+        public Dictionary<string, Role> Roles { get; private set; } = [];
 
         public event Action? OnDelete;
 
         private readonly DexieNETFactory<ToDoDB> _dexieFactory;
         private readonly BehaviorSubject<DBChangedMessage> _dbChangedSubject = new(DBChangedMessage.Closed);
         private string? _cloudURL;
-        private readonly CompositeDisposable _DBServicesDisposeBag = new();
+        private readonly CompositeDisposable _DBServicesDisposeBag = [];
         private readonly IObservable<DBChangedMessage> _changedObservable;
 
         public DexieCloudService(IDexieNETService<ToDoDB> dexieService)

@@ -8,15 +8,10 @@ using System.Reactive.Linq;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
-    public class MemberRoleSelection
+    public class MemberRoleSelection(MemberRole role)
     {
-        public MemberRole Role { get; }
+        public MemberRole Role { get; } = role;
         public string? RoleName { get; set; }
-
-        public MemberRoleSelection(MemberRole role)
-        {
-            Role = role;
-        }
 
         public override bool Equals(object? o)
         {
@@ -70,9 +65,9 @@ namespace DexieNETCloudSample.Dexie.Services
 
         private readonly DexieCloudService _dbService;
         private ITable? _membersTable;
-        private readonly CompositeDisposable _dbDisposeBag = new();
+        private readonly CompositeDisposable _dbDisposeBag = [];
         private readonly IConfiguration? _configuration;
-        private readonly CompositeDisposable _permissionsDisposeBag = new();
+        private readonly CompositeDisposable _permissionsDisposeBag = [];
         private IUsePermissions<Member>? _permissionsMember;
         private IUsePermissions<Realm>? _permissionsRealm;
 

@@ -21,7 +21,7 @@ namespace DexieNETCloudSample.Dexie.Services
         public ICommandAsync<T> DeleteItem => new DeleteItemCmd(this);
         public ICommandAsync ClearItems { get; }
 
-        protected CompositeDisposable DBDisposeBag { get; } = new();
+        protected CompositeDisposable DBDisposeBag { get; } = [];
         protected DexieCloudService DbService { get; }
 
         protected IUsePermissions<T>? Permissions { get; private set; }
