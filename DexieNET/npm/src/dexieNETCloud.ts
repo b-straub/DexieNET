@@ -29,6 +29,10 @@ export function UserLogin(db: DB, email: string, grantType: "demo" | "otp" | und
     db.cloud.login({ email: email, userId: userId, grant_type: grantType });
 }
 
+export async function Logout(db: DB, force?: boolean | undefined): Promise<void> {
+    await db.cloud.logout({ force: force });
+}
+
 export function GetTiedRealmID(id: string): string {
     return getTiedRealmId(id);
 }

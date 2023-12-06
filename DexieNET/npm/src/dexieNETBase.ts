@@ -22,7 +22,7 @@ import Dexie from 'dexie';
 
 import DexieCloudDB from 'dexie';
 import DexieCloud from "dexie-cloud-addon";
-import { DexieCloudOptions } from "dexie-cloud-addon/dist/types/DexieCloudOptions";
+import { DexieCloudOptions } from "dexie-cloud-addon/dist/modern/DexieCloudOptions";
 import { Observable, Subscription } from 'rxjs';
 
 // @ts-ignore

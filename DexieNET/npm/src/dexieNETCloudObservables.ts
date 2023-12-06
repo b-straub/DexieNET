@@ -19,12 +19,12 @@ limitations under the License.
 */
 
 import { DB, DotNetObservable } from "./dexieNETBase";
-import { DXCUserInteraction } from "dexie-cloud-addon/dist/types/types/DXCUserInteraction";
-import { Subscription } from 'rxjs';
-import { SyncState } from "dexie-cloud-addon/dist/types/types/SyncState";
-import { UserLogin } from "dexie-cloud-addon/dist/types/db/entities/UserLogin";
+import { DXCUserInteraction } from "dexie-cloud-addon/dist/modern/types/DXCUserInteraction";
+import { SyncState } from "dexie-cloud-addon/dist/modern/types/SyncState";
+import { UserLogin } from "dexie-cloud-addon/dist/modern/db/entities/UserLogin";
 import { DBRealmRole, Invite } from "dexie-cloud-addon";
-import { PermissionChecker } from "dexie-cloud-addon/dist/types/PermissionChecker";
+import { PermissionChecker } from "dexie-cloud-addon/dist/modern/PermissionChecker";
+import { Subscription } from 'rxjs';
 
 let _uiInteractions: { [key: number]: DXCUserInteraction } = {};
 

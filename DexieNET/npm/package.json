@@ -13,9 +13,9 @@
   "license": "ISC",
   "dependencies": {
     "@microsoft/dotnet-js-interop": "^7.0.4",
-    "dexie": "^4.0.1-alpha.25",
-    "dexie-cloud-addon": "^4.0.1-beta.46",
-    "dexie-cloud-common": "^1.0.26"
+    "dexie": "^4.0.1-beta.4",
+    "dexie-cloud-addon": "^4.0.1-beta.53",
+    "dexie-cloud-common": "^1.0.31"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.55.0",
