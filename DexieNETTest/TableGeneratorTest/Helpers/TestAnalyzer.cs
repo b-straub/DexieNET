@@ -61,7 +61,7 @@ namespace DNTGeneratorTest.Helpers
     {
         public Test()
         {
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net70;
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
 
             SolutionTransforms.Add((solution, projectId) =>
             {
