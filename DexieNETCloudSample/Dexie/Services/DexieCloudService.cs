@@ -101,11 +101,12 @@ namespace DexieNETCloudSample.Logic
         public IEnumerable<Invite>? Invites { get; private set; }
         public Dictionary<string, Role> Roles { get; private set; } = [];
 
+        public string? CloudURL { get; private set; }
+
         public event Action? OnDelete;
 
         private readonly DexieNETFactory<ToDoDB> _dexieFactory;
         private readonly BehaviorSubject<DBChangedMessage> _dbChangedSubject = new(DBChangedMessage.Closed);
-        private string? _cloudURL;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
         private readonly IObservable<DBChangedMessage> _changedObservable;
 
@@ -131,6 +132,12 @@ namespace DexieNETCloudSample.Logic
             }
         }
 
+        public async Task Logout(bool force = false)
+        {
+            ArgumentNullException.ThrowIfNull(DB);
+            await DB.Logout(force);
+        }
+
         public async Task DeleteDB()
         {
             OnDelete?.Invoke();
@@ -151,7 +158,7 @@ namespace DexieNETCloudSample.Logic
 
                 await DB.Delete();
                 DB = null;
-                _cloudURL = null;
+                CloudURL = null;
 #if DEBUG
                 Console.WriteLine("DeleteDB");
 #endif
@@ -163,16 +170,16 @@ namespace DexieNETCloudSample.Logic
 
         public void ConfigureCloud(string cloudURL)
         {
-            if (_cloudURL == cloudURL)
+            if (CloudURL == cloudURL)
             {
                 return;
             }
 
             ArgumentNullException.ThrowIfNull(DB);
 
-            _cloudURL = cloudURL;
+            CloudURL = cloudURL;
 
-            var options = new DexieCloudOptions(_cloudURL)
+            var options = new DexieCloudOptions(CloudURL)
                 .WithCustomLoginGui(true)
                 .WithRequireAuth(false);
 

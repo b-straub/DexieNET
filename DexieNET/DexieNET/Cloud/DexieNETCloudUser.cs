@@ -33,7 +33,31 @@ namespace DexieNET
         GrantType GrantType
     );
 
-    public record UserLogin(string UserId, string? Name, string? EMail, Dictionary<string, string> Claims, DateTime LastLogin,
+    public enum LicenseType
+    {
+        DEMO,
+        EVAL,
+        PROD,
+        CLIENT
+    }
+
+    public enum LicenseStatus
+    {
+        OK,
+        EXPIRED,
+        DEACTIVATED
+    }
+
+    public record License
+    (
+        LicenseType Type,
+        LicenseStatus Status,
+        DateTime? ValidUntil,
+        int? EvalDaysLeft
+    );
+
+    public record UserLogin(string UserId, string? Name, string? EMail, Dictionary<string, string> Claims,
+        License? License, DateTime LastLogin,
         string? AccessToken, DateTime? AccessTokenExpiration, string? RefreshToken, DateTime? RefreshTokenExpiration,
         string? NonExportablePrivateKey, string? PublicKey, bool IsLoggedIn);
 }

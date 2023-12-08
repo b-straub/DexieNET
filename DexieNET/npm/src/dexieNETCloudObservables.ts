@@ -183,8 +183,33 @@ export function SubscribeUserLogin(db: DB, dotnetRef: any): Subscription {
 
         let convert = (o : any): any => Object.fromEntries(Object.keys(o).map(key => [key, o[key].toString()]));
 
+        const licenseType = (orgType: string): number => {
+            switch (orgType) {
+                case 'demo': return 0;
+                case 'eval': return 1;
+                case 'prod': return 2;
+                case 'client': return 3;
+                default: throw "SubscribeUserLogin, undefined license type!";
+            }
+        }
+
+        const licenseStatus = (orgType: string): number => {
+            switch (orgType) {
+                case 'ok': return 0;
+                case 'expired': return 1;
+                case 'deactivated': return 2;
+                default: throw "SubscribeUserLogin, undefined license status!";
+            }
+        }
+
+        let license = res.license === undefined ? undefined :
+            {
+                type: licenseType(res.license.type), status: licenseStatus(res.license.status),
+                validUntil: res.license.validUntil, evalDaysLeft: res.license.evalDaysLeft
+            };
+
         return {
-            userId: res.userId, name: res.name, email: res.email, claims: convert(res.claims),
+            userId: res.userId, name: res.name, email: res.email, claims: convert(res.claims), license: license,
             lastlogin: res.lastLogin, accessToken: res.accessToken, accessTokenExpiration: res.accessTokenExpiration,
             refreshToken: res.refreshToken, refreshTokenExpiration: res.refreshTokenExpiration,
             nonExportablePrivateKey: JSON.stringify(res.nonExportablePrivateKey), publicKey: JSON.stringify(res.publicKey),
