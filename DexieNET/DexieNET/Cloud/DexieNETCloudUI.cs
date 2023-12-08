@@ -40,6 +40,7 @@ namespace DexieNET
             GENERIC_INFO,
             GENERIC_WARNING,
             GENERIC_ERROR,
+            LOGOUT_CONFIRMATION,
         }
 
         public string GetMessage()
@@ -50,7 +51,9 @@ namespace DexieNET
             {
                 return messageParams[m.Value[1..^1]];
             });
-            return messageFormated;
+            return messageFormated.ReplaceLineEndings()
+                .Replace(Environment.NewLine, "")
+                .Replace("'", "");
         }
     }
 
@@ -90,7 +93,8 @@ namespace DexieNET
         {
             EMAIL,
             OTP,
-            ALERT
+            MESSAGE_ALERT,
+            LOGOUT_CONFIRMATION
         }
     }
 

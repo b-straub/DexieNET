@@ -47,7 +47,11 @@
                         ArgumentNullException.ThrowIfNull(Service.UIInteraction);
                         if (Service.DB is not null && Service.UIInteraction is not null)
                         {
-                            await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction, DialogService);
+                            bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction, DialogService);
+                            if (Service.UIInteraction.Type is UIInteraction.InteractionType.LOGOUT_CONFIRMATION && res)
+                            {
+                                await Service.DB.Logout(true);
+                            }
                         }
                         break;
                     case DBChangedMessage.Closed:

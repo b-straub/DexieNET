@@ -59,6 +59,10 @@ export function SubscribeUserInteraction(db: DB, dotnetRef: any): Subscription {
                 type = 2;
                 field = null;
                 break;
+            case 'logout-confirmation':
+                type = 3;
+                field = null;
+                break;
             default: throw "SubscribeUserInteraction, undefined ui type!";
         }
 
@@ -84,6 +88,7 @@ export function SubscribeUserInteraction(db: DB, dotnetRef: any): Subscription {
                 case 'GENERIC_INFO': messageCode = 4; break;
                 case 'GENERIC_WARNING': messageCode = 5; break;
                 case 'GENERIC_ERROR': messageCode = 6; break;
+                case 'LOGOUT_CONFIRMATION': messageCode = 7; break;
                 default: throw "SubscribeUserInteraction, undefined message code!";
             }
 

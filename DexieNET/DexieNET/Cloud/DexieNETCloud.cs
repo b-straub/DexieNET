@@ -189,6 +189,11 @@ namespace DexieNET
             dexie.DBBaseJS.Module.InvokeVoid("UserLogin", dexie.DBBaseJS.Reference, userLogin.EMail,
                 grantType, userLogin.UserId);
         }
+
+        public static async Task Logout(this DBBase dexie, bool force = false)
+        {
+            await dexie.DBBaseJS.Module.InvokeVoidAsync("Logout", dexie.DBBaseJS.Reference, force);
+        }
         #endregion
 
         #region Internal
