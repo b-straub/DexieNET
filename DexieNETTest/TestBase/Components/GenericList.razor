@@ -29,6 +29,8 @@ else
 
     string GetValues(TItem item)
     {
+        ArgumentNullException.ThrowIfNull(item);
+
         List<(string Name, object? Value, string? Group)> values = new();
 
         Queue<(Type Type, object Item, string? Group)> types = new();
