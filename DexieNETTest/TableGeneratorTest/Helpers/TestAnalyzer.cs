@@ -37,7 +37,7 @@ namespace DNTGeneratorTest.Helpers
             => VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource, codeActionIndex);
 
         public static Task VerifyCodeFixAsync(string source, DiagnosticResult expected, string fixedSource, int? codeActionIndex = null)
-            => VerifyCodeFixAsync(source, new[] { expected }, fixedSource, codeActionIndex);
+            => VerifyCodeFixAsync(source, [expected], fixedSource, codeActionIndex);
 
         public static Task VerifyCodeFixAsync(string source, DiagnosticResult[] expected, string fixedSource, int? codeActionIndex = null)
         {
@@ -63,7 +63,7 @@ namespace DNTGeneratorTest.Helpers
     {
         public Test()
         {
-            ReferenceAssemblies = Net70;
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
 
             SolutionTransforms.Add((solution, projectId) =>
             {
@@ -73,24 +73,5 @@ namespace DNTGeneratorTest.Helpers
                 return project.Solution;
             });
         }
-
-        private static ReferenceAssemblies Net70 => _lazyNet70.Value;
-
-        private static readonly Lazy<ReferenceAssemblies> _lazyNet70 =
-                new(() =>
-                {
-                    if (!NuGetFramework.Parse("net7.0").IsPackageBased)
-                    {
-                        // The NuGet version provided at runtime does not recognize the 'net7.0' target framework
-                        throw new NotSupportedException("The 'net7.0' target framework is not supported by this version of NuGet.");
-                    }
-
-                    return new ReferenceAssemblies(
-                         "net7.0",
-                         new PackageIdentity(
-                              "Microsoft.NETCore.App.Ref",
-                              "7.0.0"),
-                         Path.Combine("ref", "net7.0"));
-                });
     }
 }
