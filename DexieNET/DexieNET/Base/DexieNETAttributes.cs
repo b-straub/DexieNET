@@ -123,10 +123,10 @@ namespace DexieNET
         public static KeyValuePair<Type, IIndexConverter>[] TypeConverterPairs()
         {
             KeyValuePair<Type, IIndexConverter>[] kvps =
-            {
+            [
                 KeyValuePair.Create(typeof(T), (IIndexConverter)(new C1())),
                 KeyValuePair.Create(typeof(IEnumerable<T>), (IIndexConverter)(new C2()))
-            };
+            ];
 
             return kvps;
         }
@@ -143,13 +143,13 @@ namespace DexieNET
         /// </summary>
         public CompoundIndexAttribute(string key1, string key2)
         {
-            Keys = new[] { key1, key2 };
+            Keys = [key1, key2];
             IsPrimary = false;
         }
 
         public CompoundIndexAttribute(string key1, string key2, string key3)
         {
-            Keys = new[] { key1, key2, key3 };
+            Keys = [key1, key2, key3];
             IsPrimary = false;
         }
     }

@@ -1,9 +1,19 @@
 DexieNET
 ========
 
-DexieNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB see https://dexie.org
+DexieNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB see [Dexie](https://dexie.org)
 
 *'DexieNET' used with permission of David Fahlander*
+
+##  News
+
+- Coming soon [DexieCloud](https://dexie.org/cloud/)
+- Please register with **DexieCloud** and test the ToDoSample from the Cloud branch. The configuration script can be found here [configure-app.ps1](https://github.com/b-straub/DexieNET/blob/cloud/DexieNETCloudSample/Dexie/configure-app.ps1).
+
+
+- Published a new helper library [RxBlazorLight](https://github.com/b-straub/RxBlazorLight)  
+
+---
 
 ##  Basic
 
