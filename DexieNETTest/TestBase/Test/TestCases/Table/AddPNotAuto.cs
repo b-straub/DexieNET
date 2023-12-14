@@ -24,8 +24,8 @@ namespace DexieNETTest.TestBase.Test
             await tableB.Clear();
 
             var friendsB = new[] {
-                new FriendIBBP("TestName1", new byte[] {1, 0}),
-                new FriendIBBP("TestName2", new byte[] {1, 1})
+                new FriendIBBP("TestName1", [1, 0]),
+                new FriendIBBP("TestName2", [1, 1])
             };
 
             var keyS = await tableS.Add(friendsS.First());

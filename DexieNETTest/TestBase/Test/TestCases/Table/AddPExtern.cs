@@ -30,7 +30,7 @@ namespace DexieNETTest.TestBase.Test
 
             var bytes = new[] {
                 new byte[] {1, 0},
-                new byte[] {1, 1}
+                [1, 1]
             };
 
             var compounds = new[] {
