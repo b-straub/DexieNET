@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Between : DexieTest<TestDB>
+    internal class Between(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Between(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Between";
 
         public override async ValueTask<string?> RunTest()

@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Or : DexieTest<TestDB>
+    internal class Or(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Or(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Or";
 
         public override async ValueTask<string?> RunTest()

@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class FailedTransaction : DexieTest<TestDB>
+    internal class FailedTransaction(TestDB db) : DexieTest<TestDB>(db)
     {
-        public FailedTransaction(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "FailedTransaction";
 
         public bool AllKeys { get; set; } = false;

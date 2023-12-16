@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class ClearCount : DexieTest<TestDB>
+    internal class ClearCount(TestDB db) : DexieTest<TestDB>(db)
     {
-        public ClearCount(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "ClearCount";
 
         public override async ValueTask<string?> RunTest()

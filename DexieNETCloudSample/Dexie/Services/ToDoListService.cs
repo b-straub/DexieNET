@@ -6,12 +6,12 @@ using System.Reactive.Linq;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
-    public sealed partial class ToDoListService : CrudService<ToDoDBList>
+    public sealed partial class ToDoListService(DexieCloudService databaseService) : CrudService<ToDoDBList>(databaseService)
     {
         public IEnumerable<ToDoDBList> ToDoLists => Items;
         public IEnumerable<Invite> Invites { get; private set; } = Enumerable.Empty<Invite>();
 
-        public IEnumerable<ListOpenClose> ListOpenClose { get; private set; }
+        public IEnumerable<ListOpenClose> ListOpenClose { get; private set; } = Enumerable.Empty<ListOpenClose>();
 
         // Commands
         public ICommandAsync<ToDoDBList> AddList => AddItem;
@@ -24,11 +24,6 @@ namespace DexieNETCloudSample.Dexie.Services
         public ICommand<Invite> RejectInvite => new RejectInviteCmd(this);
 
         private ToDoDB? _db;
-
-        public ToDoListService(DexieCloudService databaseService) : base(databaseService)
-        {
-            ListOpenClose = Enumerable.Empty<ListOpenClose>();
-        }
 
         public static ToDoDBList CreateList(string title, ToDoDBList? list = null)
         {

@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class ToCollection : DexieTest<TestDB>
+    internal class ToCollection(TestDB db) : DexieTest<TestDB>(db)
     {
-        public ToCollection(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "ToCollection";
 
         public override async ValueTask<string?> RunTest()

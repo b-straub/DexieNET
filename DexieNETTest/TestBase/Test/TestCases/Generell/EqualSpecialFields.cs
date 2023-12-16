@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class EqualSpecialFields : DexieTest<TestDB>
+    internal class EqualSpecialFields(TestDB db) : DexieTest<TestDB>(db)
     {
-        public EqualSpecialFields(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "EqualSpecialFields";
 
         public override async ValueTask<string?> RunTest()

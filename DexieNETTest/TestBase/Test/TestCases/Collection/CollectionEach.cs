@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionEach : DexieTest<TestDB>
+    internal class CollectionEach(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionEach(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionEach";
 
         public override async ValueTask<string?> RunTest()

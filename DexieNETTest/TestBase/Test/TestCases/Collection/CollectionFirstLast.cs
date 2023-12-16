@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionFirstLast : DexieTest<TestDB>
+    internal class CollectionFirstLast(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionFirstLast(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionFirstLast";
 
         public override async ValueTask<string?> RunTest()

@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class OrderBy : DexieTest<TestDB>
+    internal class OrderBy(TestDB db) : DexieTest<TestDB>(db)
     {
-        public OrderBy(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "OrderBy";
 
         public override async ValueTask<string?> RunTest()

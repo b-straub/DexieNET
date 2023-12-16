@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class StartsWith : DexieTest<TestDB>
+    internal class StartsWith(TestDB db) : DexieTest<TestDB>(db)
     {
-        public StartsWith(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "StartsWith";
 
         public override async ValueTask<string?> RunTest()

@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionUntil : DexieTest<TestDB>
+    internal class CollectionUntil(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionUntil(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionUntil";
 
         public override async ValueTask<string?> RunTest()

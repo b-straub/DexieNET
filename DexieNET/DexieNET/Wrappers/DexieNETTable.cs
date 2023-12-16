@@ -35,11 +35,8 @@ namespace DexieNET
         public bool CloudSync { get; }
     }
 
-    internal sealed class TableJS : DexieJSObject
+    internal sealed class TableJS(IJSInProcessObjectReference module, IJSInProcessObjectReference reference) : DexieJSObject(module, reference)
     {
-        public TableJS(IJSInProcessObjectReference module, IJSInProcessObjectReference reference) : base(module, reference)
-        {
-        }
     }
 
     public class Table<T, I> : ITable where T : IDBStore

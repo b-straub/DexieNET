@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Above : DexieTest<TestDB>
+    internal class Above(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Above(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Above";
 
         public override async ValueTask<string?> RunTest()

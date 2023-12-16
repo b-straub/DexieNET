@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Distinct : DexieTest<TestDB>
+    internal class Distinct(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Distinct(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Distinct";
 
         public override async ValueTask<string?> RunTest()

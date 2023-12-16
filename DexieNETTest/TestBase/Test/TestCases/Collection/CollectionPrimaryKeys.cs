@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionPrimaryKeys : DexieTest<TestDB>
+    internal class CollectionPrimaryKeys(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionPrimaryKeys(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionPrimaryKeys";
 
         public override async ValueTask<string?> RunTest()

@@ -2,16 +2,11 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class TransactionsNested : DexieTest<TestDB>
+    internal class TransactionsNested(TestDB db, bool fail = false) : DexieTest<TestDB>(db)
     {
-        public TransactionsNested(TestDB db, bool fail = false) : base(db)
-        {
-            Fail = fail;
-        }
-
         public override string Name => Fail ? "TransactionsNestedFail" : "TransactionsNested";
 
-        public bool Fail { get; private set; }
+        public bool Fail { get; private set; } = fail;
 
         public async Task Log(string message)
         {

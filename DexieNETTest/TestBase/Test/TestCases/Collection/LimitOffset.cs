@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class LimitOffset : DexieTest<TestDB>
+    internal class LimitOffset(TestDB db) : DexieTest<TestDB>(db)
     {
-        public LimitOffset(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "LimitOffset";
 
         public override async ValueTask<string?> RunTest()

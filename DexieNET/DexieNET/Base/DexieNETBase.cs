@@ -43,12 +43,8 @@ namespace DexieNET
 
     public record StorageEstimate(double Quota, double Usage);
 
-    public sealed class Persistance : DexieJSObject
+    public sealed class Persistance(IJSInProcessObjectReference module, IJSInProcessObjectReference? reference) : DexieJSObject(module, reference)
     {
-        public Persistance(IJSInProcessObjectReference module, IJSInProcessObjectReference? reference) : base(module, reference)
-        {
-        }
-
         public async ValueTask<PersistenceType> GetPersistanceType()
         {
             return await Module.InvokeAsync<PersistenceType>("InitStoragePersistence");

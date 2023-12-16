@@ -222,20 +222,12 @@ namespace DexieNET
         }
     }
 
-    public class DBQuery<T, I, Q> where T : IDBStore
+    public class DBQuery<T, I, Q>(ITypeConverter? converter, params string[] keys) where T : IDBStore
     {
-        public string[] Keys { get; }
+        public string[] Keys { get; } = keys;
 
-        private readonly ITypeConverter? _converter;
-        private readonly bool _compoundType;
-
-        public DBQuery(ITypeConverter? converter, params string[] keys)
-        {
-            _converter = converter;
-            _compoundType = typeof(Q).IsAssignableTo(typeof(ITuple));
-
-            Keys = keys;
-        }
+        private readonly ITypeConverter? _converter = converter;
+        private readonly bool _compoundType = typeof(Q).IsAssignableTo(typeof(ITuple));
 
         public IEnumerable<Q> AsEnumerable(JsonElement jsonElement)
         {

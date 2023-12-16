@@ -6,12 +6,8 @@ using System.Reactive.Subjects;
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class LiveQueryTest : DexieTest<TestDB>
+    internal class LiveQueryTest(TestDB db) : DexieTest<TestDB>(db)
     {
-        public LiveQueryTest(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "LiveQueryTest";
 
         private async Task<Unit> BulkAddOp()

@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class VersionUpdate : DexieTest<TestDB>
+    internal class VersionUpdate(TestDB db) : DexieTest<TestDB>(db)
     {
-        public VersionUpdate(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "VersionUpdate";
 
         public override async ValueTask<string?> RunTest()

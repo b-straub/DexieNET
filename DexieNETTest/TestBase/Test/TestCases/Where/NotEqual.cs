@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class NotEqual : DexieTest<TestDB>
+    internal class NotEqual(TestDB db) : DexieTest<TestDB>(db)
     {
-        public NotEqual(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "NotEqual";
 
         public override async ValueTask<string?> RunTest()

@@ -46,17 +46,13 @@ namespace DexieNET
         }
     }
 
+    /// <summary>
+    /// Constructor to setup default values
+    /// </summary>
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
-    public class DBNameAttribute : Attribute
+    public class DBNameAttribute(string name) : Attribute
     {
-        public string Name { get; private set; }
-        /// <summary>
-        /// Constructor to setup default values
-        /// </summary>
-        public DBNameAttribute(string name)
-        {
-            Name = name;
-        }
+        public string Name { get; private set; } = name;
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]

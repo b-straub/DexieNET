@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Keys : DexieTest<TestDB>
+    internal class Keys(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Keys(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Keys";
 
         public override async ValueTask<string?> RunTest()

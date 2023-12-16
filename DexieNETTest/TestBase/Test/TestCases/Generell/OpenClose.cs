@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class OpenClose : DexieTest<TestDB>
+    internal class OpenClose(TestDB db) : DexieTest<TestDB>(db)
     {
-        public OpenClose(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "OpenClose";
 
         public override async ValueTask<string?> RunTest()

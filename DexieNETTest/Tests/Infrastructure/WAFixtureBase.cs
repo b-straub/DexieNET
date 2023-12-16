@@ -27,19 +27,14 @@ namespace DexieNETTest.Tests.Infrastructure
         public bool Headless { get; }
     }
 
-    public class WAFixtureBase : WebApplicationFactory<Program>
+    public class WAFixtureBase(int port) : WebApplicationFactory<Program>
     {
         public IPage? Page { get; private set; }
 
         private IPlaywright? _playwright;
         private IBrowser? _browser;
         private IBrowserContext? _browserContext;
-        private readonly int _port;
-
-        public WAFixtureBase(int port)
-        {
-            _port = port;
-        }
+        private readonly int _port = port;
 
         protected async Task InitializeAsync(IWAFixture.BrowserType browserType, bool onePass, bool headless)
         {

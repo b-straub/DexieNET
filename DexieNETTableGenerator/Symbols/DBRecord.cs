@@ -24,7 +24,7 @@ using static DNTGenerator.Verifier.DBRecordExtensions;
 
 namespace DNTGenerator.Verifier
 {
-    internal class DBRecord
+    internal class DBRecord(INamedTypeSymbol symbol, DBRecord.RecordType recordType, bool isPartial, Compilation compilation, CancellationToken cancellationToken)
     {
         public enum RecordType
         {
@@ -35,34 +35,23 @@ namespace DNTGenerator.Verifier
             Struct
         }
 
-        public INamedTypeSymbol Symbol { get; }
+        public INamedTypeSymbol Symbol { get; } = symbol;
 
-        public IEnumerable<IndexDescriptor> Properties { get; }
+        public IEnumerable<IndexDescriptor> Properties { get; } = symbol.GetIndexProperties(compilation, cancellationToken);
 
-        public SchemaDescriptor SchemaDescriptor { get; }
+        public SchemaDescriptor SchemaDescriptor { get; } = symbol.GetSchemaDescriptor(recordType is RecordType.Interface, compilation, cancellationToken);
 
-        public IEnumerable<(IEnumerable<(string Name, Location Location)> Keys, bool IsPrimary, Location PKLocation)> CompoundKeys { get; }
+        public IEnumerable<(IEnumerable<(string Name, Location Location)> Keys, bool IsPrimary, Location PKLocation)> CompoundKeys { get; } = symbol.GetCompoundKeys(compilation, cancellationToken);
 
         public string Namespace => Symbol.ContainingNamespace.ToDisplayString();
 
         public string AccessToString => Symbol.DeclaredAccessibility.ToString().ToLowerInvariant();
 
-        public RecordType Type { get; }
+        public RecordType Type { get; } = recordType;
 
-        public bool IsPartial { get; }
+        public bool IsPartial { get; } = isPartial;
 
-        public string DBName { get; private set; }
-
-        public DBRecord(INamedTypeSymbol symbol, RecordType recordType, bool isPartial, Compilation compilation, CancellationToken cancellationToken)
-        {
-            Symbol = symbol;
-            Type = recordType;
-            IsPartial = isPartial;
-            Properties = symbol.GetIndexProperties(compilation, cancellationToken);
-            SchemaDescriptor = symbol.GetSchemaDescriptor(recordType is RecordType.Interface, compilation, cancellationToken);
-            CompoundKeys = symbol.GetCompoundKeys(compilation, cancellationToken);
-            DBName = symbol.Name.MakeDBOrTableName(true, recordType is RecordType.Interface);
-        }
+        public string DBName { get; private set; } = symbol.Name.MakeDBOrTableName(true, recordType is RecordType.Interface);
 
         public void SetDBName(string dbName)
         {

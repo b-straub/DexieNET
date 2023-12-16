@@ -6,20 +6,16 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoItemService
     {
-        private class SetListCmd : CommandService<ToDoItemService, ToDoDBList>
+        private class SetListCmd(ToDoItemService service) : CommandService<ToDoItemService, ToDoDBList>(service)
         {
-            public SetListCmd(ToDoItemService service) : base(service) { }
-
             protected override void DoExecute(ToDoDBList parameter)
             {
                 Service.CurrentList = parameter;
             }
         }
 
-        private class ToggledItemCompletedCmd : CommandServiceAsync<ToDoItemService, ToDoDBItem>
+        private class ToggledItemCompletedCmd(ToDoItemService service) : CommandServiceAsync<ToDoItemService, ToDoDBItem>(service)
         {
-            public ToggledItemCompletedCmd(ToDoItemService service) : base(service) { }
-
             protected override async Task DoExecute(ToDoDBItem parameter, CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service._db);
@@ -35,10 +31,8 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        private class DeleteCompletedItemsCmd : CommandServiceAsync<ToDoItemService>
+        private class DeleteCompletedItemsCmd(ToDoItemService service) : CommandServiceAsync<ToDoItemService>(service)
         {
-            public DeleteCompletedItemsCmd(ToDoItemService service) : base(service) { }
-
             protected override async Task DoExecute(CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service._db);

@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class AddSecond : DexieTest<SecondDB>
+    internal class AddSecond(SecondDB db) : DexieTest<SecondDB>(db)
     {
-        public AddSecond(SecondDB db) : base(db)
-        {
-        }
-
         public override string Name => "AddSecond";
 
         public override async ValueTask<string?> RunTest()

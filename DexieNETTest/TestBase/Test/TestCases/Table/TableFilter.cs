@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class TableFilter : DexieTest<TestDB>
+    internal class TableFilter(TestDB db) : DexieTest<TestDB>(db)
     {
-        public TableFilter(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "TableFilter";
 
         public override async ValueTask<string?> RunTest()

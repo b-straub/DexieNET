@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class BulkGet : DexieTest<TestDB>
+    internal class BulkGet(TestDB db) : DexieTest<TestDB>(db)
     {
-        public BulkGet(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "BulkGet";
 
         public override async ValueTask<string?> RunTest()

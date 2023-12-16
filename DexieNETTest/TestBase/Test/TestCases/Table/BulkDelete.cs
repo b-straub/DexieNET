@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class BulkDelete : DexieTest<TestDB>
+    internal class BulkDelete(TestDB db) : DexieTest<TestDB>(db)
     {
-        public BulkDelete(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "BulkDelete";
 
         public override async ValueTask<string?> RunTest()

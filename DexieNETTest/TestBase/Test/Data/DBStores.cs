@@ -188,14 +188,9 @@ namespace DexieNETTest.TestBase.Test
         string FirstName
     ) : ITestDB;
 
-    public class PersonComparer : IEqualityComparer<Person>
+    public class PersonComparer(bool IgnoreID = false) : IEqualityComparer<Person>
     {
-        private readonly bool _ignoreID;
-
-        public PersonComparer(bool IgnoreID = false)
-        {
-            _ignoreID = IgnoreID;
-        }
+        private readonly bool _ignoreID = IgnoreID;
 
         public bool Equals(Person? x, Person? y)
         {
@@ -233,14 +228,9 @@ namespace DexieNETTest.TestBase.Test
         }
     }
 
-    public class StudentComparer : IEqualityComparer<Student>
+    public class StudentComparer(bool IgnoreID = false) : IEqualityComparer<Student>
     {
-        private readonly bool _ignoreID;
-
-        public StudentComparer(bool IgnoreID = false)
-        {
-            _ignoreID = IgnoreID;
-        }
+        private readonly bool _ignoreID = IgnoreID;
 
         public bool Equals(Student? x, Student? y)
         {

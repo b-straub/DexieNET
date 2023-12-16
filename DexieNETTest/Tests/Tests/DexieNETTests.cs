@@ -13,9 +13,8 @@ namespace DexieNETTest.Tests.Tests
 
 
     [Collection("Chromium")]
-    public class ChromiumTest : DexieNETTestBase
+    public class ChromiumTest(ChromiumFixture fixture) : DexieNETTestBase(fixture)
     {
-        public ChromiumTest(ChromiumFixture fixture) : base(fixture) { }
     }
 
 #if DEBUG
@@ -28,9 +27,8 @@ namespace DexieNETTest.Tests.Tests
     }
 
     [Collection("Firefox")]
-    public class FirefoxTest : DexieNETTestBase
+    public class FirefoxTest(FirefoxFixture fixture) : DexieNETTestBase(fixture)
     {
-        public FirefoxTest(FirefoxFixture fixture) : base(fixture) { }
     }
 
 #if !Windows

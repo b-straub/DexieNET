@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DexieNET.Component
 {
-    public class DexieNET<T> : ComponentBase where T : DBBase, IDBBase
+    public class DexieNET<T>(string? cloudURL = null) : ComponentBase where T : DBBase, IDBBase
     {
         [Inject]
         protected IDexieNETService<T>? DexieNETService { get; set; }
@@ -11,12 +11,7 @@ namespace DexieNET.Component
         [NotNull] // OnInitializedAsync will throw
         public T? Dexie { get; private set; }
 
-        private readonly string? _cloudURL;
-
-        public DexieNET(string? cloudURL = null)
-        {
-            _cloudURL = cloudURL;
-        }
+        private readonly string? _cloudURL = cloudURL;
 
         protected async override Task OnInitializedAsync()
         {

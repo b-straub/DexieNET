@@ -6,10 +6,8 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoListService
     {
-        private class ToggleListItemsOpenCloseCmd : CommandServiceAsync<ToDoListService, ToDoDBList>
+        private class ToggleListItemsOpenCloseCmd(ToDoListService service) : CommandServiceAsync<ToDoListService, ToDoDBList>(service)
         {
-            public ToggleListItemsOpenCloseCmd(ToDoListService service) : base(service) { }
-
             protected override async Task DoExecute(ToDoDBList parameter, CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service._db);
@@ -24,10 +22,8 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        private class ToggleListShareOpenCloseCmd : CommandServiceAsync<ToDoListService, ToDoDBList>
+        private class ToggleListShareOpenCloseCmd(ToDoListService service) : CommandServiceAsync<ToDoListService, ToDoDBList>(service)
         {
-            public ToggleListShareOpenCloseCmd(ToDoListService service) : base(service) { }
-
             protected override async Task DoExecute(ToDoDBList parameter, CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service._db);
@@ -47,10 +43,8 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        private class AcceptInviteCmd : CommandService<ToDoListService, Invite>
+        private class AcceptInviteCmd(ToDoListService service) : CommandService<ToDoListService, Invite>(service)
         {
-            public AcceptInviteCmd(ToDoListService service) : base(service) { }
-
             protected override void DoExecute(Invite parameter)
             {
                 ArgumentNullException.ThrowIfNull(Service._db);
@@ -65,10 +59,8 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        private class RejectInviteCmd : CommandService<ToDoListService, Invite>
+        private class RejectInviteCmd(ToDoListService service) : CommandService<ToDoListService, Invite>(service)
         {
-            public RejectInviteCmd(ToDoListService service) : base(service) { }
-
             protected override void DoExecute(Invite parameter)
             {
                 ArgumentNullException.ThrowIfNull(Service._db);

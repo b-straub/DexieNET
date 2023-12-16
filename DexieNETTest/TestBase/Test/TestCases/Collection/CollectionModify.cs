@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionModify : DexieTest<TestDB>
+    internal class CollectionModify(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionModify(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionModify";
 
         public override async ValueTask<string?> RunTest()

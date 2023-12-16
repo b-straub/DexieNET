@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class InAnyRange : DexieTest<TestDB>
+    internal class InAnyRange(TestDB db) : DexieTest<TestDB>(db)
     {
-        public InAnyRange(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "InAnyRange";
 
 

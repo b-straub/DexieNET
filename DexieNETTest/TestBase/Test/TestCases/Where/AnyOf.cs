@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class AnyOf : DexieTest<TestDB>
+    internal class AnyOf(TestDB db) : DexieTest<TestDB>(db)
     {
-        public AnyOf(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "AnyOf";
 
         public override async ValueTask<string?> RunTest()

@@ -31,16 +31,10 @@ namespace DexieNET
         public IJSInProcessObjectReference Module { get; }
     }
 
-    public class DexieJSObject : IDexieJSObject
+    public class DexieJSObject(IJSInProcessObjectReference module, IJSInProcessObjectReference? reference) : IDexieJSObject
     {
-        public IJSInProcessObjectReference Module { get; }
-        public IJSInProcessObjectReference? Reference { get; private set; }
-
-        public DexieJSObject(IJSInProcessObjectReference module, IJSInProcessObjectReference? reference)
-        {
-            Module = module;
-            Reference = reference;
-        }
+        public IJSInProcessObjectReference Module { get; } = module;
+        public IJSInProcessObjectReference? Reference { get; private set; } = reference;
 
         public void SetReference(IJSInProcessObjectReference? reference)
         {
@@ -132,12 +126,8 @@ namespace DexieNET
         }
     }
 
-    public class JSObservableKey<T> : JSObservable<T>
+    public class JSObservableKey<T>(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction, params object?[] args) : JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction, args)
     {
-        public JSObservableKey(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction, params object?[] args) : base(db, jsSubscribeFunction, jsPostUnsubscribeFunction, args)
-        {
-        }
-
         protected override void PostUnsubscribe()
         {
             ArgumentNullException.ThrowIfNull(Value);

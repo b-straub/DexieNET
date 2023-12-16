@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Put : DexieTest<TestDB>
+    internal class Put(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Put(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Put";
 
         public override async ValueTask<string?> RunTest()

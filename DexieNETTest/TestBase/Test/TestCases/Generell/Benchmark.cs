@@ -3,14 +3,9 @@ using System.Diagnostics;
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Benchmark : DexieTest<TestDB>
+    internal class Benchmark(TestDB db, CancellationToken cancellationToken) : DexieTest<TestDB>(db)
     {
-        private readonly CancellationToken _cancellationToken;
-
-        public Benchmark(TestDB db, CancellationToken cancellationToken) : base(db)
-        {
-            _cancellationToken = cancellationToken;
-        }
+        private readonly CancellationToken _cancellationToken = cancellationToken;
 
         public override string Name => "Benchmark";
 

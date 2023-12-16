@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionFilter : DexieTest<TestDB>
+    internal class CollectionFilter(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionFilter(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionFilter";
 
         public override async ValueTask<string?> RunTest()

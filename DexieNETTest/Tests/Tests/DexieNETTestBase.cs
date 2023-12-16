@@ -6,14 +6,9 @@ using Xunit;
 
 namespace DexieNETTest.Tests.Tests
 {
-    public abstract class DexieNETTestBase : IAsyncLifetime
+    public abstract class DexieNETTestBase(IWAFixture fixture) : IAsyncLifetime
     {
-        private readonly IWAFixture _fixture;
-
-        public DexieNETTestBase(IWAFixture fixture)
-        {
-            _fixture = fixture;
-        }
+        private readonly IWAFixture _fixture = fixture;
 
         public Task DisposeAsync()
         {

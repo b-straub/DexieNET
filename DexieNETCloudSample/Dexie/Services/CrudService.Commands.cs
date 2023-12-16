@@ -6,10 +6,8 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class CrudService<T>
     {
-        private class AddItemCmd : CommandServiceAsync<CrudService<T>, T>
+        private class AddItemCmd(CrudService<T> service) : CommandServiceAsync<CrudService<T>, T>(service)
         {
-            public AddItemCmd(CrudService<T> service) : base(service) { }
-
             protected override async Task DoExecute(T parameter, CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service.DbService.DB);
@@ -32,10 +30,8 @@ namespace DexieNETCloudSample.Dexie.Services
             return (Permissions?.CanAdd()).True();
         }
 
-        private class UpdateItemCmd : CommandServiceAsync<CrudService<T>, T>
+        private class UpdateItemCmd(CrudService<T> service) : CommandServiceAsync<CrudService<T>, T>(service)
         {
-            public UpdateItemCmd(CrudService<T> service) : base(service) { }
-
             protected override async Task DoExecute(T parameter, CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service.DbService.DB);
@@ -54,10 +50,8 @@ namespace DexieNETCloudSample.Dexie.Services
             return item is not null;
         }
 
-        private class DeleteItemCmd : CommandServiceAsync<CrudService<T>, T>
+        private class DeleteItemCmd(CrudService<T> service) : CommandServiceAsync<CrudService<T>, T>(service)
         {
-            public DeleteItemCmd(CrudService<T> service) : base(service) { }
-
             protected override async Task DoExecute(T parameter, CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service.DbService.DB);
@@ -82,10 +76,8 @@ namespace DexieNETCloudSample.Dexie.Services
             return item is not null && (Permissions?.CanDelete(item)).True();
         }
 
-        private class ClearItemsCmd : CommandServiceAsync<CrudService<T>>
+        private class ClearItemsCmd(CrudService<T> service) : CommandServiceAsync<CrudService<T>>(service)
         {
-            public ClearItemsCmd(CrudService<T> service) : base(service) { }
-
             protected override async Task DoExecute(CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service.DbService.DB);

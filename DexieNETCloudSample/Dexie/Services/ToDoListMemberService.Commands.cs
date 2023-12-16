@@ -7,10 +7,8 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoListMemberService
     {
-        private class SetListCmd : CommandService<ToDoListMemberService, ToDoDBList>
+        private class SetListCmd(ToDoListMemberService service) : CommandService<ToDoListMemberService, ToDoDBList>(service)
         {
-            public SetListCmd(ToDoListMemberService service) : base(service) { }
-
             protected override void DoExecute(ToDoDBList parameter)
             {
                 Service.List = parameter;
@@ -22,10 +20,8 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        private class InviteUserCmd : CommandServiceAsync<ToDoListMemberService, string>
+        private class InviteUserCmd(ToDoListMemberService service) : CommandServiceAsync<ToDoListMemberService, string>(service)
         {
-            public InviteUserCmd(ToDoListMemberService service) : base(service) { }
-
             protected override async Task DoExecute(string parameter, CancellationToken cancellationToken)
             {
                 await Service.DoInviteUser(parameter);
@@ -37,10 +33,8 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        private class ChangeMemberStateCmd : CommandServiceAsync<ToDoListMemberService, Member>
+        private class ChangeMemberStateCmd(ToDoListMemberService service) : CommandServiceAsync<ToDoListMemberService, Member>(service)
         {
-            public ChangeMemberStateCmd(ToDoListMemberService service) : base(service) { }
-
             protected override async Task DoExecute(Member parameter, CancellationToken cancellationToken)
             {
                 ArgumentNullException.ThrowIfNull(Service.List);
@@ -81,7 +75,7 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        public class MemberRoleSelectionIPG : InputGroupPAsync<ToDoListMemberService, MemberRoleSelection, Member>
+        public class MemberRoleSelectionIPG(ToDoListMemberService service) : InputGroupPAsync<ToDoListMemberService, MemberRoleSelection, Member>(service, _roleSelections[3])
         {
             private static readonly MemberRoleSelection[] _roleSelections =
             {
@@ -90,11 +84,6 @@ namespace DexieNETCloudSample.Dexie.Services
                 new MemberRoleSelection(MemberRole.USER),
                 new MemberRoleSelection(MemberRole.GUEST),
             };
-
-            public MemberRoleSelectionIPG(ToDoListMemberService service) : base(service, _roleSelections[3])
-            {
-
-            }
 
             public override MemberRoleSelection[] GetItems()
             {

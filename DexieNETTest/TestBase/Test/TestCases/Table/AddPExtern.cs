@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class AddPExtern : DexieTest<TestDB>
+    internal class AddPExtern(TestDB db) : DexieTest<TestDB>(db)
     {
-        public AddPExtern(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "AddPExtern";
 
         public override async ValueTask<string?> RunTest()

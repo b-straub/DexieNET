@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class NoneOf : DexieTest<TestDB>
+    internal class NoneOf(TestDB db) : DexieTest<TestDB>(db)
     {
-        public NoneOf(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "NoneOf";
 
         public override async ValueTask<string?> RunTest()

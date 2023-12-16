@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class AddPNotAuto : DexieTest<TestDB>
+    internal class AddPNotAuto(TestDB db) : DexieTest<TestDB>(db)
     {
-        public AddPNotAuto(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "AddPNotAuto";
 
         public override async ValueTask<string?> RunTest()

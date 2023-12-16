@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Reverse : DexieTest<TestDB>
+    internal class Reverse(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Reverse(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Reverse";
 
         public override async ValueTask<string?> RunTest()

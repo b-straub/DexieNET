@@ -43,11 +43,8 @@ namespace DexieNET
         ParallelExecuting,
     }
 
-    public sealed class TransactionException : InvalidOperationException
+    public sealed class TransactionException(string? message) : InvalidOperationException(message)
     {
-        public TransactionException(string? message) : base(message)
-        {
-        }
     }
 
     public sealed class Transaction : DexieJSObject, IDisposable
