@@ -9,9 +9,9 @@ namespace DexieNETTest.TestBase.Test
         {
             return new Address[]
             {
-                new Address("TestStreet1", "10", "TestCity1", "00000", "Germany"),
-                new Address("TestStreet2", "20", "TestCity2", "11111", "France"),
-                new Address("TestStreet3", "30", "TestCity3", "22222", "USA")
+                new("TestStreet1", "10", "TestCity1", "00000", "Germany"),
+                new("TestStreet2", "20", "TestCity2", "11111", "France"),
+                new("TestStreet3", "30", "TestCity3", "22222", "USA")
             };
         }
 
@@ -19,9 +19,9 @@ namespace DexieNETTest.TestBase.Test
         {
             return new PhoneNumber[]
             {
-                new PhoneNumber("0001", "00000"),
-                new PhoneNumber("0002", "11111"),
-                new PhoneNumber("0003", "22222"),
+                new("0001", "00000"),
+                new("0002", "11111"),
+                new("0003", "22222"),
             };
         }
 
@@ -49,17 +49,17 @@ namespace DexieNETTest.TestBase.Test
 
             return new Person[]
             {
-                new Person("Person1", 11, addresses[0], new Phone(GetPhoneNumbers()[0], PhoneType.Mobile), new string[] { "Friend", "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("APerson2", 17, addresses[1], new Phone(GetPhoneNumbers()[1], PhoneType.LandLine), new string[] { "Friend", "Buddy", "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("APerson3", 25, addresses[2], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Buddy" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("BPerson4", 33, addresses[0], new Phone(GetPhoneNumbers()[0], PhoneType.Mobile), new string[] { "Friend", "Buddy" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("BPerson5", 65, addresses[1], new Phone(GetPhoneNumbers()[1], PhoneType.LandLine), new string[] { "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("Person6", 75, addresses[2], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend", "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("Person7", 85, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("Person7", 40, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("Person7", 60, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("Person7", 90, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
-                new Person("Person8", 30, addresses[0], new Phone(GetPhoneNumbers()[0], PhoneType.Satellite), new string[] { "Friend", "Neighbor" }, Guid.NewGuid(), "NotIndexed")
+                new("Person1", 11, addresses[0], new Phone(GetPhoneNumbers()[0], PhoneType.Mobile), new string[] { "Friend", "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
+                new("APerson2", 17, addresses[1], new Phone(GetPhoneNumbers()[1], PhoneType.LandLine), new string[] { "Friend", "Buddy", "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
+                new("APerson3", 25, addresses[2], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Buddy" }, Guid.NewGuid(), "NotIndexed"),
+                new("BPerson4", 33, addresses[0], new Phone(GetPhoneNumbers()[0], PhoneType.Mobile), new string[] { "Friend", "Buddy" }, Guid.NewGuid(), "NotIndexed"),
+                new("BPerson5", 65, addresses[1], new Phone(GetPhoneNumbers()[1], PhoneType.LandLine), new string[] { "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
+                new("Person6", 75, addresses[2], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend", "Neighbor" }, Guid.NewGuid(), "NotIndexed"),
+                new("Person7", 85, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
+                new("Person7", 40, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
+                new("Person7", 60, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
+                new("Person7", 90, addresses[0], new Phone(GetPhoneNumbers()[2], PhoneType.Satellite), new string[] { "Friend" }, Guid.NewGuid(), "NotIndexed"),
+                new("Person8", 30, addresses[0], new Phone(GetPhoneNumbers()[0], PhoneType.Satellite), new string[] { "Friend", "Neighbor" }, Guid.NewGuid(), "NotIndexed")
             };
         }
 
@@ -67,9 +67,9 @@ namespace DexieNETTest.TestBase.Test
         {
             return new PersonCompound[]
             {
-                new PersonCompound("Last1", "First1"),
-                new PersonCompound("Last2", "First2"),
-                new PersonCompound("Last3", "First3")
+                new("Last1", "First1"),
+                new("Last2", "First2"),
+                new("Last3", "First3")
             };
         }
 
@@ -102,6 +102,7 @@ namespace DexieNETTest.TestBase.Test
                 .Select(_ => random.Next(-5, 5))
                 .Select(r => new FieldTest(
                     r >= 0,
+                    r < 0,
                     new bool[] { true, r > 0 },
                     new DateOnly(2000 + r, 1, 1),
                     new TimeOnly(12 + r, 0), new TimeSpan(r * 1000),
@@ -120,12 +121,12 @@ namespace DexieNETTest.TestBase.Test
         {
             return new Friend[]
             {
-                new Friend("AAA BBB", 41, new AgeInfo1(30)),
-                new Friend("CCC DDD", 44, new AgeInfo1(11)),
-                new Friend("EEE FFF", 39, new AgeInfo1(44)),
-                new Friend("GGG HHH", 45, new AgeInfo1(25)),
-                new Friend("III JJJ", 26, new AgeInfo1(61)),
-                new Friend("KKK LLL", 42, new AgeInfo1(73))
+                new("AAA BBB", 41, new AgeInfo1(30)),
+                new("CCC DDD", 44, new AgeInfo1(11)),
+                new("EEE FFF", 39, new AgeInfo1(44)),
+                new("GGG HHH", 45, new AgeInfo1(25)),
+                new("III JJJ", 26, new AgeInfo1(61)),
+                new("KKK LLL", 42, new AgeInfo1(73))
             };
         }
 
