@@ -24,13 +24,20 @@ namespace DexieNETCloudSample.Extensions
 
             builder.Services.AddScoped(sp => http);
 
-            using var importfileR = await http.GetAsync("importfile.json");
-            using var importfileS = await importfileR.Content.ReadAsStreamAsync();
-            builder.Configuration.AddJsonStream(importfileS);
+            try
+            {
+                using var importfileR = await http.GetAsync("importfile.json");
+                using var importfileS = await importfileR.Content.ReadAsStreamAsync();
+                builder.Configuration.AddJsonStream(importfileS);
 
-            using var dexieCloudR = await http.GetAsync("dexie-cloud.json");
-            using var dexieCloudS = await dexieCloudR.Content.ReadAsStreamAsync();
-            builder.Configuration.AddJsonStream(dexieCloudS);
+                using var dexieCloudR = await http.GetAsync("dexie-cloud.json");
+                using var dexieCloudS = await dexieCloudR.Content.ReadAsStreamAsync();
+                builder.Configuration.AddJsonStream(dexieCloudS);
+            }
+            catch
+            {
+                throw new InvalidOperationException("Can not load cloud configuration. Run 'configure-app.ps1' first!");
+            }
         }
 
         public static string[] GetUsers(this IConfiguration? configuration)
