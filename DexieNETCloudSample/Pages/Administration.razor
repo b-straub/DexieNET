@@ -1,0 +1,33 @@
+﻿@page "/administration"
+
+<h3>Administration</h3>
+
+<MudButton Variant="Variant.Filled" Color=Color.Primary OnClick="GetUsers">Get Users</MudButton>
+<p />
+
+@if (_requestRunning)
+{
+    <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+}
+
+<MudSimpleTable Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            @foreach (var h in _headers)
+            {
+                <th>@h</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in _users)
+        {
+            <tr>
+                <td>@user.UserId</td>
+                <td>@user.LastLogin</td>
+                <td>@user.Type</td>
+                <td>@user.EvalDaysLeft</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>

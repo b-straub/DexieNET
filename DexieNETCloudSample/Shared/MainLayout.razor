@@ -8,6 +8,12 @@
         <DBContainer />
         <MudIconButton Icon="@Icons.Material.Outlined.Info" Color="Color.Inherit" OnClick="@OpenAboutDialog" />
     </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">DexieNETCloudSample</MudText>
+        </MudDrawerHeader>
+        <NavMenu />
+    </MudDrawer>
     <MudMainContent Class="pt-16 pl-13 pr-12">
         @Body
     </MudMainContent>
@@ -16,6 +22,13 @@
 @code {
     [Inject]
     IDialogService? DialogService { get; set; }
+
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
 
     private void OpenAboutDialog()
     {
