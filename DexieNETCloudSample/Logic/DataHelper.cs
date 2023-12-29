@@ -1,8 +1,5 @@
 ﻿using DexieNET;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using static DexieNET.UIAlert;
 
 namespace DexieNETCloudSample.Logic
 {
@@ -41,3 +38,5 @@ namespace DexieNETCloudSample.Logic
 
         public IEnumerable<UIAlert> Alerts { get; set; } = alerts;
     }
+    }
+}
