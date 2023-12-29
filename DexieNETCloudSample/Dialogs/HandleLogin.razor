@@ -1,0 +1,112 @@
+﻿@using DexieNET
+@inherits OwningComponentBase
+
+<MudMenu Disabled=@(_userLogin is null)>
+    <ActivatorContent>
+        <MudIconButton Icon="@Icons.Material.Outlined.People" Color="Color.Inherit">
+            "Sign in or create your account"
+        </MudIconButton>
+    </ActivatorContent>
+    <ChildContent>
+        @if (_userLogin is not null && _userLogin.IsLoggedIn)
+        {
+            <MudMenuItem OnClick=@Logout OnTouch=@Logout>Sign Out: @_userLogin.UserId</MudMenuItem>
+        }
+        else
+        {
+            foreach (var user in users)
+            {
+                <MudMenuItem OnClick=@(async () => await Login(user))
+                     OnTouch=@(async () => await Login(user))>
+                    @user
+                </MudMenuItem>
+            }
+            <MudMenuItem OnClick=@(async () => await Login())
+                     OnTouch=@(async () => await Login())>
+                Sign in / sign up yourself
+            </MudMenuItem>
+        }
+    </ChildContent>
+</MudMenu>
+
+
+@code {
+    [Inject]
+    private DexieCloudService? DBService { get; set; }
+
+    [Inject]
+    private IDialogService? DialogService { get; set; }
+
+    [Inject]
+    private IConfiguration? Configuration { get; set; }
+
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    private UserLogin? _userLogin;
+    private IDisposable? _sDisposable;
+    private IEnumerable<string> users = Enumerable.Empty<string>();
+
+    protected override void OnInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(DBService);
+        ArgumentNullException.ThrowIfNull(Configuration);
+
+        users = Configuration.GetUsers();
+
+        _sDisposable = DBService.Subscribe(c =>
+        {
+            if (c is DBChangedMessage.UserLogin)
+            {
+                _userLogin = DBService.UserLogin;
+                InvokeAsync(StateHasChanged);
+            }
+        });
+    }
+
+    private async Task Logout()
+    {
+        ArgumentNullException.ThrowIfNull(DBService);
+
+        await DBService.Logout();
+        //await DBService.DeleteDB();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _sDisposable?.Dispose();
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private async ValueTask Login(string? eMail = null)
+    {
+        ArgumentNullException.ThrowIfNull(DBService);
+
+        if (eMail is not null)
+        {
+            LoginInformation li = new(eMail, null, GrantType.DEMO);
+            DBService.Login(li);
+        }
+        else
+        {
+            ArgumentNullException.ThrowIfNull(DialogService);
+
+            EmailData data = new("email@mydomain.com");
+
+            var parameters = new DialogParameters { ["Item"] = data };
+            var dialog = DialogService.Show<AuthenticateEMail>("Email for Login", parameters);
+
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                data = (EmailData)result.Data;
+                LoginInformation li = new(data.Email, null, GrantType.OTP);
+                DBService.Login(li);
+            }
+        }
+    }
+}

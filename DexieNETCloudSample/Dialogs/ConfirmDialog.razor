@@ -1,0 +1,36 @@
+﻿<MudDialog>
+    <DialogContent>
+        @Message
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color=@(SuccessOnConfirm ? Color.Error : Color.Success) OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color=@(SuccessOnConfirm ? Color.Success : Color.Error) OnClick="Submit">@ConfirmButton</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public string ConfirmButton { get; set; } = "Delete";
+
+    [Parameter]
+    public bool SuccessOnConfirm { get; set; } = false;
+
+    void Submit() => MudDialog?.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog?.Cancel();
+
+    protected override void OnInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(MudDialog);
+
+        MudDialog.Options.CloseButton = false;
+        MudDialog.SetOptions(MudDialog.Options);
+
+        base.OnInitialized();
+    }
+}

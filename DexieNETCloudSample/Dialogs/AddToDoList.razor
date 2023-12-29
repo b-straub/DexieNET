@@ -1,0 +1,47 @@
+﻿<MudDialog>
+    <DialogContent>
+        @if (List is not null)
+        {
+            <EditForm Model=@List OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Disabled=@(!CanUpdateTitle) AutoFocus="true" Immediate="true" Label="ToDoList" @bind-Value=@List.Title For=@(() => @List.Title) />
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Save</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public ToDoListData? List { get; set; }
+
+    [Parameter]
+    public bool CanUpdateTitle { get; set; } = false;
+
+    void Cancel() => MudDialog?.Cancel();
+
+    protected override void OnInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(MudDialog);
+
+        MudDialog.Options.CloseButton = true;
+        MudDialog.SetOptions(MudDialog.Options);
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        ArgumentNullException.ThrowIfNull(MudDialog);
+
+        MudDialog.Close(DialogResult.Ok(List));
+    }
+}

@@ -1,0 +1,70 @@
+﻿<MudDialog>
+    <DialogContent>
+        @if (Item is not null)
+        {
+            <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Disabled=@(!CanUpdateText) AutoFocus="true" Immediate="true" Label="ToDo" @bind-Value=@Item.Text For=@(() => Item.Text) />
+                        <MudDatePicker Disabled=@(!CanUpdateDueDate) Label="Due Date" @bind-Date=@date Editable="true" />
+                        <MudTimePicker Disabled=@(!CanUpdateDueDate) PickerVariant="PickerVariant.Dialog" @bind-Time=@time />
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Save</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public ToDoItemData? Item { get; set; }
+
+    [Parameter]
+    public bool CanUpdateText { get; set; } = false;
+
+    [Parameter]
+    public bool CanUpdateDueDate { get; set; } = false;
+
+    void Cancel() => MudDialog?.Cancel();
+
+    private DateTime? date = DateTime.Today;
+    private TimeSpan? time = TimeSpan.Zero;
+
+    protected override void OnInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(MudDialog);
+
+        if (Item is not null)
+        {
+            date = Item.DueDate;
+            time = new TimeSpan(Item.DueDate.Hour, Item.DueDate.Minute, Item.DueDate.Second);
+        }
+
+        MudDialog.Options.CloseButton = true;
+        MudDialog.SetOptions(MudDialog.Options);
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        ArgumentNullException.ThrowIfNull(MudDialog);
+
+        if (Item is not null)
+        {
+            if (date.HasValue && time.HasValue)
+            {
+                date = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day) + time.Value;
+                Item.DueDate = date.Value;
+            }
+
+            MudDialog.Close(DialogResult.Ok(Item));
+        }
+    }
+}

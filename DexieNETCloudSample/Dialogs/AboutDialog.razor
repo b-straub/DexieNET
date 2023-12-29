@@ -1,0 +1,33 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.subtitle2">DexieNETCloudSample</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body1">© Bernhard Straub 2023</MudText>
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    void Submit() => MudDialog?.Close(DialogResult.Ok(true));
+
+    protected override void OnInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(MudDialog);
+
+        MudDialog.Options.CloseButton = false;
+        MudDialog.SetOptions(MudDialog.Options);
+
+        base.OnInitialized();
+    }
+}
