@@ -1,5 +1,6 @@
 using DexieNET;
 using DexieNETCloudSample;
+using DexieNETCloudSample.Aministration;
 using DexieNETCloudSample.Dexie.Services;
 using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
@@ -18,6 +19,7 @@ builder.Services.AddSingleton<DexieCloudService>();
 builder.Services.AddScoped<ToDoListService>();
 builder.Services.AddScoped<ToDoItemService>();
 builder.Services.AddScoped<ToDoListMemberService>();
+builder.Services.AddScoped<AdministrationService>();
 
 await builder.LoadConfigurationAsync();
 

@@ -1,0 +1,43 @@
+﻿@inherits RxBLComponent<AdministrationService>
+
+<MudStack>
+    <MudText Typo="Typo.h3" GutterBottom="true">Administration</MudText>
+
+    <MudStack Row=@true AlignItems=@AlignItems.Center>
+        <MudButtonAsyncPRx Color="Color.Primary" Variant="Variant.Filled" RxCommandAsyncFactory=@(() => Service.GetUsers) PrepareExecutionAsync=@GetCloudKeyData CancelText="Cancel Add">
+            Get Users
+        </MudButtonAsyncPRx>
+    </MudStack>
+
+    <MudGrid>
+        @if (Service.CommandExceptions.Any())
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.h5" GutterBottom="true">@GetExceptions()</MudText>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick=@(() => Service.ResetCommandExceptions())>Reset Exceptions</MudButton>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudSimpleTable Style="overflow-x: auto;">
+        <thead>
+            <tr>
+                @foreach (var h in _headers)
+                {
+                    <th>@h</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Service.Users)
+            {
+                <tr>
+                    <td>@user.UserId</td>
+                    <td>@user.LastLogin</td>
+                    <td>@user.Type</td>
+                    <td>@user.EvalDaysLeft</td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudStack>
