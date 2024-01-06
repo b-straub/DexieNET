@@ -79,7 +79,7 @@
 		<Delete Files="wwwroot\js\*.*" />
 	</Target>
 
-	<Target Name="NpmInstall" BeforeTargets="BeforeBuild" Inputs="package.json" Outputs="$(NpmInstallStampFile)">
+	<Target Name="NpmInstall" BeforeTargets="BeforeBuild" Inputs="npm/package.json" Outputs="$(NpmInstallStampFile)">
 		<Exec Command="npm install" WorkingDirectory="npm" />
 		<Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
 	</Target>
