@@ -99,7 +99,7 @@ namespace DexieNET
 
         public static Version Stores<T1>(this Version version) where T1 : IDBStore
         {
-            Dictionary<string, string> stores = new();
+            Dictionary<string, string> stores = [];
 
             if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToCamelCase(), out var store1))
             {
@@ -116,7 +116,7 @@ namespace DexieNET
 
         public static Version Stores<T1, T2>(this Version version) where T1 : IDBStore where T2 : IDBStore
         {
-            Dictionary<string, string> stores = new();
+            Dictionary<string, string> stores = [];
 
             if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToCamelCase(), out var store1))
             {
@@ -142,7 +142,7 @@ namespace DexieNET
 
         public static Version Stores<T1, T2, T3>(this Version version) where T1 : IDBStore where T2 : IDBStore where T3 : IDBStore
         {
-            Dictionary<string, string> stores = new();
+            Dictionary<string, string> stores = [];
 
             if (version.UpdateStores.TryGetValue(typeof(T1).Name.ToCamelCase(), out var store1))
             {

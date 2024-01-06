@@ -180,7 +180,7 @@ namespace DexieNET
             var args = new List<object?>() { DB.DBBaseJS.Reference, _dotnetRef };
             args.AddRange(_args);
 
-            _jsSubscription ??= DB.DBBaseJS.Module.Invoke<IJSInProcessObjectReference>(_jsSubscribeFunction, args.ToArray());
+            _jsSubscription ??= DB.DBBaseJS.Module.Invoke<IJSInProcessObjectReference>(_jsSubscribeFunction, [.. args]);
             return disposable;
         }
 

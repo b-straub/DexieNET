@@ -132,7 +132,7 @@ namespace DexieNET
             }
             else
             {
-                permission = permission with { Add = permission.Add.Append(table.Name).ToArray() };
+                permission = permission with { Add = [.. permission.Add, table.Name] };
             }
             return permission;
         }
@@ -154,7 +154,7 @@ namespace DexieNET
         {
             if (permission.Update is null)
             {
-                permission = permission with { Update = new() };
+                permission = permission with { Update = [] };
             }
 
             permission.Update.Add(table.Name, new[] { query.GetKey() });
@@ -165,7 +165,7 @@ namespace DexieNET
         {
             if (permission.Update is null)
             {
-                permission = permission with { Update = new() };
+                permission = permission with { Update = [] };
             }
             else if (permission.Update.TryGetValue("*", out string[]? value))
             {
@@ -183,7 +183,7 @@ namespace DexieNET
         {
             if (permission.Update is null)
             {
-                permission = permission with { Update = new() };
+                permission = permission with { Update = [] };
             }
             else if (permission.Update.TryGetValue(table.Name, out string[]? value))
             {
@@ -205,7 +205,7 @@ namespace DexieNET
             }
             else
             {
-                permission = permission with { Manage = permission.Manage.Append(table.Name).ToArray() };
+                permission = permission with { Manage = [.. permission.Manage, table.Name] };
             }
             return permission;
         }

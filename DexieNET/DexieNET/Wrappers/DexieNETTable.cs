@@ -78,8 +78,8 @@ namespace DexieNET
             Keys = keys;
             MultiEntry = multiEntry;
             CloudSync = cloudSync;
-            _emptyCollection = new();
-            _emptyWhereClause = new();
+            _emptyCollection = [];
+            _emptyWhereClause = [];
             DefaultPrimaryKey = HelperExtensions.GetDefaultPrimaryKey<I>();
         }
 
@@ -653,12 +653,12 @@ namespace DexieNET
         {
             if (table.AddTableInfo((table.Name, TAMode.Read)))
             {
-                return table.EmptyCollection<Q>(query.Keys.ToArray());
+                return table.EmptyCollection<Q>([.. query.Keys]);
             }
 
             var queryConverted = table.TypeConverter?.Convert(query) ?? query;
             var reference = table.TableJS.Invoke<IJSInProcessObjectReference>("where", queryConverted);
-            return new(table, reference, query.Keys.ToArray());
+            return new(table, reference, [.. query.Keys]);
         }
 
         public static Collection<T, I, Q> Where<T, I, Q>(this Table<T, I> table, Expression<Func<T, Q>> query, Q value) where T : IDBStore

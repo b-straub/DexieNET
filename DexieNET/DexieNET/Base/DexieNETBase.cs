@@ -81,7 +81,7 @@ namespace DexieNET
         {
             DBBaseJS = new(module, reference);
             TransactionCollectStack = new();
-            TransactionDict = new();
+            TransactionDict = [];
             TransactionTasks = new();
             CloudSync = cloudSync;
         }
@@ -221,7 +221,7 @@ namespace DexieNET
                         if (db.TransactionState is TAState.ParallelExecuting)
                         {
                             db.CurrentTransaction = null;
-                            await Task.WhenAll(db.TransactionTasks.ToArray());
+                            await Task.WhenAll([.. db.TransactionTasks]);
                         }
 
                         db.TransactionState = TAState.Collecting;

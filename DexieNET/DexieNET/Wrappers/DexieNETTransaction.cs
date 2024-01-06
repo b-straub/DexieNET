@@ -71,7 +71,7 @@ namespace DexieNET
             _dotnetRef = DotNetObjectReference.Create(this);
             _mode = TAMode.Read;
             _parallel = parallel;
-            _tables = new();
+            _tables = [];
         }
 
         internal bool AddTableInfo((string Name, TAMode Mode) tableInfo)

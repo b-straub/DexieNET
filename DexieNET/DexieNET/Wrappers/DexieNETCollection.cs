@@ -39,8 +39,8 @@ namespace DexieNET
         public CollectionJS()
         {
             DotnetRef = DotNetObjectReference.Create(this);
-            _filterList = new();
-            _untilList = new();
+            _filterList = [];
+            _untilList = [];
         }
 
         public CollectionJS(CollectionJS<T, I, Q> other)

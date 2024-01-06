@@ -36,7 +36,7 @@ namespace DexieNET
 
     public sealed class UsePermissions<T, I> : IUsePermissions<T>, IDisposable where T : IDBStore, IDBCloudEntity
     {
-        private readonly Dictionary<string, PermissionChecker<T, I>> _updatePermissions = new();
+        private readonly Dictionary<string, PermissionChecker<T, I>> _updatePermissions = [];
         private PermissionChecker<T, I> _tablePermissions;
         private readonly Table<T, I> _table;
         private readonly Subject<Unit> _changedSubject;
@@ -95,7 +95,7 @@ namespace DexieNET
 
             if (item is null)
             {
-                return _tablePermissions.CanAdd(tableNameList.ToArray());
+                return _tablePermissions.CanAdd([.. tableNameList]);
             }
 
             if (item.EntityKey is not null)
@@ -106,7 +106,7 @@ namespace DexieNET
                     _updatePermissions[item.EntityKey] = pc;
                     _changedSubject.OnNext(Unit.Default);
                 }
-                return pc.CanAdd(tableNameList.ToArray());
+                return pc.CanAdd([.. tableNameList]);
             }
             return false;
         }

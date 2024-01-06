@@ -248,7 +248,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"Can not deserialize to IEnumerable<{typeof(K).Name}>, invalid JSON.");
             }
 
-            List<K> values = new();
+            List<K> values = [];
 
             foreach (var element in jsonElements)
             {
