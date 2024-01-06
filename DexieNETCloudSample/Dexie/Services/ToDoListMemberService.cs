@@ -112,7 +112,7 @@ namespace DexieNETCloudSample.Dexie.Services
             var memberQuery = _dbService.DB.LiveQuery(async () =>
                 await _dbService.DB.Members.Where(m => m.RealmId).Equal(List?.RealmId).ToArray());
 
-            var useMemberQuery = memberQuery.UseLiveQuery(SetList.Executed);
+            var useMemberQuery = memberQuery.UseLiveQuery(SetList.ExecutedObservable());
 
             _dbDisposeBag.Add(useMemberQuery.Subscribe(m =>
             {

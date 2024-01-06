@@ -19,7 +19,7 @@
             {
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
                     <MudFabAsyncPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" RxCommandAsyncFactory=@(() => Service.AddList) PrepareExecutionAsync=@AddOrUpdate />
-                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecution=@(async () => await ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearLists) />
+                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearLists) />
                 </MudHidden>
             }
         </CardHeaderActions>
@@ -35,7 +35,7 @@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 <MudContainer Class="ml-n3 mb-8">
                     <MudFabAsyncPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" RxCommandAsyncFactory=@(() => Service.AddList) PrepareExecutionAsync=@AddOrUpdate />
-                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecution=@(async () => await ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearLists) />
+                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearLists) />
                 </MudContainer>
             </MudHidden>
             <MudTable T="ToDoDBList" Items=@(Service.ToDoLists)>
@@ -64,18 +64,18 @@
                 <RowTemplate>
                     <MudTd DataLabel="ToggleItemOpenClose" Style="text-align:center">
                         <MudButtonAsyncPRx Color="Color.Info" StartIcon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
-                                       RxCommandAsyncFactory=@(() => Service.ToggleListItemsOpenClose) Parameter=@context />
+                            RxCommandAsyncFactory=@(() => Service.ToggleListItemsOpenClose) Parameter=@context />
                     </MudTd>
                     <MudTd DataLabel="ToDoList"><MudText>@context.Title</MudText></MudTd>
                     <MudTd DataLabel="Share" Style="text-align:center">
                         <MudIconButtonAsyncPRx Color="Color.Info" Icon=@(Service.IsListShareOpen(context) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share)
-                                               RxCommandAsyncFactory=@(() => Service.ToggleListShareOpenClose) Parameter=@context />
+                            RxCommandAsyncFactory=@(() => Service.ToggleListShareOpenClose) Parameter=@context />
                     </MudTd>
                     <MudTd DataLabel="Edit" Style="text-align:center">
                         <MudIconButtonAsyncPRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit RxCommandAsyncFactory=@(() => Service.UpdateList) Parameter=@context PrepareExecutionAsync=@AddOrUpdate />
                     </MudTd>
                     <MudTd DataLabel="DeleteItem" Style="text-align:center">
-                        <MudIconButtonAsyncPRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete Parameter=@context RxCommandAsyncFactory=@(() => Service.DeleteList) ConfirmExecution=@(async () => await ConfirmDelete(DeleteType.One)) />
+                            <MudIconButtonAsyncPRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete Parameter=@context RxCommandAsyncFactory=@(() => Service.DeleteList) PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.One)) />
                     </MudTd>
                 </RowTemplate>
                 <ChildRowContent>

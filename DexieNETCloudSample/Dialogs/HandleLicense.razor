@@ -16,7 +16,7 @@
         <ChildContent>
             @if (_userLogin.License.Status is not LicenseStatus.OK)
             {
-                <MudMenuItem OnClick=@DeleteAccount OnTouch=@DeleteAccount>Delete account for: @_userLogin.UserId</MudMenuItem>
+                <MudMenuItem OnClick=@ConfirmDeleteUser OnTouch=@ConfirmDeleteUser>Delete account for: @_userLogin.UserId</MudMenuItem>
             }
             @if (_userLogin.License.Status is LicenseStatus.EXPIRED || _userLogin.License.EvalDaysLeft < 7)
             {
@@ -28,30 +28,28 @@
 
 @code {
     [Inject]
-    private DexieCloudService? DBService { get; set; }
+    private AdministrationService? AdministrationService { get; set; }
 
     [Inject]
     private IDialogService? DialogService { get; set; }
 
-    [Inject]
-    private HttpClient? HttpClient { get; set; }
-
-    [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
-
     private UserLogin? _userLogin;
     private IDisposable? _sDisposable;
-    private IEnumerable<string> users = Enumerable.Empty<string>();
+    private readonly License _testLicense = new(LicenseType.EVAL, LicenseStatus.EXPIRED, null, 6);
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(DBService);
+        ArgumentNullException.ThrowIfNull(AdministrationService?.DBService);
 
-        _sDisposable = DBService.Subscribe(c =>
+        _sDisposable = AdministrationService.DBService.Subscribe(c =>
         {
             if (c is DBChangedMessage.UserLogin)
             {
-                _userLogin = DBService.UserLogin;
+                _userLogin = AdministrationService.DBService.UserLogin;
+                if (_userLogin is not null)
+                {
+                    _userLogin = _userLogin with { License = _testLicense };
+                }
                 InvokeAsync(StateHasChanged);
             }
         });
@@ -67,41 +65,17 @@
         base.Dispose(disposing);
     }
 
-    private async Task DeleteAccount()
+    private async Task<bool> ConfirmDeleteUser()
     {
-        ArgumentNullException.ThrowIfNull(HttpClient);
         ArgumentNullException.ThrowIfNull(DialogService);
+        ArgumentNullException.ThrowIfNull(AdministrationService);
+        ArgumentNullException.ThrowIfNull(AdministrationService.DeleteUser);
         ArgumentNullException.ThrowIfNull(_userLogin);
-        ArgumentNullException.ThrowIfNull(DBService?.CloudURL);
 
         var message = $"Are you sure you want to delete your user completely along all stored data for {_userLogin.UserId}? Private data will be deleted. Shared data will not be deleted. This action cannot be undone.";
-        var button = "Delete user";
 
-        var parameters = new DialogParameters
-            { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = false };
-        var dialog = DialogService.Show<ConfirmDialog>($"Delete {_userLogin.UserId}", parameters);
-
-        var res = await dialog.Result;
-
-        if (res.Canceled)
-        {
-            return;
-        }
-
-        using var request = new HttpRequestMessage(HttpMethod.Delete,
-            $"{DBService.CloudURL}/users/{_userLogin.UserId}");
-        request.Headers.Add("Authorization", $"Bearer {_userLogin.AccessToken}");
-
-        using var response = await HttpClient.SendAsync(request);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            await DialogService.ShowMessageBox("Delete user", "User could not be deleted!");
-        }
-        else
-        {
-            await DBService.Logout(true);
-        }
+        return await DialogAsyncRx.Show(DialogService, AdministrationService.DeleteUser, $"Delete {_userLogin.UserId}",
+            message, $"Delete {_userLogin.UserId}", "Cancel", false, "Cancel Delete");
     }
 
     private async Task BuyLicense()

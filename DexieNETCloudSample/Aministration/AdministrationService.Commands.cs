@@ -4,21 +4,24 @@ namespace DexieNETCloudSample.Aministration
 {
     public partial class AdministrationService
     {
-        private class GetUsersCmd(AdministrationService service) : CommandServiceAsync<AdministrationService, CloudKeyData>(service)
+        private class GetUsersCmd(AdministrationService service) : CommandLongRunningServiceAsync<AdministrationService, CloudKeyData>(service)
         {
             protected override async Task DoExecute(CloudKeyData parameter, CancellationToken cancellationToken)
             {
                 await Service.DoGetUsers(parameter, cancellationToken);
             }
+        }
 
-            public override bool CanCancel()
+        private class DeleteUserCmd(AdministrationService service) : CommandLongRunningServiceAsync<AdministrationService>(service)
+        {
+            protected override async Task DoExecute(CancellationToken cancellationToken)
             {
-                return true;
+                await Service.DoDeleteUser(cancellationToken);
             }
 
-            public override bool HasProgress()
+            public override bool CanExecute()
             {
-                return true;
+                return Service.DBService.UserLogin is not null;
             }
         }
     }

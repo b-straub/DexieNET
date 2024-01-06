@@ -6,11 +6,11 @@
 </MudTd>
 <MudTd DataLabel="Role">
     <RxMudBlazorLight.Inputs.Select.MudSelectAsyncPRx Parameter=@Member RxInputGroupAsyncFactory=@(() => Service.MemberRoleSelection)
-                                                      HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
+        HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
 </MudTd>
 <MudTd>
     <MudFabAsyncPRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
-                    StartIcon=@GetMemberActionIcon() Size="Size.Small" ConfirmExecution=@(async () => await ConfirmChangeMember()) RxCommandAsyncFactory=@(() => Service.ChangeMemberState) Parameter=@Member />
+        StartIcon=@GetMemberActionIcon() Size="Size.Small" PrepareExecutionAsync=@DoPrepareChangeMemberState RxCommandAsyncFactory=@(() => Service.ChangeMemberState) Parameter=@Member />
     @if (_isOwnList && _currentMemberAction is not MemberAction.OWNER)
     {
         <MudIcon Class="ml-4" Color=@(_currentMemberState is MemberState.ACCEPTED ? Color.Success : Color.Error) Icon=@GetMemberStateIcon() />
@@ -89,7 +89,7 @@
         };
     }
 
-    private async Task<bool> ConfirmChangeMember()
+    private async Task<bool> DoPrepareChangeMemberState(ICommandAsync<Member> cmd, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(DialogService);
 

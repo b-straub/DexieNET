@@ -20,13 +20,13 @@
         <MudTd DataLabel="Invite"><MudText>@GetInviteText(context)</MudText></MudTd>
         <MudTd DataLabel="Accept" Style="text-align:center">
             <MudIconButtonPRx Color="Color.Success" Icon=@Icons.Material.Outlined.AddCircleOutline
-                                   RxCommandFactory=@(() => Service?.AcceptInvite) Parameter=@context
-                                   ConfirmExecution=@(async () => await ConfirmInvite(true)) />
+                    RxCommandFactory=@(() => Service?.AcceptInvite) Parameter=@context
+                    ConfirmExecution=@(async _ => await ConfirmInvite(true)) />
         </MudTd>
         <MudTd DataLabel="Reject" Style="text-align:center">
             <MudIconButtonPRx Color="Color.Error" Icon=@Icons.Material.Outlined.RemoveCircleOutline
-                              RxCommandFactory=@(() => Service?.RejectInvite) Parameter=@context
-                                   ConfirmExecution=@(async () => await ConfirmInvite(false)) />
+                    RxCommandFactory=@(() => Service?.RejectInvite) Parameter=@context
+                    ConfirmExecution=@(async _ => await ConfirmInvite(false)) />
         </MudTd>
     </RowTemplate>
 </MudTable>

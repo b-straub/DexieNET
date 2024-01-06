@@ -40,9 +40,6 @@
     [Inject]
     private IConfiguration? Configuration { get; set; }
 
-    [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
-
     private UserLogin? _userLogin;
     private IDisposable? _sDisposable;
     private IEnumerable<string> users = Enumerable.Empty<string>();

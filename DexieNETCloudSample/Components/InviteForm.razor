@@ -16,12 +16,12 @@
         <MudTd DataLabel="Invite User"><MudText>@context</MudText></MudTd>
         <MudTd DataLabel="Invite" Style="text-align:center">
             <MudIconButtonAsyncPRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd
-                                   RxCommandAsyncFactory=@(() => Service.InviteUser) Parameter=@context PrepareExecutionAsync=@GetUser ConfirmExecution=@(async () => await ConfirmAdd(context)) />
+                RxCommandAsyncFactory=@(() => Service.InviteUser) Parameter=@context PrepareExecutionAsync=@GetUser />
         </MudTd>
     </RowTemplate>
 </MudTable>
 
-@code {
+    @code {
     [Inject]
     private DexieCloudService? DBService { get; set; }
 
@@ -39,8 +39,10 @@
     private async Task<bool> GetUser(ICommandAsync<string> cmd, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(DBService);
+        ArgumentNullException.ThrowIfNull(DialogService);
 
         var user = cmd.Parameter;
+
         if (user == Service.Users.Last())
         {
             ArgumentNullException.ThrowIfNull(DialogService);
@@ -60,26 +62,23 @@
                 user = data.Email; 
             }
         }
-
-        cmd.SetParameter(user);
-        return true;
-    }
-
-    private async Task<bool> ConfirmAdd(string user)
-    {
-        ArgumentNullException.ThrowIfNull(DialogService);
-
-        var parameters = new DialogParameters
-            { ["Message"] = $"Invite {user}", ["ConfirmButton"] = "Invite", ["SuccessOnConfirm"] = true };
-        var dialog = DialogService.Show<ConfirmDialog>("Invite USER", parameters);
-
-        var res = await dialog.Result;
-
-        if (res.Canceled)
+        else
         {
-            return false;
+            var parameters = new DialogParameters
+                { ["Message"] = $"Invite {user}", ["ConfirmButton"] = "Invite", ["SuccessOnConfirm"] = true };
+            var dialog = DialogService.Show<ConfirmDialog>("Invite USER", parameters);
+
+            var res = await dialog.Result;
+
+            if (res.Canceled)
+            {
+                return false;
+            }
+
+            return true;
         }
 
+        cmd.SetParameter(user);
         return true;
     }
 }
