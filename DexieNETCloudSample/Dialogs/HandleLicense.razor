@@ -35,7 +35,7 @@
 
     private UserLogin? _userLogin;
     private IDisposable? _sDisposable;
-    private readonly License _testLicense = new(LicenseType.EVAL, LicenseStatus.EXPIRED, null, 6);
+    //private readonly License _testLicense = new(LicenseType.EVAL, LicenseStatus.EXPIRED, null, 6);
 
     protected override void OnInitialized()
     {
@@ -46,10 +46,10 @@
             if (c is DBChangedMessage.UserLogin)
             {
                 _userLogin = AdministrationService.DBService.UserLogin;
-                if (_userLogin is not null)
+                /*if (_userLogin is not null)
                 {
                     _userLogin = _userLogin with { License = _testLicense };
-                }
+                }*/
                 InvokeAsync(StateHasChanged);
             }
         });
