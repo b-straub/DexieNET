@@ -22,7 +22,7 @@
 @code {
 
     [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
+    public required MudDialogInstance MudDialog { get; init; }
 
     [Parameter]
     public ToDoItemData? Item { get; set; }
@@ -40,8 +40,6 @@
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         if (Item is not null)
         {
             date = Item.DueDate;
@@ -54,8 +52,6 @@
 
     private void OnValidSubmit(EditContext context)
     {
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         if (Item is not null)
         {
             if (date.HasValue && time.HasValue)

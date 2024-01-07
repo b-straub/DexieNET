@@ -27,18 +27,13 @@
 
 @code {
     [Inject]
-    private DexieCloudService? DBService { get; set; }
+    public required DexieCloudService DBService { get; init; }
 
-    [Parameter]
-    public ToDoDBList? List { get; set; }
-
-    private readonly CompositeDisposable _dbDisposeBag = new();
+    [Parameter, EditorRequired]
+    public required ToDoDBList List { get; init; }
 
     protected override Task OnInitializedAsync()
     {
-        ArgumentNullException.ThrowIfNull(DBService);
-        ArgumentNullException.ThrowIfNull(List);
-
         Service.SetList.Execute(List);
 
         return base.OnInitializedAsync();
@@ -46,23 +41,11 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        ArgumentNullException.ThrowIfNull(List);
-
         if (Service.List != List)
         {
             Service.SetList.Execute(List);
         }
 
         await base.OnParametersSetAsync();
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _dbDisposeBag?.Dispose();
-        }
-
-        base.Dispose(disposing);
     }
 }

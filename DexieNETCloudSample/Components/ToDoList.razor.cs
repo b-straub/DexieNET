@@ -10,7 +10,7 @@ namespace DexieNETCloudSample.Components
     public partial class ToDoList
     {
         [Inject]
-        private IDialogService? DialogService { get; set; }
+        public required IDialogService DialogService { get; init; }
 
         private enum DeleteType
         {
@@ -20,8 +20,6 @@ namespace DexieNETCloudSample.Components
 
         private async Task<bool> AddOrUpdate(ICommandAsync<ToDoDBList> cmd, CancellationToken cancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(DialogService);
-
             var item = cmd.Parameter;
             ToDoListData data = item is null ? new ToDoListData(string.Empty) : new ToDoListData(item.Title);
 
@@ -48,8 +46,6 @@ namespace DexieNETCloudSample.Components
 
         private async Task<bool> ConfirmDelete(DeleteType type)
         {
-            ArgumentNullException.ThrowIfNull(DialogService);
-
             var message = type switch
             {
                 DeleteType.All => "Delete all lists?",

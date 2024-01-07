@@ -1,46 +1,37 @@
 ﻿<MudDialog>
     <DialogContent>
-        @if (Item is not null)
-        {
-            <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
-                <DataAnnotationsValidator />
-                <MudCard>
-                    <MudCardContent>
-                        <MudTextField AutoFocus="true" Immediate="true" Placeholder=@Item.Placeholder Label="EMail" @bind-Value=@Item.Email For=@(() => Item.Email) />
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Submit</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </EditForm>
-        }
+        <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField AutoFocus="true" Immediate="true" InputType=@InputType.Email Placeholder=@Item.Placeholder Label="EMail" @bind-Value=@Item.Email For=@(() => Item.Email) />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Submit</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
     </DialogContent>
 </MudDialog>
 
 @code {
 
     [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
+    public required MudDialogInstance MudDialog { get; init; }
 
-    [Parameter]
-    public EmailData? Item { get; set; }
+    [Parameter, EditorRequired]
+    public required EmailData Item { get; init; }
 
     void Cancel() => MudDialog?.Cancel();
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(Item);
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         MudDialog.Options.CloseButton = true;
         MudDialog.SetOptions(MudDialog.Options);
     }
 
     private void OnValidSubmit(EditContext context)
     {
-        ArgumentNullException.ThrowIfNull(Item);
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         MudDialog.Close(DialogResult.Ok(Item));
     }
 }

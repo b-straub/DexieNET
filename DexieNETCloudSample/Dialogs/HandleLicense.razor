@@ -28,10 +28,10 @@
 
 @code {
     [Inject]
-    private AdministrationService? AdministrationService { get; set; }
+    public required AdministrationService AdministrationService { get; init; }
 
     [Inject]
-    private IDialogService? DialogService { get; set; }
+    public required IDialogService DialogService { get; init; }
 
     private UserLogin? _userLogin;
     private IDisposable? _sDisposable;
@@ -39,7 +39,7 @@
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(AdministrationService?.DBService);
+        ArgumentNullException.ThrowIfNull(AdministrationService.DBService);
 
         _sDisposable = AdministrationService.DBService.Subscribe(c =>
         {
@@ -67,8 +67,6 @@
 
     private async Task<bool> ConfirmDeleteUser()
     {
-        ArgumentNullException.ThrowIfNull(DialogService);
-        ArgumentNullException.ThrowIfNull(AdministrationService);
         ArgumentNullException.ThrowIfNull(AdministrationService.DeleteUser);
         ArgumentNullException.ThrowIfNull(_userLogin);
 
@@ -80,7 +78,6 @@
 
     private async Task BuyLicense()
     {
-        ArgumentNullException.ThrowIfNull(DialogService);
         await DialogService.ShowMessageBox("Buy license", "Implement your buying process here.");
     }
 

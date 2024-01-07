@@ -1,32 +1,29 @@
 ﻿<MudDialog>
     <DialogContent>
-        @if (Item is not null)
-        {
-            <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
-                <DataAnnotationsValidator />
-                <MudCard>
-                    <MudCardContent>
-                        <MudTextField Immediate="true" Placeholder=@Item.PlaceholderClientId Label="ClientId" @bind-Value=@Item.ClientId For=@(() => Item.ClientId) />
-                    </MudCardContent>
-                    <MudCardContent>
-                        <MudTextField Immediate="true" Placeholder=@Item.PlaceholderClientSecret Label="ClientSecret" @bind-Value=@Item.ClientSecret For=@(() => Item.ClientSecret) InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ClientSecretToggle" AdornmentAriaLabel="Show Client Secret" />
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Submit</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </EditForm>
-        }
+        <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Immediate="true" Placeholder=@Item.PlaceholderClientId Label="ClientId" @bind-Value=@Item.ClientId For=@(() => Item.ClientId) />
+                </MudCardContent>
+                <MudCardContent>
+                    <MudTextField Immediate="true" Placeholder=@Item.PlaceholderClientSecret Label="ClientSecret" @bind-Value=@Item.ClientSecret For=@(() => Item.ClientSecret) InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ClientSecretToggle" AdornmentAriaLabel="Show Client Secret" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Submit</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
     </DialogContent>
 </MudDialog>
 
 @code {
 
     [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
+    public required MudDialogInstance MudDialog { get; init; }
 
-    [Parameter]
-    public CloudKeyData? Item { get; set; }
+    [Parameter, EditorRequired]
+    public required CloudKeyData Item { get; init; }
 
     void Cancel() => MudDialog?.Cancel();
 
@@ -36,18 +33,12 @@
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(Item);
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         MudDialog.Options.CloseButton = true;
         MudDialog.SetOptions(MudDialog.Options);
     }
 
     private void OnValidSubmit(EditContext context)
     {
-        ArgumentNullException.ThrowIfNull(Item);
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         MudDialog.Close(DialogResult.Ok(Item));
     }
 

@@ -12,13 +12,13 @@
 
 @code {
     [Inject]
-    IDialogService? DialogService { get; set; }
+    public required IDialogService DialogService { get; init; }
 
     [Inject]
-    DexieCloudService? Service { get; set; }
+    public required DexieCloudService Service { get; init; }
 
     [Inject]
-    private IConfiguration? Configuration { get; set; }
+    public required IConfiguration Configuration { get; init; }
 
     private string _statusIcon = @Icons.Material.Outlined.QuestionMark;
     private string _phaseIcon = @Icons.Material.Outlined.QuestionMark;
@@ -27,9 +27,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
-        ArgumentNullException.ThrowIfNull(Service);
-        ArgumentNullException.ThrowIfNull(DialogService);
 
         _sDisposable = Service
             .Select(async c =>
@@ -76,9 +73,6 @@
 
     private async Task OpenDB()
     {
-        ArgumentNullException.ThrowIfNull(DialogService);
-        ArgumentNullException.ThrowIfNull(Service);
-
         await Service.OpenDB();
         ArgumentNullException.ThrowIfNull(Service.DB);
 

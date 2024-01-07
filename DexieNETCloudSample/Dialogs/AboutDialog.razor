@@ -17,14 +17,13 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+    [CascadingParameter] 
+    public required MudDialogInstance MudDialog { get; init; }
 
     void Submit() => MudDialog?.Close(DialogResult.Ok(true));
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         MudDialog.Options.CloseButton = false;
         MudDialog.SetOptions(MudDialog.Options);
 

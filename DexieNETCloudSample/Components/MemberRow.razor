@@ -19,17 +19,16 @@
 
 @code {
     [Inject]
-    private DexieCloudService? DBService { get; set; }
+    public required DexieCloudService DBService { get; init; }
 
     [Inject]
-    private IDialogService? DialogService { get; set; }
+    public required IDialogService DialogService { get; init; }
 
-    [Parameter]
-    public ToDoDBList? List { get; set; }
+    [Parameter, EditorRequired]
+    public required ToDoDBList List { get; init; }
 
-    [Parameter]
-    [NotNull]
-    public Member? Member { get; set; }
+    [Parameter, EditorRequired]
+    public required Member Member { get; init; }
 
     private MemberAction _currentMemberAction = MemberAction.NONE;
     private MemberState _currentMemberState = MemberState.NONE;
@@ -37,20 +36,18 @@
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(Member);
+        ArgumentNullException.ThrowIfNull(DBService.DB);
 
         _currentMemberAction = Service.GetMemberAction(Member);
         _currentMemberState = ToDoListMemberService.GetMemberState(Member);
-        _isOwnList = List?.Owner == DBService?.DB?.CurrentUserId();
+        _isOwnList = List.Owner == DBService.DB.CurrentUserId();
 
         base.OnInitialized();
     }
 
-    private string MemberName(Member? member)
+    private string MemberName(Member member)
     {
-        ArgumentNullException.ThrowIfNull(DBService?.DB);
-        ArgumentNullException.ThrowIfNull(member);
-
+        ArgumentNullException.ThrowIfNull(DBService.DB);
         var name = member.UserId;
 
         name ??= member.Email;
@@ -91,8 +88,6 @@
 
     private async Task<bool> DoPrepareChangeMemberState(ICommandAsync<Member> cmd, CancellationToken token)
     {
-        ArgumentNullException.ThrowIfNull(DialogService);
-
         var message = _currentMemberAction switch
         {
             MemberAction.DELETE => "Delete Member",

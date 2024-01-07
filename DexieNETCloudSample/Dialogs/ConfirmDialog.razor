@@ -10,10 +10,10 @@
 
 @code {
     [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
+    public required MudDialogInstance MudDialog { get; init; }
 
-    [Parameter]
-    public string? Message { get; set; }
+    [Parameter, EditorRequired]
+    public required string Message { get; init; }
 
     [Parameter]
     public string ConfirmButton { get; set; } = "Delete";
@@ -26,8 +26,6 @@
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(MudDialog);
-
         MudDialog.Options.CloseButton = false;
         MudDialog.SetOptions(MudDialog.Options);
 

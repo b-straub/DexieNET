@@ -23,24 +23,20 @@
 
     @code {
     [Inject]
-    private DexieCloudService? DBService { get; set; }
+    public required DexieCloudService DBService { get; init; }
 
     [Inject]
-    private IDialogService? DialogService { get; set; }
+    public required IDialogService DialogService { get; init; }
 
     private IEnumerable<string> users = Enumerable.Empty<string>();
 
     protected override Task OnInitializedAsync()
     {
-        ArgumentNullException.ThrowIfNull(DBService);
         return base.OnInitializedAsync();
     }
 
     private async Task<bool> GetUser(ICommandAsync<string> cmd, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(DBService);
-        ArgumentNullException.ThrowIfNull(DialogService);
-
         var user = cmd.Parameter;
 
         if (user == Service.Users.Last())

@@ -16,9 +16,6 @@
 </MudTable>
 
 @code {
-    [Inject]
-    private DexieCloudService? DBService { get; set; }
-
-    [Parameter]
-    public ToDoDBList? List { get; set; }
+    [Parameter, EditorRequired]
+    public required ToDoDBList List { get; set; }
 }

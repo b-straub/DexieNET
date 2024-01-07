@@ -1,7 +1,7 @@
 ﻿@using DexieNET
 @inherits RxBLComponent<ToDoListService>
 
-<MudTable Class="mt-2" T="Invite" Items=@(DBService?.Invites)>
+<MudTable Class="mt-2" T="Invite" Items=@(DBService.Invites)>
     <ColGroup>
         <col />
         <col style="width:50px;" />
@@ -33,14 +33,13 @@
 
 @code {
     [Inject]
-    private DexieCloudService? DBService { get; set; }
+    public required DexieCloudService DBService { get; init; }
 
     [Inject]
-    private IDialogService? DialogService { get; set; }
+    public required IDialogService DialogService { get; init; }
 
     protected override Task OnInitializedAsync()
     {
-        ArgumentNullException.ThrowIfNull(DBService);
         return base.OnInitializedAsync();
     }
 
@@ -54,8 +53,6 @@
 
     private async Task<bool> ConfirmInvite(bool accept)
     {
-        ArgumentNullException.ThrowIfNull(DialogService);
-
         var message = accept ? "Accept Invitation" : "Reject Invitation";
         var button = accept ? "Accept" : "Reject";
 
