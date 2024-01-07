@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
-    public sealed partial class ToDoListService(DexieCloudService databaseService) : CrudService<ToDoDBList>(databaseService)
+    public sealed partial class ToDoListService : CrudService<ToDoDBList>
     {
         public IEnumerable<ToDoDBList> ToDoLists => Items;
         public IEnumerable<Invite> Invites { get; private set; } = Enumerable.Empty<Invite>();
@@ -14,16 +14,28 @@ namespace DexieNETCloudSample.Dexie.Services
         public IEnumerable<ListOpenClose> ListOpenClose { get; private set; } = Enumerable.Empty<ListOpenClose>();
 
         // Commands
-        public ICommandAsync<ToDoDBList> AddList => AddItem;
-        public ICommandAsync<ToDoDBList> UpdateList => UpdateItem;
-        public ICommandAsync<ToDoDBList> DeleteList => DeleteItem;
-        public ICommandAsync ClearLists => ClearItems;
-        public ICommandAsync<ToDoDBList> ToggleListItemsOpenClose => new ToggleListItemsOpenCloseCmd(this);
-        public ICommandAsync<ToDoDBList> ToggleListShareOpenClose => new ToggleListShareOpenCloseCmd(this);
-        public ICommand<Invite> AcceptInvite => new AcceptInviteCmd(this);
-        public ICommand<Invite> RejectInvite => new RejectInviteCmd(this);
+        public ICommandAsync<ToDoDBList> AddList { get; }
+        public ICommandAsync<ToDoDBList> UpdateList { get; }
+        public ICommandAsync<ToDoDBList> DeleteList { get; }
+        public ICommandAsync ClearLists { get; }
+        public ICommandAsync<ToDoDBList> ToggleListItemsOpenClose { get; }
+        public ICommandAsync<ToDoDBList> ToggleListShareOpenClose { get; }
+        public ICommand<Invite> AcceptInvite { get; }
+        public ICommand<Invite> RejectInvite { get; }
 
         private ToDoDB? _db;
+
+        public ToDoListService(DexieCloudService databaseService) : base(databaseService)
+        {
+            AddList = AddItem;
+            UpdateList = UpdateItem;
+            DeleteList = DeleteItem;
+            ClearLists = ClearItems;
+            ToggleListItemsOpenClose = new ToggleListItemsOpenCloseCmd(this);
+            ToggleListShareOpenClose = new ToggleListShareOpenCloseCmd(this);
+            AcceptInvite = new AcceptInviteCmd(this);
+            RejectInvite = new RejectInviteCmd(this);
+        }
 
         public static ToDoDBList CreateList(string title, ToDoDBList? list = null)
         {

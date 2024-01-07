@@ -17,8 +17,8 @@ namespace DexieNETCloudSample.Dexie.Services
 
         // Commands
         public ICommandAsync<T> AddItem { get; }
-        public ICommandAsync<T> UpdateItem => new UpdateItemCmd(this);
-        public ICommandAsync<T> DeleteItem => new DeleteItemCmd(this);
+        public ICommandAsync<T> UpdateItem { get; }
+        public ICommandAsync<T> DeleteItem { get; }
         public ICommandAsync ClearItems { get; }
 
         protected CompositeDisposable DBDisposeBag { get; } = [];
@@ -34,6 +34,8 @@ namespace DexieNETCloudSample.Dexie.Services
             Items = Enumerable.Empty<T>();
 
             AddItem = new AddItemCmd(this);
+            UpdateItem = new UpdateItemCmd(this);
+            DeleteItem = new DeleteItemCmd(this);
             ClearItems = new ClearItemsCmd(this);
         }
 
