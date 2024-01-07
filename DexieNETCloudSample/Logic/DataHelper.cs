@@ -24,7 +24,9 @@ namespace DexieNETCloudSample.Logic
     public class EmailData(string? placeholder)
     {
         [Required(AllowEmptyStrings = false)]
-        [DataType(DataType.EmailAddress)]
+        [RegularExpression(@"^[\w\-+.]+@([\w-]+\.)+[\w-]{2,10}(\sas\s[\w\-+.]+@([\w-]+\.)+[\w-]{2,10})?$",
+            ErrorMessage = "Enter a valid eMail address or eMail1 as eMail2!")]
+        // https://github.com/dexie/Dexie.js/blob/81ce60736455470742e6b4c12a9e4f10e73f7c60/addons/dexie-cloud/src/authentication/interactWithUser.ts#L100
         public string Email { get; set; } = string.Empty;
 
         public string Placeholder { get; set; } = placeholder ?? string.Empty;
