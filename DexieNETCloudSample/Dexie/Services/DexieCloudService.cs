@@ -219,9 +219,11 @@ namespace DexieNETCloudSample.Logic
             _dbChangedSubject.OnNext(DBChangedMessage.Cloud);
         }
 
-        public void Login(LoginInformation loginInformation)
+        public async ValueTask Login(LoginInformation loginInformation)
         {
-            DB?.UserLogin(loginInformation);
+            ArgumentNullException.ThrowIfNull(DB);
+
+            await DB.UserLogin(loginInformation);
         }
 
         public IDisposable Subscribe(IObserver<DBChangedMessage> observer)
