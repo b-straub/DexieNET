@@ -32,13 +32,16 @@
 
 @code {
     [Inject]
-    private DexieCloudService? DBService { get; set; }
+    public required DexieCloudService DBService { get; init; }
 
     [Inject]
-    private IDialogService? DialogService { get; set; }
+    public required IDialogService DialogService { get; init; }
 
     [Inject]
-    private IConfiguration? Configuration { get; set; }
+    public required ISnackbar Snackbar { get; init; }
+
+    [Inject]
+    public required IConfiguration Configuration { get; init; }
 
     private UserLogin? _userLogin;
     private IDisposable? _sDisposable;
@@ -46,9 +49,6 @@
 
     protected override void OnInitialized()
     {
-        ArgumentNullException.ThrowIfNull(DBService);
-        ArgumentNullException.ThrowIfNull(Configuration);
-
         users = Configuration.GetUsers();
 
         _sDisposable = DBService.Subscribe(c =>
@@ -63,10 +63,7 @@
 
     private async Task Logout()
     {
-        ArgumentNullException.ThrowIfNull(DBService);
-
         await DBService.Logout();
-        //await DBService.DeleteDB();
     }
 
     protected override void Dispose(bool disposing)
@@ -81,17 +78,15 @@
 
     private async ValueTask Login(string? eMail = null)
     {
-        ArgumentNullException.ThrowIfNull(DBService);
+        string? error = null;
 
         if (eMail is not null)
         {
             LoginInformation li = new(eMail, null, GrantType.DEMO);
-            await DBService.Login(li);
+            error = await DBService.Login(li);
         }
         else
         {
-            ArgumentNullException.ThrowIfNull(DialogService);
-
             EmailData data = new("email@mydomain.com");
 
             var parameters = new DialogParameters { ["Item"] = data };
@@ -102,8 +97,13 @@
             {
                 data = (EmailData)result.Data;
                 LoginInformation li = new(data.Email, null, GrantType.OTP);
-                await DBService.Login(li);
+                error = await DBService.Login(li);
             }
+        }
+
+        if (error is not null)
+        {
+            Snackbar.Add(error, Severity.Error);
         }
     }
 }

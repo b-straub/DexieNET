@@ -25,8 +25,18 @@ export function CurrentUserId(db: DB): string {
     return db.cloud.currentUserId;
 }
 
-export async function UserLogin(db: DB, email: string, grantType: "demo" | "otp" | undefined, userId?: string): Promise<void> {
-    await db.cloud.login({ email: email, userId: userId, grant_type: grantType });
+export async function UserLogin(db: DB, email: string, grantType: "demo" | "otp" | undefined, userId?: string): Promise<string | undefined> {
+
+    let httpError: string | undefined = undefined;
+
+    try {
+        await db.cloud.login({ email: email, userId: userId, grant_type: grantType });
+    }
+    catch (e) {
+        httpError = e.message;
+    }
+
+    return httpError;
 }
 
 export async function Logout(db: DB, force?: boolean | undefined): Promise<void> {

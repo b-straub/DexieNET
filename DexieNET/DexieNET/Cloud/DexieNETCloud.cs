@@ -176,7 +176,7 @@ namespace DexieNET
             return dexie.DBBaseJS.Module.Invoke<string>("CurrentUserId", dexie.DBBaseJS.Reference);
         }
 
-        public static async ValueTask UserLogin(this DBBase dexie, LoginInformation userLogin)
+        public static async ValueTask<string?> UserLogin(this DBBase dexie, LoginInformation userLogin)
         {
             dexie.TestCloudSync();
             var grantType = userLogin.GrantType switch
@@ -186,7 +186,7 @@ namespace DexieNET
                 _ => throw new InvalidOperationException("GrantType: Invalid type!")
             };
 
-            await dexie.DBBaseJS.Module.InvokeVoidAsync("UserLogin", dexie.DBBaseJS.Reference, userLogin.EMail,
+            return await dexie.DBBaseJS.Module.InvokeAsync<string?>("UserLogin", dexie.DBBaseJS.Reference, userLogin.EMail,
                 grantType, userLogin.UserId);
         }
 
