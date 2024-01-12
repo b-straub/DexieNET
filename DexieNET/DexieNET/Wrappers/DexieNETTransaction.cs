@@ -97,7 +97,7 @@ namespace DexieNET
 
         internal void Commit(Func<Transaction, Task> create)
         {
-            if (!_tables.Any())
+            if (_tables.Count == 0)
             {
                 throw new InvalidOperationException("Found empty Transaction.");
             }
@@ -109,7 +109,7 @@ namespace DexieNET
 
         internal async ValueTask CommitAsync(Func<Transaction, Task> create)
         {
-            if (!_tables.Any())
+            if (_tables.Count == 0)
             {
                 throw new InvalidOperationException("Found empty Transaction.");
             }

@@ -174,7 +174,7 @@ namespace DexieNET
                 }
                 else
                 {
-                    if (!db.TransactionCollectStack.Any())
+                    if (db.TransactionCollectStack.Count == 0)
                     {
                         db.TransactionDict.Clear();
                         db.TransactionTasks.Clear();
@@ -193,7 +193,7 @@ namespace DexieNET
 
                         db.CurrentTransaction = db.TransactionCollectStack.Pop();
 
-                        if (db.TransactionCollectStack.Any())
+                        if (db.TransactionCollectStack.Count != 0)
                         {
                             throw new InvalidOperationException("Not all nested transactions have been processed.");
                         }

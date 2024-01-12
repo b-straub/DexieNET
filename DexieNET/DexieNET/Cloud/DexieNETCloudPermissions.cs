@@ -88,7 +88,7 @@ namespace DexieNET
         {
             var tableNameList = tables.Select(t => t.Name).ToList();
 
-            if (!tableNameList.Any())
+            if (tableNameList.Count == 0)
             {
                 tableNameList.Add(_table.Name);
             }

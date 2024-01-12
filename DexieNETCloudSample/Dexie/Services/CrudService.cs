@@ -74,7 +74,6 @@ namespace DexieNETCloudSample.Dexie.Services
             GC.SuppressFinalize(this);
         }
 
-
         protected virtual void Dispose(bool disposing)
         {
             DBDisposeBag.Clear();
@@ -97,7 +96,7 @@ namespace DexieNETCloudSample.Dexie.Services
         {
             ArgumentNullException.ThrowIfNull(DbService.DB);
 
-            if (DBDisposeBag.Any())
+            if (DBDisposeBag.Count != 0)
             {
                 throw new InvalidOperationException("DB not disposed");
             }
