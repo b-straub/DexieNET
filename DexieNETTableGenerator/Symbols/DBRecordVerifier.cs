@@ -157,7 +157,7 @@ namespace DNTGenerator.Verifier
 
                 var indexConverter = GetIndexConverterAttributeName(index.Symbol.Type, compilation);
 
-                if (indexConverter is not null && (index.IndexConverter is null || !indexConverter.StartsWith(index.IndexConverter)))
+                if (indexConverter is not null && index.IsIndex && (index.IndexConverter is null || !indexConverter.StartsWith(index.IndexConverter)))
                 {
                     indexConverter = indexConverter.TrimEnd("Attribute");
                     var diagnostic = new GeneratorDiagnostic(GeneratorDiagnostic.MissingIndexConverter, index.AttributeLocation, index.Name, indexConverter);

@@ -53,6 +53,14 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Include Items not identical.");
             }
 
+            var fieldsDataBoolNoIndex = fieldsData.Where(f => f.BoolNoIndex);
+            var fieldsBoolNoIndex = (await table.ToArray()).Where(f => f.BoolNoIndex);
+
+            if (fieldsDataBoolNoIndex.Count() != fieldsBoolNoIndex.Count())
+            {
+                throw new InvalidOperationException("BoolNoIndex Items not identical.");
+            }
+
             var fieldsDataIncludeME = fieldsData.Where(f => f.IncludeME.Contains(false));
             var fieldsIncludeME = await table.Where(f => f.IncludeME).Equal(false).ToArray();
 

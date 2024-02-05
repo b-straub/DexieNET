@@ -96,6 +96,7 @@ namespace DexieNETTest.TestBase.Test
     public record FieldTest
     (
         [property: BoolIndex] bool Include,
+        bool BoolNoIndex,
         [property: BoolIndex(IsMultiEntry = true)] IEnumerable<bool> IncludeME,
         [property: Index] DateOnly Date,
         [property: Index] TimeOnly Time,
