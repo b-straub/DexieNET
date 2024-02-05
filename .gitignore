@@ -22,3 +22,5 @@ DexieNETCloudSample/Dexie/dexie-cloud.json
 DexieNETCloudSample/Dexie/dexie-cloud.key
 DexieNETCloudSample/wwwroot/dexie-cloud.json
 DexieNETCloudSample/wwwroot/importfile.json
+DexieNET/npm/yarn.lock
+DexieNET/node_modules/.yarn-integrity
