@@ -1,5 +1,4 @@
 ﻿@using DexieNET
-@inherits RxBLComponent<ToDoListMemberService>
 
 <MudTable T="Member" Items=@(Service.Members)>
     <ColGroup>
@@ -16,6 +15,9 @@
 </MudTable>
 
 @code {
+    [CascadingParameter]
+    public required ToDoListMemberService Service { get; init; }
+
     [Parameter, EditorRequired]
     public required ToDoDBList List { get; set; }
 }

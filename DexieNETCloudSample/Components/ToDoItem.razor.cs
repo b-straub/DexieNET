@@ -9,6 +9,12 @@ namespace DexieNETCloudSample.Components
 {
     public partial class ToDoItem
     {
+        [CascadingParameter]
+        public required ToDoItemService Service { get; init; }
+
+        [CascadingParameter]
+        public required ToDoItemService.Scope Scope { get; init; }
+
         [Inject]
         public required IDialogService DialogService { get; init; }
 
@@ -28,19 +34,18 @@ namespace DexieNETCloudSample.Components
         {
             ArgumentNullException.ThrowIfNull(List);
 
-            if (Service.CurrentList != List)
+            if (Service.CurrentList.Value != List)
             {
-                Service.SetCurrentList.Execute(List);
+                Service.CurrentList.Transform(List);
             }
 
             return base.OnParametersSetAsync();
         }
 
-        private async Task<bool> AddOrUpdate(ICommandAsync<ToDoDBItem> cmd, CancellationToken cancellationToken)
+        private async Task AddOrUpdate(IStateTransformer<ToDoDBItem> tf, ToDoDBItem? item)
         {
-            ArgumentNullException.ThrowIfNull(Service.CurrentList);
+            ArgumentNullException.ThrowIfNull(Service.CurrentList.Value);
 
-            var item = cmd.Parameter;
             ToDoItemData data = item is null ? new ToDoItemData(string.Empty, DateTime.Now) : new ToDoItemData(item.Text, item.DueDate);
 
             bool canUpdateText = item is null || Service.CanUpdate(item, i => i.Text);
@@ -55,14 +60,21 @@ namespace DexieNETCloudSample.Components
             {
                 data = (ToDoItemData)result.Data;
                 item = item is null ?
-                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.CurrentList) :
-                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.CurrentList, item);
+                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.CurrentList.Value) :
+                    ToDoItemService.CreateItem(data.Text, data.DueDate, Service.CurrentList.Value, item);
 
-                cmd.SetParameter(item);
-                return true;
+                tf.Transform(item);
             }
+        }
 
-            return false;
+        private async Task DeleteItem(IStateTransformer<ToDoDBItem> tf, ToDoDBItem item)
+        {
+            var confirmed = await ConfirmDelete(DeleteType.One);
+
+            if (confirmed)
+            {
+                tf.Transform(item);
+            }
         }
 
         private async Task<bool> ConfirmDelete(DeleteType type)

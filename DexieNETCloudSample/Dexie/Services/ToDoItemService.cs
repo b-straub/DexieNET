@@ -9,22 +9,25 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoItemService : CrudService<ToDoDBItem>
     {
-        public IEnumerable<ToDoDBItem> ToDoItems => Items;
+        public partial class Scope(ToDoItemService service) : CrudServiceScope(service)
+        {
+            public IServiceStateTransformer<ToDoDBItem> ToggledItemCompleted { get; } = new ToggledItemCompletedSST(service);
+            public IServiceStateProvider DeleteCompletedItems { get; } = new DeleteCompletedItemsSSP(service);
+        }
 
-        public ToDoDBList? CurrentList { get; private set; }
-
-        // Commands
-        public ICommandAsync<ToDoDBItem> ToggledItemCompleted => new ToggledItemCompletedCmd(this);
-        public ICommandAsync DeleteCompletedItems;
-
-        public ICommand<ToDoDBList> SetCurrentList;
+        public IEnumerable<ToDoDBItem> ToDoItems => Items.Value ?? Enumerable.Empty<ToDoDBItem>();
+        public IState<ToDoDBList?> CurrentList { get; }
 
         private ToDoDB? _db;
 
-        public ToDoItemService(DexieCloudService databaseService) : base(databaseService)
+        public ToDoItemService(IServiceProvider serviceProvider) : base(serviceProvider)
         {
-            SetCurrentList = new SetListCmd(this);
-            DeleteCompletedItems = new DeleteCompletedItemsCmd(this);
+            CurrentList = this.CreateState((ToDoDBList?)null);
+        }
+
+        public override IRxBLScope CreateScope()
+        {
+            return new Scope(this);
         }
 
         public static ToDoDBItem CreateItem(string text, DateTime dueDate, ToDoDBList list, ToDoDBItem? item = null)
@@ -40,17 +43,17 @@ namespace DexieNETCloudSample.Dexie.Services
 
         protected override LiveQuery<IEnumerable<ToDoDBItem>> InitializeDB(ToDoDB db)
         {
-            ArgumentNullException.ThrowIfNull(CurrentList?.ID);
+            ArgumentNullException.ThrowIfNull(CurrentList.Value?.ID);
             _db = db;
-            return db.LiveQuery(async () => await GetTable().Where(i => i.ListID).Equal(CurrentList.ID).ToArray());
+            return db.LiveQuery(async () => await GetTable().Where(i => i.ListID).Equal(CurrentList.Value.ID).ToArray());
         }
 
         protected override bool CanAdd()
         {
-            return (Permissions?.CanAdd(CurrentList)).True();
+            return (Permissions?.CanAdd(CurrentList.Value)).True();
         }
 
-        protected override bool CanUpdate(ToDoDBItem? item)
+        protected override bool CanUpdate(ToDoDBItem item)
         {
             return CanUpdate(item, i => i.Text) || CanUpdate(item, i => i.DueDate);
         }

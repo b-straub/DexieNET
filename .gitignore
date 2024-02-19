@@ -17,8 +17,10 @@ GeneratorRunner
 payload.json
 DexieNETHelloWorld
 Nuget
-DexieNET/npm/src/*.js
+DexieNET/yarn/src/*.js
 DexieNETCloudSample/Dexie/dexie-cloud.json
 DexieNETCloudSample/Dexie/dexie-cloud.key
 DexieNETCloudSample/wwwroot/dexie-cloud.json
 DexieNETCloudSample/wwwroot/importfile.json
+DexieNET/yarn/node_modules
+DexieNET/yarn/yarn.lock

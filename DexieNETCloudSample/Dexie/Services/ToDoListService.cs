@@ -8,33 +8,32 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoListService : CrudService<ToDoDBList>
     {
-        public IEnumerable<ToDoDBList> ToDoLists => Items;
-        public IEnumerable<Invite> Invites { get; private set; } = Enumerable.Empty<Invite>();
+        public partial class Scope(ToDoListService service) : CrudServiceScope(service)
+        {
+            public IServiceStateTransformer<ToDoDBList> ToggleListItemsOpenClose { get; } = new ToggleListItemsOpenCloseSST(service);
+            public IServiceStateTransformer<ToDoDBList> ToggleListShareOpenClose { get; } = new ToggleListShareOpenCloseSST(service);
+        }
 
-        public IEnumerable<ListOpenClose> ListOpenClose { get; private set; } = Enumerable.Empty<ListOpenClose>();
+        public IEnumerable<ToDoDBList> ToDoLists => Items.Value ?? Enumerable.Empty<ToDoDBList>();
+        public IEnumerable<Invite> Invites => DbService.Invites.Value ?? Enumerable.Empty<Invite>();
+        public IState<IEnumerable<ListOpenClose>> ListOpenClose { get; }
 
-        // Commands
-        public ICommandAsync<ToDoDBList> AddList { get; }
-        public ICommandAsync<ToDoDBList> UpdateList { get; }
-        public ICommandAsync<ToDoDBList> DeleteList { get; }
-        public ICommandAsync ClearLists { get; }
-        public ICommandAsync<ToDoDBList> ToggleListItemsOpenClose { get; }
-        public ICommandAsync<ToDoDBList> ToggleListShareOpenClose { get; }
-        public ICommand<Invite> AcceptInvite { get; }
-        public ICommand<Invite> RejectInvite { get; }
+        // Transformers
+        public IServiceStateTransformer<Invite> AcceptInvite { get; }
+        public IServiceStateTransformer<Invite> RejectInvite { get; }
 
         private ToDoDB? _db;
 
-        public ToDoListService(DexieCloudService databaseService) : base(databaseService)
+        public ToDoListService(IServiceProvider serviceProvider) : base(serviceProvider)
         {
-            AddList = AddItem;
-            UpdateList = UpdateItem;
-            DeleteList = DeleteItem;
-            ClearLists = ClearItems;
-            ToggleListItemsOpenClose = new ToggleListItemsOpenCloseCmd(this);
-            ToggleListShareOpenClose = new ToggleListShareOpenCloseCmd(this);
-            AcceptInvite = new AcceptInviteCmd(this);
-            RejectInvite = new RejectInviteCmd(this);
+            ListOpenClose = this.CreateState(Enumerable.Empty<ListOpenClose>());
+            AcceptInvite = new AcceptInviteSST(this);
+            RejectInvite = new RejectInviteSST(this);
+        }
+
+        public override IRxBLScope CreateScope()
+        {
+            return new Scope(this);
         }
 
         public static ToDoDBList CreateList(string title, ToDoDBList? list = null)
@@ -44,10 +43,13 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public bool IsListItemsOpen(ToDoDBList? list)
         {
-            if (list is not null && ListOpenClose.Any(l => l.ListID == list.ID) &&
-                 ListOpenClose.Where(l => l.ListID == list.ID).First().IsItemsOpen)
+            if (ListOpenClose.HasValue())
             {
-                return true;
+                if (list is not null && ListOpenClose.Value.Any(l => l.ListID == list.ID) &&
+                     ListOpenClose.Value.Where(l => l.ListID == list.ID).First().IsItemsOpen)
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -55,10 +57,13 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public bool IsListShareOpen(ToDoDBList? list)
         {
-            if (list is not null && ListOpenClose.Any(l => l.ListID == list.ID) &&
-                 ListOpenClose.Where(l => l.ListID == list.ID).First().IsShareOpen)
+            if (ListOpenClose.HasValue())
             {
-                return true;
+                if (list is not null && ListOpenClose.Value.Any(l => l.ListID == list.ID) &&
+                 ListOpenClose.Value.Where(l => l.ListID == list.ID).First().IsShareOpen)
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -77,18 +82,17 @@ namespace DexieNETCloudSample.Dexie.Services
             var listOpenQuery = _db.LiveQuery(GetListOpenCloseDo);
             DBDisposeBag.Add(listOpenQuery.Subscribe(i =>
             {
-                ListOpenClose = i;
-                StateHasChanged();
+                ListOpenClose.Transform(i);
             }));
 
-            if (DbService.Invites is not null)
+            if (DbService is not null)
             {
-                Invites = DbService.Invites;
+                Invites.Transform(DbService.Invites);
             }
 
-            DBDisposeBag.Add(DbService.Subscribe(i =>
+            DBDisposeBag.Add(DbService.Subscribe(() =>
             {
-                if (i is DBChangedMessage.Invites && DbService.Invites is not null)
+                if (DbService.State is DBState.Invites && DbService.Invites is not null)
                 {
                     Invites = DbService.Invites;
                     StateHasChanged();

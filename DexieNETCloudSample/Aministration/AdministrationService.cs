@@ -3,22 +3,28 @@ using RxBlazorLightCore;
 using System.Text.Json;
 using System.Text;
 using DexieNET;
-using MudBlazor;
 
 namespace DexieNETCloudSample.Aministration
 {
-    public sealed partial class AdministrationService(HttpClient httpClient, DexieCloudService dbService) : RxBLServiceBase
+    public sealed partial class AdministrationService : RxBLService
     {
-        public IEnumerable<UserResponse> Users => _users;
-        public DexieCloudService DBService => dbService;
+        public IState<IEnumerable<UserResponse>, List<UserResponse>> Users { get; }
+        public DexieCloudService DBService { get; }
 
         // Commands
-        public ICommandAsync<CloudKeyData> GetUsers => new GetUsersCmd(this);
-        public ICommandAsync DeleteUser => new DeleteUserCmd(this);
+        public IStateTransformer<CloudKeyData> GetUsers => new GetUsersST(this, Users);
+        public IServiceStateProvider DeleteUser => new DeleteUserSSP(this);
 
-        private readonly HttpClient _httpClient = httpClient;
-        private readonly List<UserResponse> _users = [];
-        private async Task DoGetUsers(CloudKeyData data, CancellationToken cancellationToken)
+        private readonly HttpClient _httpClient;
+
+        public AdministrationService(IServiceProvider serviceProvider)
+        {
+            DBService = serviceProvider.GetRequiredService<DexieCloudService>();
+            _httpClient = serviceProvider.GetRequiredService<HttpClient>();
+            Users = this.CreateState<AdministrationService, IEnumerable<UserResponse>, List<UserResponse>>([]);
+        }
+
+        private async Task DoGetUsers(CloudKeyData data, List<UserResponse> users, CancellationToken cancellationToken)
         {
             var body = new AccesssTokenRequest([DBScopes.AccessDB, DBScopes.GlobalRead, DBScopes.GlobalWrite], data.ClientId, data.ClientSecret);
             var bodyJson = JsonSerializer.Serialize(body, AccesssTokenRequestContext.Default.AccesssTokenRequest);
@@ -54,8 +60,8 @@ namespace DexieNETCloudSample.Aministration
 
                     if (usersResponse is not null)
                     {
-                        _users.Clear();
-                        _users.AddRange(usersResponse.Data);
+                        users.Clear();
+                        users.AddRange(usersResponse.Data);
                     }
                 }
             }
@@ -63,11 +69,11 @@ namespace DexieNETCloudSample.Aministration
 
         private async Task DoDeleteUser(CancellationToken cancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(DBService.UserLogin);
+            ArgumentNullException.ThrowIfNull(DBService.UserLogin.Value);
 
             using var request = new HttpRequestMessage(HttpMethod.Delete,
-                $"{DBService.CloudURL}/users/{DBService.UserLogin.UserId}");
-                request.Headers.Add("Authorization", $"Bearer {DBService.UserLogin.AccessToken}");
+                $"{DBService.CloudURL}/users/{DBService.UserLogin.Value.UserId}");
+                request.Headers.Add("Authorization", $"Bearer {DBService.UserLogin.Value.AccessToken}");
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
 

@@ -1,5 +1,4 @@
-﻿@inherits RxBLComponent<ToDoItemService>
-
+﻿
 <MudCard Class="ma-8" Elevation="0" Outlined="true">
     <MudCardHeader>
         <CardHeaderAvatar>
@@ -9,25 +8,25 @@
         </CardHeaderAvatar>
         <CardHeaderContent>
             <MudText Typo="Typo.h6" GutterBottom="true">ToDo</MudText>
-            @if (Service.CommandExceptions.Any())
+            @if (Service.Exceptions.Any())
             {
-                <MudText Class="mt-4" Color="Color.Error">Error: @Service.CommandExceptions.FirstOrDefault()?.Message</MudText>
+                <MudText Class="mt-4" Color="Color.Error">Error: @Service.Exceptions.First().Exception.Message</MudText>
             }
         </CardHeaderContent>
         <CardHeaderActions>
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudFabAsyncPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" RxCommandAsyncFactory=@(() => Service.AddItem) PrepareExecutionAsync=@AddOrUpdate />
-                <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.Completed)) RxCommandAsyncFactory=@(() => Service.DeleteCompletedItems) />
-                <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearItems) />
+                <MudFabPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateTransformer=@Scope.AddItem ValueFactoryAsync=@(st => AddOrUpdate(st, null)) />
+                <MudFabRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.Completed)) StateProvider=@Scope.DeleteCompletedItems />
+                <MudFabRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All)) StateProvider=@Scope.ClearItems />
             </MudHidden>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <MudContainer Class="ml-n3 mb-8">
-                <MudFabAsyncPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" RxCommandAsyncFactory=@(() => Service.AddItem) PrepareExecutionAsync=@AddOrUpdate />
-                <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.Completed)) RxCommandAsyncFactory=@(() => Service.DeleteCompletedItems) />
-                <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.All)) RxCommandAsyncFactory=@(() => Service.ClearItems) />
+                <MudFabPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateTransformer=@Scope.AddItem ValueFactoryAsync=@(st => AddOrUpdate(st, null)) />
+                <MudFabRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.Completed)) StateProvider=@Scope.DeleteCompletedItems />
+                <MudFabRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All)) StateProvider=@Scope.ClearItems />
             </MudContainer>
         </MudHidden>
         <MudTable T="ToDoDBItem" Items=@(Service.ToDoItems) Dense="true">
@@ -59,13 +58,13 @@
                 <MudTd DataLabel="ToDo"><MudText Style=@ColorForItem(context)>@context.Text</MudText></MudTd>
                 <MudTd DataLabel="DueDate"><MudText Style=@ColorForItem(context)>@DateTimeForItem(context)</MudText></MudTd>
                 <MudTd DataLabel="Completed" Style="text-align:center">
-                    <MudIconButtonAsyncPRx Icon=@(context.Completed ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank) Parameter=@context RxCommandAsyncFactory=@(() => Service.ToggledItemCompleted) />
+                        <MudIconButtonPRx Icon=@(context.Completed ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank) Context=@context StateTransformer=@Scope.ToggledItemCompleted ValueFactoryAsync=@(_ => Task.FromResult(context)) />
                 </MudTd>
                 <MudTd DataLabel="Edit" Style="text-align:center">
-                    <MudIconButtonAsyncPRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit RxCommandAsyncFactory=@(() => Service.UpdateItem) Parameter=@context PrepareExecutionAsync=@AddOrUpdate />
+                        <MudIconButtonPRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit Context=@context StateTransformer=@Scope.UpdateItem ValueFactoryAsync=@(st => AddOrUpdate(st, context)) />
                 </MudTd>
                 <MudTd DataLabel="DeleteItem" Style="text-align:center">
-                    <MudIconButtonAsyncPRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete RxCommandAsyncFactory=@(() => Service.DeleteItem) Parameter=@context PrepareExecutionAsync=@((_,_) => ConfirmDelete(DeleteType.One)) />
+                        <MudIconButtonPRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete Context=@context StateTransformer=@Scope.DeleteItem ValueFactoryAsync=@(st => DeleteItem(st, context)) />
                 </MudTd>
             </RowTemplate>
         </MudTable>

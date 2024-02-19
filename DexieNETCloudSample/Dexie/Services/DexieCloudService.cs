@@ -1,7 +1,7 @@
 ﻿using DexieNET;
+using RxBlazorLightCore;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace DexieNETCloudSample.Logic
 {
@@ -78,42 +78,43 @@ namespace DexieNETCloudSample.Logic
         }
     }
 
-    public enum DBChangedMessage
+    public enum DBState
     {
         Closed,
         Opened,
-        Cloud,
-        SyncState,
-        UIInteraction,
-        UserLogin,
-        Roles,
-        Invites
+        Cloud
     }
 
-    public sealed class DexieCloudService : IObservable<DBChangedMessage>
+    public sealed class DexieCloudService : RxBLService
     {
         public ToDoDB? DB { get; private set; }
         public bool IsDBOpen => DB is not null;
 
-        public SyncState? SyncState { get; private set; }
-        public UserLogin? UserLogin { get; private set; }
-        public UIInteraction? UIInteraction { get; private set; }
-        public IEnumerable<Invite>? Invites { get; private set; }
-        public Dictionary<string, Role> Roles { get; private set; } = [];
+        public IState<DBState> State { get; }
+        public IState<SyncState?> SyncState { get; }
+        public IState<UserLogin?> UserLogin { get; }
+        public IState<UIInteraction?> UIInteraction { get; }
+        public IState<IEnumerable<Invite>?> Invites { get; }
+        public IState<Dictionary<string, Role>?> Roles { get; }
 
         public string? CloudURL { get; private set; }
 
         public event Action? OnDelete;
 
         private readonly DexieNETFactory<ToDoDB> _dexieFactory;
-        private readonly BehaviorSubject<DBChangedMessage> _dbChangedSubject = new(DBChangedMessage.Closed);
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
-        private readonly IObservable<DBChangedMessage> _changedObservable;
 
-        public DexieCloudService(IDexieNETService<ToDoDB> dexieService)
+        public DexieCloudService(IServiceProvider serviceProvider)
         {
+            var dexieService = serviceProvider.GetRequiredService<IDexieNETService<ToDoDB>>();
             _dexieFactory = dexieService.DexieNETFactory;
-            _changedObservable = _dbChangedSubject.Publish().RefCount();
+
+            State = this.CreateState(DBState.Closed);
+            SyncState = this.CreateState((SyncState?)null);
+            UserLogin = this.CreateState((UserLogin?)null);
+            UIInteraction = this.CreateState((UIInteraction?)null);
+            Invites = this.CreateState((IEnumerable<Invite>?) null);
+            Roles = this.CreateState((Dictionary<string, Role>?)null);
         }
 
         public async ValueTask OpenDB()
@@ -128,7 +129,7 @@ namespace DexieNETCloudSample.Logic
                 DB.Version(1).Stores();
 
                 ArgumentNullException.ThrowIfNull(DB);
-                _dbChangedSubject.OnNext(DBChangedMessage.Opened);
+                State.Transform(DBState.Opened);
             }
         }
 
@@ -145,16 +146,11 @@ namespace DexieNETCloudSample.Logic
             if (DB is not null)
             {
                 _DBServicesDisposeBag.Clear();
-                SyncState = null;
-                _dbChangedSubject.OnNext(DBChangedMessage.SyncState);
-                UIInteraction = null;
-                _dbChangedSubject.OnNext(DBChangedMessage.UIInteraction);
-                UserLogin = null;
-                _dbChangedSubject.OnNext(DBChangedMessage.UserLogin);
-                Invites = null;
-                _dbChangedSubject.OnNext(DBChangedMessage.Invites);
-                Roles.Clear();
-                _dbChangedSubject.OnNext(DBChangedMessage.Roles);
+                SyncState.Transform(null);
+                UIInteraction.Transform(null);
+                UserLogin.Transform(null);
+                Invites.Transform(null);
+                Roles.Transform(null);
 
                 await DB.Delete();
                 DB = null;
@@ -164,7 +160,7 @@ namespace DexieNETCloudSample.Logic
 #endif
                 await Task.Delay(1000);
 
-                _dbChangedSubject.OnNext(DBChangedMessage.Closed);
+                State.Transform(DBState.Closed);
             }
         }
 
@@ -186,37 +182,32 @@ namespace DexieNETCloudSample.Logic
             // call before configure cloud to have login UI ready when needed
             _DBServicesDisposeBag.Add(DB.UserInteractionObservable().Subscribe(ui =>
             {
-                UIInteraction = ui;
-                _dbChangedSubject.OnNext(DBChangedMessage.UIInteraction);
+                UIInteraction.Transform(ui);
             }));
 
             DB.ConfigureCloud(options);
 
             _DBServicesDisposeBag.Add(DB.SyncStateObservable().Subscribe(ss =>
             {
-                SyncState = ss;
-                _dbChangedSubject.OnNext(DBChangedMessage.SyncState);
+                SyncState.Transform(ss);
             }));
 
             _DBServicesDisposeBag.Add(DB.UserLoginObservable().Subscribe(ul =>
             {
-                UserLogin = ul;
-                _dbChangedSubject.OnNext(DBChangedMessage.UserLogin);
+                UserLogin.Transform(ul);
             }));
 
             _DBServicesDisposeBag.Add(DB.RoleObservable().Subscribe(r =>
             {
-                Roles = r;
-                _dbChangedSubject.OnNext(DBChangedMessage.Roles);
+                Roles.Transform(r);
             }));
 
             _DBServicesDisposeBag.Add(DB.InvitesObservable().Subscribe(i =>
             {
-                Invites = i;
-                _dbChangedSubject.OnNext(DBChangedMessage.Invites);
+                Invites.Transform(i);
             }));
 
-            _dbChangedSubject.OnNext(DBChangedMessage.Cloud);
+            State.Transform(DBState.Cloud);
         }
 
         public async ValueTask<string?> Login(LoginInformation loginInformation)
@@ -224,11 +215,6 @@ namespace DexieNETCloudSample.Logic
             ArgumentNullException.ThrowIfNull(DB);
 
             return await DB.UserLogin(loginInformation);
-        }
-
-        public IDisposable Subscribe(IObserver<DBChangedMessage> observer)
-        {
-            return _changedObservable.Subscribe(observer);
         }
     }
 }

@@ -1,11 +1,10 @@
 ﻿@using DexieNET
-@inherits RxBLComponent<ToDoListMemberService>
 
 <MudTd DataLabel="Member">
     <MudText>@MemberName(Member)</MudText>
 </MudTd>
 <MudTd DataLabel="Role">
-    <RxMudBlazorLight.Inputs.Select.MudSelectAsyncPRx Parameter=@Member RxInputGroupAsyncFactory=@(() => Service.MemberRoleSelection)
+    <MudSelectAsyncPRx Parameter=@Member RxInputGroupAsyncFactory=@(() => Service.MemberRoleSelection)
         HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
 </MudTd>
 <MudTd>
@@ -18,6 +17,9 @@
 </MudTd>
 
 @code {
+    [CascadingParameter]
+    public required ToDoListMemberService Service { get; init; }
+
     [Inject]
     public required DexieCloudService DBService { get; init; }
 

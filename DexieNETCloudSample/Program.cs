@@ -8,24 +8,24 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
 using MudBlazor.Services;
+using RxBlazorLightCore;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
 });
 
 builder.Services.AddDexieNET<ToDoDB>();
-builder.Services.AddSingleton<DexieCloudService>();
-builder.Services.AddScoped<ToDoListService>();
-builder.Services.AddScoped<ToDoItemService>();
-builder.Services.AddScoped<ToDoListMemberService>();
-builder.Services.AddScoped<AdministrationService>();
+builder.Services.AddRxBLService(sp => new DexieCloudService(sp));
+builder.Services.AddRxBLService(sp => new AdministrationService(sp));
+builder.Services.AddRxBLService(sp => new ToDoItemService(sp));
+builder.Services.AddRxBLService(sp => new ToDoListService(sp));
+builder.Services.AddRxBLService(sp => new ToDoListMemberService(sp));
 
-await builder.LoadConfigurationAsync();
+await builder.LoadConfigurationAsync(); // also adds HttpClient
 
 await builder.Build().RunAsync();

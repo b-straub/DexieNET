@@ -9,37 +9,37 @@ using System.Reactive.Linq;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
-    public abstract partial class CrudService<T> : RxBLServiceBase, IDisposable where T : IIDPrimaryIndex, IDBStore, IDBCloudEntity
+    public abstract partial class CrudService<T> : RxBLService, IDisposable where T : IIDPrimaryIndex, IDBStore, IDBCloudEntity
     {
-        public IEnumerable<T> Items { get; private set; }
+        public class CrudServiceScope(CrudService<T> service) : IRxBLScope
+        {
+            public IServiceStateTransformer<T> AddItem { get; } = new AddItemSST(service);
+            public IServiceStateTransformer<T> UpdateItem { get; } = new UpdateItemSST(service);
+            public IServiceStateTransformer<T> DeleteItem { get; } = new DeleteItemSST(service);
+            public IServiceStateProvider ClearItems { get; } = new ClearItemsSSP(service);
+        }
+
+        public IState<IEnumerable<T>> Items { get; }
 
         public bool IsDBOpen => DbService.DB is not null;
 
-        // Commands
-        public ICommandAsync<T> AddItem { get; }
-        public ICommandAsync<T> UpdateItem { get; }
-        public ICommandAsync<T> DeleteItem { get; }
-        public ICommandAsync ClearItems { get; }
-
+        // Transformers
         protected CompositeDisposable DBDisposeBag { get; } = [];
         protected DexieCloudService DbService { get; }
 
         protected IUsePermissions<T>? Permissions { get; private set; }
 
         private IDisposable? _dbDisposable;
+        private readonly IState<Unit> _permissionsChanged;
 
-        public CrudService(DexieCloudService databaseService)
+        public CrudService(IServiceProvider serviceProvider)
         {
-            DbService = databaseService;
-            Items = Enumerable.Empty<T>();
-
-            AddItem = new AddItemCmd(this);
-            UpdateItem = new UpdateItemCmd(this);
-            DeleteItem = new DeleteItemCmd(this);
-            ClearItems = new ClearItemsCmd(this);
+            DbService = serviceProvider.GetRequiredService<DexieCloudService>();
+            Items = this.CreateState(Enumerable.Empty<T>());
+            _permissionsChanged = this.CreateState(Unit.Default);
         }
 
-        public override void OnInitialized()
+        protected override ValueTask ContextReadyAsync()
         {
             if (IsDBOpen)
             {
@@ -48,18 +48,15 @@ namespace DexieNETCloudSample.Dexie.Services
 
             DbService.OnDelete += () => Dispose(false);
 
-            _dbDisposable = DbService
-               .Select(c =>
-               {
-                   switch (c)
-                   {
-                       case DBChangedMessage.Cloud:
-                           InitDB();
-                           break;
-                   };
+            _dbDisposable = DbService.Subscribe(s =>
+            {
+                if (s == (ChangeReason.STATE, DbService.State.ID) && DbService.State.Value is DBState.Cloud)
+                {
+                    InitDB();
+                }
+            });
 
-                   return Unit.Default;
-               }).Subscribe(_ => StateHasChanged());
+            return ValueTask.CompletedTask;
         }
 
 
@@ -108,14 +105,13 @@ namespace DexieNETCloudSample.Dexie.Services
 #if DEBUG
                 Console.WriteLine($"CRUD new items: {l.Aggregate(string.Empty, (p, n) => p += n.ToString())}");
 #endif
-                Items = l;
-                StateHasChanged();
+                Items.Transform(l);
             }));
 
             Permissions = GetTable().CreateUsePermissions();
             DBDisposeBag.Add(Permissions.Subscribe(_ =>
             {
-                StateHasChanged();
+                _permissionsChanged.Transform(Unit.Default);
             }));
         }
         protected virtual Task PostAddAction(string id) { return Task.CompletedTask; }

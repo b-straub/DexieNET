@@ -7,16 +7,14 @@ namespace DexieNETCloudSample.Aministration
 {
     public partial class Administration
     {
+        [CascadingParameter]
+        public required AdministrationService Service { get; init; }
+
         [Inject]
-        private IDialogService? DialogService { get; set; }
+        public required IDialogService DialogService { get; init; }
 
-
-        private readonly string[] _headers = ["UserId", "LastLogin", "LicenseType", "EvalDaysLeft"];
-
-        private async Task<bool> GetCloudKeyData(ICommandAsync<CloudKeyData> cmd, CancellationToken cancellationToken)
+        private async Task GetCloudKeyData(IStateTransformer<CloudKeyData> st)
         {
-            ArgumentNullException.ThrowIfNull(DialogService);
-
             CloudKeyData data = new("clientId", "clientSecret");
 
             var parameters = new DialogParameters { ["Item"] = data };
@@ -25,16 +23,13 @@ namespace DexieNETCloudSample.Aministration
             var result = await dialog.Result;
             if (!result.Canceled)
             {
-                cmd.SetParameter((CloudKeyData)result.Data);
-                return true;
+                st.Transform((CloudKeyData)result.Data);
             }
-
-            return false;
         }
 
         private string GetExceptions()
         {
-            return Service.CommandExceptions.Aggregate("", (p, n) => p + n.Message + ", ").TrimEnd([' ', ',']);
+            return Service.Exceptions.Aggregate("", (p, n) => p + n.Exception.Message + ", ").TrimEnd([' ', ',']);
         }
     }
 }

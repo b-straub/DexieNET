@@ -49,7 +49,7 @@ namespace DexieNETCloudSample.Dexie.Services
         REJECTED,
     }
 
-    public sealed partial class ToDoListMemberService : RxBLServiceBase, IDisposable
+    public sealed partial class ToDoListMemberService : RxBLService
     {
         public bool IsDBOpen => _dbService.DB is not null;
         public ToDoDBList? List { get; private set; }
@@ -59,8 +59,8 @@ namespace DexieNETCloudSample.Dexie.Services
 
         // Commands
         public ICommand<ToDoDBList> SetList;
-        public ICommandAsync<string> InviteUser => new InviteUserCmd(this);
-        public ICommandAsync<Member> ChangeMemberState => new ChangeMemberStateCmd(this);
+        public ICommandAsync<string> InviteUser;
+        public ICommandAsync<Member> ChangeMemberState;
         public IInputGroupAsync<MemberRoleSelection, Member> MemberRoleSelection => new MemberRoleSelectionIPG(this);
 
         private readonly DexieCloudService _dbService;
@@ -71,15 +71,17 @@ namespace DexieNETCloudSample.Dexie.Services
         private IUsePermissions<Member>? _permissionsMember;
         private IUsePermissions<Realm>? _permissionsRealm;
 
-        public ToDoListMemberService(DexieCloudService databaseService, IConfiguration? configuration)
+        public ToDoListMemberService(IServiceProvider serviceProvider)
         {
-            _dbService = databaseService;
-            _configuration = configuration;
+            _dbService = serviceProvider.GetRequiredService<DexieCloudService>();
+            _configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
+            InviteUser = new InviteUserCmd(this);
+            ChangeMemberState = new ChangeMemberStateCmd(this);
             SetList = new SetListCmd(this);
         }
 
-        public override void OnInitialized()
+        protected override ValueTask ContextReadyAsync()
         {
             if (IsDBOpen)
             {
@@ -89,23 +91,21 @@ namespace DexieNETCloudSample.Dexie.Services
             _dbService.OnDelete += () => Dispose(false);
 
             _dbDisposeBag.Add(
-                _dbService
-               .Select(c =>
+                _dbService.Subscribe(() =>
                {
-                   switch (c)
+                   switch (_dbService.State)
                    {
-                       case DBChangedMessage.Cloud:
+                       case DBState.Cloud:
                            InitDB();
                            break;
-                       case DBChangedMessage.UserLogin:
-                       case DBChangedMessage.Invites:
-                       case DBChangedMessage.Roles:
+                       case DBState.UserLogin:
+                       case DBState.Invites:
+                       case DBState.Roles:
                            StateHasChanged();
                            break;
-                   };
+                   }
+               }));
 
-                   return Unit.Default;
-               }).Subscribe());
 
             ArgumentNullException.ThrowIfNull(_dbService.DB);
 
@@ -130,6 +130,8 @@ namespace DexieNETCloudSample.Dexie.Services
 
                 StateHasChanged();
             }));
+
+            return ValueTask.CompletedTask;
         }
 
         public bool CanAddMember()

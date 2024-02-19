@@ -17,12 +17,12 @@ namespace DexieNETCloudSample.Extensions
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
             };
 
-            http.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue
+            /*http.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue
             {
                 NoCache = true
-            };
+            };*/
 
-            builder.Services.AddScoped(sp => http);
+            builder.Services.AddSingleton(sp => http);
 
             try
             {

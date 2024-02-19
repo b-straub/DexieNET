@@ -41,9 +41,9 @@
     {
         ArgumentNullException.ThrowIfNull(AdministrationService.DBService);
 
-        _sDisposable = AdministrationService.DBService.Subscribe(c =>
+        _sDisposable = AdministrationService.DBService.Subscribe(() =>
         {
-            if (c is DBChangedMessage.UserLogin)
+            if (AdministrationService.DBService.State is DBState.UserLogin)
             {
                 _userLogin = AdministrationService.DBService.UserLogin;
                 /*if (_userLogin is not null)

@@ -1,5 +1,5 @@
 ﻿@page "/"
 
-<RxBLService TService=@ToDoListService>
+<RxBLServiceScope TScope=@ToDoListService.Scope TService=@ToDoListService>
     <ToDoList />
-</RxBLService>
+</RxBLServiceScope>

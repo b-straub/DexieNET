@@ -78,12 +78,12 @@ namespace DexieNETCloudSample.Dexie.Services
         public class MemberRoleSelectionIPG(ToDoListMemberService service) : InputGroupPAsync<ToDoListMemberService, MemberRoleSelection, Member>(service, _roleSelections[3])
         {
             private static readonly MemberRoleSelection[] _roleSelections =
-            {
-                new MemberRoleSelection(MemberRole.OWNER),
-                new MemberRoleSelection(MemberRole.ADMIN),
-                new MemberRoleSelection(MemberRole.USER),
-                new MemberRoleSelection(MemberRole.GUEST),
-            };
+            [
+                new(MemberRole.OWNER),
+                new(MemberRole.ADMIN),
+                new(MemberRole.USER),
+                new(MemberRole.GUEST),
+            ];
 
             public override MemberRoleSelection[] GetItems()
             {
@@ -91,7 +91,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 return _roleSelections;
             }
 
-            public override async Task InitializeAsync()
+            public override void InitializeContext()
             {
                 ArgumentNullException.ThrowIfNull(Parameter);
                 var role = Service.GetMemberRole(Parameter);
@@ -109,7 +109,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 }
 
                 ArgumentNullException.ThrowIfNull(initialSelection);
-                await SetInitialValueAsync(initialSelection);
+                SetInitialValue(initialSelection);
             }
 
             protected override async Task OnValueChangingAsync(MemberRoleSelection oldValue, MemberRoleSelection newValue)

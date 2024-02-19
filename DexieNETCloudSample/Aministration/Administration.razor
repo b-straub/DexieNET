@@ -1,43 +1,38 @@
-﻿@inherits RxBLComponent<AdministrationService>
-
-<MudStack>
-    <MudText Typo="Typo.h3" GutterBottom="true">Administration</MudText>
-
-    <MudStack Row=@true AlignItems=@AlignItems.Center>
-        <MudButtonAsyncPRx Color="Color.Primary" Variant="Variant.Filled" RxCommandAsyncFactory=@(() => Service.GetUsers) PrepareExecutionAsync=@GetCloudKeyData CancelText="Cancel Add">
-            Get Users
-        </MudButtonAsyncPRx>
-    </MudStack>
-
-    <MudGrid>
-        @if (Service.CommandExceptions.Any())
-        {
-            <MudItem xs="12">
-                <MudText Typo="Typo.h5" GutterBottom="true">@GetExceptions()</MudText>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick=@(() => Service.ResetCommandExceptions())>Reset Exceptions</MudButton>
-            </MudItem>
-        }
-    </MudGrid>
-
-    <MudSimpleTable Style="overflow-x: auto;">
-        <thead>
-            <tr>
-                @foreach (var h in _headers)
-                {
-                    <th>@h</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Service.Users)
+﻿
+<MudCard Class="mt-16">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Primary">
+                <MudIcon Icon="@Icons.Material.Filled.List" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h3" GutterBottom="true">Administration</MudText>
+            @if (Service.Exceptions.Any())
             {
-                <tr>
-                    <td>@user.UserId</td>
-                    <td>@user.LastLogin</td>
-                    <td>@user.Type</td>
-                    <td>@user.EvalDaysLeft</td>
-                </tr>
+                <MudText Class="mt-4" Color="Color.Error">Error: @Service.Exceptions.FirstOrDefault()?.Message</MudText>
             }
-        </tbody>
-    </MudSimpleTable>
-</MudStack>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudButtonPRx Color="Color.Primary" Variant="Variant.Filled" StateTransformer=@Service.GetUsers ValueFactoryAsync=@GetCloudKeyData CancelText="Cancel Add">
+                Get Users
+            </MudButtonPRx>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTable Items=@Service.Users Hover="true" Breakpoint="Breakpoint.Sm" Loading=@Service.GetUsers.Running() LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>UserId</MudTh>
+                <MudTh>LastLogin</MudTh>
+                <MudTh>LicenseType</MudTh>
+                <MudTh>EvalDaysLeft</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="UserId">@context.UserId</MudTd>
+                <MudTd DataLabel="LastLogin">@context.LastLogin</MudTd>
+                <MudTd DataLabel="LicenseType">@context.Type</MudTd>
+                <MudTd DataLabel="EvalDaysLeft">@context.EvalDaysLeft</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudCardContent>
+</MudCard>

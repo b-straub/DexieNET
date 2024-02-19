@@ -1,16 +1,15 @@
 ﻿@using DexieNET
-@inherits OwningComponentBase
 
-<MudMenu Disabled=@(_userLogin is null)>
+<MudMenu Disabled=@(DBService.UserLogin is null)>
     <ActivatorContent>
         <MudIconButton Icon="@Icons.Material.Outlined.People" Color="Color.Inherit">
             "Sign in or create your account"
         </MudIconButton>
     </ActivatorContent>
     <ChildContent>
-        @if (_userLogin is not null && _userLogin.IsLoggedIn)
+        @if (DBService.UserLogin is not null && DBService.UserLogin.IsLoggedIn)
         {
-            <MudMenuItem OnClick=@Logout OnTouch=@Logout>Sign Out: @_userLogin.UserId</MudMenuItem>
+            <MudMenuItem OnClick=@Logout OnTouch=@Logout>Sign Out: @DBService.UserLogin.UserId</MudMenuItem>
         }
         else
         {
@@ -32,9 +31,6 @@
 
 @code {
     [Inject]
-    public required DexieCloudService DBService { get; init; }
-
-    [Inject]
     public required IDialogService DialogService { get; init; }
 
     [Inject]
@@ -43,37 +39,14 @@
     [Inject]
     public required IConfiguration Configuration { get; init; }
 
-    private UserLogin? _userLogin;
-    private IDisposable? _sDisposable;
+    [CascadingParameter]
+    public required DexieCloudService DBService { get; init; }
+
     private IEnumerable<string> users = Enumerable.Empty<string>();
-
-    protected override void OnInitialized()
-    {
-        users = Configuration.GetUsers();
-
-        _sDisposable = DBService.Subscribe(c =>
-        {
-            if (c is DBChangedMessage.UserLogin)
-            {
-                _userLogin = DBService.UserLogin;
-                InvokeAsync(StateHasChanged);
-            }
-        });
-    }
 
     private async Task Logout()
     {
         await DBService.Logout();
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _sDisposable?.Dispose();
-        }
-
-        base.Dispose(disposing);
     }
 
     private async ValueTask Login(string? eMail = null)
