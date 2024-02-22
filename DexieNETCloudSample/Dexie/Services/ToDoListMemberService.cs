@@ -57,7 +57,9 @@ namespace DexieNETCloudSample.Dexie.Services
         public IEnumerable<Member> Members { get; private set; } = Enumerable.Empty<Member>();
         public IEnumerable<string> Users { get; private set; } = Enumerable.Empty<string>();
 
-        // Commands
+        // Transformers
+        public IServiceStateObserver MemberStateObserver { get; }
+
         public ICommand<ToDoDBList> SetList;
         public ICommandAsync<string> InviteUser;
         public ICommandAsync<Member> ChangeMemberState;
@@ -76,6 +78,7 @@ namespace DexieNETCloudSample.Dexie.Services
             _dbService = serviceProvider.GetRequiredService<DexieCloudService>();
             _configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
+            MemberStateObserver = this.CreateStateObserver();
             InviteUser = new InviteUserCmd(this);
             ChangeMemberState = new ChangeMemberStateCmd(this);
             SetList = new SetListCmd(this);
@@ -87,25 +90,6 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 InitDB();
             }
-
-            _dbService.OnDelete += () => Dispose(false);
-
-            _dbDisposeBag.Add(
-                _dbService.Subscribe(() =>
-               {
-                   switch (_dbService.State)
-                   {
-                       case DBState.Cloud:
-                           InitDB();
-                           break;
-                       case DBState.UserLogin:
-                       case DBState.Invites:
-                       case DBState.Roles:
-                           StateHasChanged();
-                           break;
-                   }
-               }));
-
 
             ArgumentNullException.ThrowIfNull(_dbService.DB);
 
@@ -124,11 +108,11 @@ namespace DexieNETCloudSample.Dexie.Services
 
                 Users = _configuration.GetUsers().Where(u =>
                 {
-                    return u != _dbService.UserLogin?.UserId && !usersInvited.Contains(u);
+                    return u != _dbService.UserLogin.Value?.UserId && !usersInvited.Contains(u);
                 })
                 .Append("by eMail");
 
-                StateHasChanged();
+                MemberStateObserver.Provide();
             }));
 
             return ValueTask.CompletedTask;
@@ -231,7 +215,7 @@ namespace DexieNETCloudSample.Dexie.Services
             var roleName = member.Roles?.FirstOrDefault();
             var memberRole = MemberRole.GUEST;
 
-            if (roleName is not null && _dbService.Roles.TryGetValue(roleName, out var role))
+            if (roleName is not null && _dbService.Roles.HasValue() && _dbService.Roles.Value.TryGetValue(roleName, out var role))
             {
                 if (role.DisplayName is not null)
                 {
@@ -253,7 +237,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             ArgumentNullException.ThrowIfNull(_dbService?.Roles);
 
-            if (_dbService.Roles.TryGetValue(memberRole.ToString().ToLowerInvariant(), out var role))
+            if (_dbService.Roles.HasValue() && _dbService.Roles.Value.TryGetValue(memberRole.ToString().ToLowerInvariant(), out var role))
             {
                 return role.DisplayName;
             }
@@ -277,8 +261,6 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 _dbDisposeBag.Clear();
             }
-
-            _dbService.OnDelete -= () => Dispose(false);
         }
 
         private void InitDB()
@@ -288,17 +270,11 @@ namespace DexieNETCloudSample.Dexie.Services
 
             _permissionsMember = _dbService.DB.Members.CreateUsePermissions();
 
-            _permissionsDisposeBag.Add(_permissionsMember.Subscribe(_ =>
-            {
-                StateHasChanged();
-            }));
+            _permissionsDisposeBag.Add(_permissionsMember.Subscribe(MemberStateObserver));
 
             _permissionsRealm = _dbService.DB.Realms.CreateUsePermissions();
 
-            _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(_ =>
-            {
-                StateHasChanged();
-            }));
+            _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(MemberStateObserver));
         }
 
         private async Task DoInviteUser(string user)
