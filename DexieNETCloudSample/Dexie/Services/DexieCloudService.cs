@@ -99,8 +99,6 @@ namespace DexieNETCloudSample.Logic
 
         public string? CloudURL { get; private set; }
 
-        public event Action? OnDelete;
-
         private readonly DexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
 
@@ -137,31 +135,6 @@ namespace DexieNETCloudSample.Logic
         {
             ArgumentNullException.ThrowIfNull(DB);
             await DB.Logout(force);
-        }
-
-        public async Task DeleteDB()
-        {
-            OnDelete?.Invoke();
-
-            if (DB is not null)
-            {
-                _DBServicesDisposeBag.Clear();
-                SyncState.Transform(null);
-                UIInteraction.Transform(null);
-                UserLogin.Transform(null);
-                Invites.Transform(null);
-                Roles.Transform(null);
-
-                await DB.Delete();
-                DB = null;
-                CloudURL = null;
-#if DEBUG
-                Console.WriteLine("DeleteDB");
-#endif
-                await Task.Delay(1000);
-
-                State.Transform(DBState.Closed);
-            }
         }
 
         public void ConfigureCloud(string cloudURL)
