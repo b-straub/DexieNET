@@ -54,13 +54,13 @@ namespace DexieNETCloudSample.Dexie.Services
         public bool IsDBOpen => _dbService.DB is not null;
         public ToDoDBList? List { get; private set; }
 
-        public IEnumerable<Member> Members { get; private set; } = Enumerable.Empty<Member>();
-        public IEnumerable<string> Users { get; private set; } = Enumerable.Empty<string>();
+        public IEnumerable<Member> Members { get; private set; } = [];
+        public IEnumerable<string> Users { get; private set; } = [];
 
         // Transformers
-        public IServiceStateObserver MemberStateObserver { get; }
+        public IObservableStateProvider MemberStateProvider { get; }
 
-        public ICommand<ToDoDBList> SetList;
+        public IStateTransformer<ToDoDBList> SetList;
         public ICommandAsync<string> InviteUser;
         public ICommandAsync<Member> ChangeMemberState;
         public IInputGroupAsync<MemberRoleSelection, Member> MemberRoleSelection => new MemberRoleSelectionIPG(this);
@@ -78,10 +78,10 @@ namespace DexieNETCloudSample.Dexie.Services
             _dbService = serviceProvider.GetRequiredService<DexieCloudService>();
             _configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
-            MemberStateObserver = this.CreateStateObserver();
+            MemberStateProvider = this.CreateObservableStateProvider();
             InviteUser = new InviteUserCmd(this);
             ChangeMemberState = new ChangeMemberStateCmd(this);
-            SetList = new SetListCmd(this);
+            SetList = new SetListST(this);
         }
 
         protected override ValueTask ContextReadyAsync()
@@ -98,7 +98,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             var useMemberQuery = memberQuery.UseLiveQuery(SetList.ExecutedObservable());
 
-            _dbDisposeBag.Add(useMemberQuery.Subscribe(m =>
+            _dbDisposeBag.Add(useMemberQuery.Select(m =>
             {
                 Members = m;
 
@@ -111,9 +111,8 @@ namespace DexieNETCloudSample.Dexie.Services
                     return u != _dbService.UserLogin.Value?.UserId && !usersInvited.Contains(u);
                 })
                 .Append("by eMail");
-
-                MemberStateObserver.Provide();
-            }));
+                return Unit.Default;
+            }).Subscribe(MemberStateProvider));
 
             return ValueTask.CompletedTask;
         }
@@ -270,11 +269,11 @@ namespace DexieNETCloudSample.Dexie.Services
 
             _permissionsMember = _dbService.DB.Members.CreateUsePermissions();
 
-            _permissionsDisposeBag.Add(_permissionsMember.Subscribe(MemberStateObserver));
+            _permissionsDisposeBag.Add(_permissionsMember.Subscribe(MemberStateProvider));
 
             _permissionsRealm = _dbService.DB.Realms.CreateUsePermissions();
 
-            _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(MemberStateObserver));
+            _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(MemberStateProvider));
         }
 
         private async Task DoInviteUser(string user)

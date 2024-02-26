@@ -2,21 +2,22 @@
 using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
+using System.Reflection.Metadata;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoListMemberService
     {
-        private class SetListCmd(ToDoListMemberService service) : CommandService<ToDoListMemberService, ToDoDBList>(service)
+        private class SetListST(ToDoListMemberService service) : StateTransformer<ToDoListMemberService, ToDoDBList>(service)
         {
-            protected override void DoExecute(ToDoDBList parameter)
+            public override bool CanTransform(ToDoDBList? value)
             {
-                Service.List = parameter;
+                return value is not null && value != Service.List;
             }
 
-            public override bool CanExecute(ToDoDBList? parameter)
+            protected override void TransformState(ToDoDBList value)
             {
-                return parameter is not null && parameter != Service.List;
+                Service.List = value;
             }
         }
 

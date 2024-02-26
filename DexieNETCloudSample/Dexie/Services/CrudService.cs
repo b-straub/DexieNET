@@ -13,10 +13,10 @@ namespace DexieNETCloudSample.Dexie.Services
     {
         public class CrudServiceScope(CrudService<T> service) : IRxBLScope
         {
-            public IServiceStateTransformer<T> AddItem { get; } = new AddItemSST(service);
-            public IServiceStateTransformer<T> UpdateItem { get; } = new UpdateItemSST(service);
-            public IServiceStateTransformer<T> DeleteItem { get; } = new DeleteItemSST(service);
-            public IServiceStateProvider ClearItems { get; } = new ClearItemsSSP(service);
+            public IStateTransformer<T> AddItem { get; } = new AddItemST(service);
+            public IStateTransformer<T> UpdateItem { get; } = new UpdateItemST(service);
+            public IStateTransformer<T> DeleteItem { get; } = new DeleteItemST(service);
+            public IStateProvider ClearItems { get; } = new ClearItemsSP(service);
         }
 
         public IState<IEnumerable<T>> Items { get; }

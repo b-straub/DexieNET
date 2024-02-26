@@ -16,14 +16,14 @@ namespace DexieNETCloudSample.Aministration
             public override bool LongRunning => true;
         }
 
-        private class DeleteUserSSP(AdministrationService service) : ServiceStateProviderAsync<AdministrationService>(service)
+        private class DeleteUserSP(AdministrationService service) : StateProviderAsync<AdministrationService>(service)
         {
             protected override async Task ProvideStateAsync(CancellationToken cancellationToken)
             {
                 await Service.DoDeleteUser(cancellationToken);
             }
 
-            public override bool CanRun => Service.DBService.UserLogin.HasValue();
+            protected override bool CanProvide() => Service.DBService.UserLogin.HasValue();
             public override bool CanCancel => true;
             public override bool LongRunning => true;
         }

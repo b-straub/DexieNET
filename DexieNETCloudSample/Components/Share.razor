@@ -28,15 +28,12 @@
     [CascadingParameter]
     public required ToDoListMemberService Service { get; init; }
 
-    [Inject]
-    public required DexieCloudService DBService { get; init; }
-
     [Parameter, EditorRequired]
     public required ToDoDBList List { get; init; }
 
     protected override Task OnInitializedAsync()
     {
-        Service.SetList.Execute(List);
+        Service.SetList.Transform(List);
 
         return base.OnInitializedAsync();
     }
@@ -45,7 +42,7 @@
     {
         if (Service.List != List)
         {
-            Service.SetList.Execute(List);
+            Service.SetList.Transform(List);
         }
 
         await base.OnParametersSetAsync();

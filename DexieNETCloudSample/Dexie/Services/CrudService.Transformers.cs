@@ -6,7 +6,7 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class CrudService<T>
     {
-        private class AddItemSST(CrudService<T> service) : ServiceStateTransformerAsync<CrudService<T>, T>(service)
+        private class AddItemST(CrudService<T> service) : StateTransformerAsync<CrudService<T>, T>(service)
         {
             protected override async Task TransformStateAsync(T value, CancellationToken cancellationToken)
             {
@@ -30,7 +30,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return (Permissions?.CanAdd()).True();
         }
 
-        private class UpdateItemSST(CrudService<T> service) : ServiceStateTransformerAsync<CrudService<T>, T>(service)
+        private class UpdateItemST(CrudService<T> service) : StateTransformerAsync<CrudService<T>, T>(service)
         {
             protected override async Task TransformStateAsync(T value, CancellationToken cancellationToken)
             {
@@ -50,7 +50,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return true;
         }
 
-        private class DeleteItemSST(CrudService<T> service) : ServiceStateTransformerAsync<CrudService<T>, T>(service)
+        private class DeleteItemST(CrudService<T> service) : StateTransformerAsync<CrudService<T>, T>(service)
         {
             protected override async Task TransformStateAsync(T value, CancellationToken cancellationToken)
             {
@@ -76,7 +76,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return item is not null && (Permissions?.CanDelete(item)).True();
         }
 
-        private class ClearItemsSSP(CrudService<T> service) : ServiceStateProviderAsync<CrudService<T>>(service)
+        private class ClearItemsSP(CrudService<T> service) : StateProviderAsync<CrudService<T>>(service)
         {
             protected override async Task ProvideStateAsync(CancellationToken cancellationToken)
             {

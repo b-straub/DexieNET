@@ -13,7 +13,7 @@ namespace DexieNETCloudSample.Aministration
 
         // Commands
         public IStateTransformer<CloudKeyData> GetUsers => new GetUsersST(this, Users);
-        public IServiceStateProvider DeleteUser => new DeleteUserSSP(this);
+        public IStateProvider DeleteUser => new DeleteUserSP(this);
 
         private readonly HttpClient _httpClient;
 
