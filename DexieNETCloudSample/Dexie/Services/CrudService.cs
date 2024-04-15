@@ -23,14 +23,12 @@ namespace DexieNETCloudSample.Dexie.Services
         protected IUsePermissions<T>? Permissions { get; private set; }
 
         private IDisposable? _dbDisposable;
-        private readonly IState<Unit> _permissionsChanged;
 
         public CrudService(IServiceProvider serviceProvider)
         {
             Items = [];
             DbService = serviceProvider.GetRequiredService<DexieCloudService>();
             DBCMDAsync = this.CreateStateCommandAsync();
-            _permissionsChanged = this.CreateState(Unit.Default);
         }
 
         protected override ValueTask ContextReadyAsync()
@@ -99,9 +97,9 @@ namespace DexieNETCloudSample.Dexie.Services
             }));
 
             Permissions = GetTable().CreateUsePermissions();
-            DBDisposeBag.Add(Permissions.Subscribe(p =>
+            DBDisposeBag.Add(Permissions.Subscribe(_ =>
             {
-                _permissionsChanged.Value = p;
+                StateHasChanged();
             }));
         }
 

@@ -127,7 +127,7 @@ namespace DexieNETCloudSample.Logic
                 DB.Version(1).Stores();
 
                 ArgumentNullException.ThrowIfNull(DB);
-                State.Transform(DBState.Opened);
+                State.Value = DBState.Opened;
             }
         }
 
@@ -155,32 +155,32 @@ namespace DexieNETCloudSample.Logic
             // call before configure cloud to have login UI ready when needed
             _DBServicesDisposeBag.Add(DB.UserInteractionObservable().Subscribe(ui =>
             {
-                UIInteraction.Transform(ui);
+                UIInteraction.Value = ui;
             }));
 
             DB.ConfigureCloud(options);
 
             _DBServicesDisposeBag.Add(DB.SyncStateObservable().Subscribe(ss =>
             {
-                SyncState.Transform(ss);
+                SyncState.Value = ss;
             }));
 
             _DBServicesDisposeBag.Add(DB.UserLoginObservable().Subscribe(ul =>
             {
-                UserLogin.Transform(ul);
+                UserLogin.Value = ul;
             }));
 
             _DBServicesDisposeBag.Add(DB.RoleObservable().Subscribe(r =>
             {
-                Roles.Transform(r);
+                Roles.Value = r;
             }));
 
             _DBServicesDisposeBag.Add(DB.InvitesObservable().Subscribe(i =>
             {
-                Invites.Transform(i);
+                Invites.Value = i;
             }));
 
-            State.Transform(DBState.Cloud);
+            State.Value = DBState.Cloud;
         }
 
         public async ValueTask<string?> Login(LoginInformation loginInformation)
