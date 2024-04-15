@@ -9,7 +9,7 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoItemService : CrudService<ToDoDBItem>
     {
-        public partial class Scope(ToDoItemService service) : CrudServiceScope(service)
+        public partial class Scope(ToDoItemService service) : CrudItemScope(service)
         {
             public IServiceStateTransformer<ToDoDBItem> ToggledItemCompleted { get; } = new ToggledItemCompletedSST(service);
             public IServiceStateProvider DeleteCompletedItems { get; } = new DeleteCompletedItemsSSP(service);

@@ -8,7 +8,7 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoListService : CrudService<ToDoDBList>
     {
-        public partial class Scope(ToDoListService service) : CrudServiceScope(service)
+        public partial class Scope(ToDoListService service) : CrudItemScope(service)
         {
             public IServiceStateTransformer<ToDoDBList> ToggleListItemsOpenClose { get; } = new ToggleListItemsOpenCloseSST(service);
             public IServiceStateTransformer<ToDoDBList> ToggleListShareOpenClose { get; } = new ToggleListShareOpenCloseSST(service);

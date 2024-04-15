@@ -11,15 +11,8 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public abstract partial class CrudService<T> : RxBLService, IDisposable where T : IIDPrimaryIndex, IDBStore, IDBCloudEntity
     {
-        public class CrudServiceScope(CrudService<T> service) : IRxBLScope
-        {
-            public IStateTransformer<T> AddItem { get; } = new AddItemST(service);
-            public IStateTransformer<T> UpdateItem { get; } = new UpdateItemST(service);
-            public IStateTransformer<T> DeleteItem { get; } = new DeleteItemST(service);
-            public IStateProvider ClearItems { get; } = new ClearItemsSP(service);
-        }
-
-        public IState<IEnumerable<T>> Items { get; }
+        public IEnumerable<T> Items { get; private set; }
+        public IStateCommandAsync DBCMDAsync { get; }
 
         public bool IsDBOpen => DbService.DB is not null;
 
@@ -34,8 +27,9 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public CrudService(IServiceProvider serviceProvider)
         {
+            Items = [];
             DbService = serviceProvider.GetRequiredService<DexieCloudService>();
-            Items = this.CreateState(Enumerable.Empty<T>());
+            DBCMDAsync = this.CreateStateCommandAsync();
             _permissionsChanged = this.CreateState(Unit.Default);
         }
 
@@ -46,11 +40,9 @@ namespace DexieNETCloudSample.Dexie.Services
                 InitDB();
             }
 
-            DbService.OnDelete += () => Dispose(false);
-
             _dbDisposable = DbService.Subscribe(s =>
             {
-                if (s == (ChangeReason.STATE, DbService.State.ID) && DbService.State.Value is DBState.Cloud)
+                if (s.StateID == DbService.State.ID && DbService.State.Value is DBState.Cloud)
                 {
                     InitDB();
                 }
@@ -81,8 +73,6 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 _dbDisposable?.Dispose();
             }
-
-            DbService.OnDelete -= () => Dispose(false);
         }
 
         protected abstract Table<T, string> GetTable();
@@ -105,15 +95,16 @@ namespace DexieNETCloudSample.Dexie.Services
 #if DEBUG
                 Console.WriteLine($"CRUD new items: {l.Aggregate(string.Empty, (p, n) => p += n.ToString())}");
 #endif
-                Items.Transform(l);
+                Items = l;
             }));
 
             Permissions = GetTable().CreateUsePermissions();
-            DBDisposeBag.Add(Permissions.Subscribe(_ =>
+            DBDisposeBag.Add(Permissions.Subscribe(p =>
             {
-                _permissionsChanged.Transform(Unit.Default);
+                _permissionsChanged.Value = p;
             }));
         }
+
         protected virtual Task PostAddAction(string id) { return Task.CompletedTask; }
         protected virtual Task PreDeleteAction(string id) { return Task.CompletedTask; }
         protected virtual Task PostDeleteAction(string id) { return Task.CompletedTask; }
