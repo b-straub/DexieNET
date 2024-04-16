@@ -26,12 +26,12 @@
     {
         await base.OnInitializedAsync();
 
-        _sDisposable = Service.Subscribe(async () =>
+        _sDisposable = Service.Subscribe(async cr =>
             {
-                switch ((ChangeReason Reason, Guid ID))
+                switch (cr.ID)
                 {
-                    case (ChangeReason.STATE, Service.UIInteraction.ID):
-                        if (Service.DB is not null && Service.UIInteraction.HasValue)
+                    case var value when value == Service.UIInteraction.ID:
+                        if (Service.DB is not null && Service.UIInteraction.HasValue())
                         {
                             bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction.Value, DialogService);
                             if (Service.UIInteraction.Value.Type is UIInteraction.InteractionType.LOGOUT_CONFIRMATION && res)
@@ -40,7 +40,7 @@
                             }
                         }
                         break;
-                    case (ChangeReason.STATE, Service.State.ID):
+                    case var value when value == Service.State.ID:
                         if (Service.State.Value is DBState.Closed)
                         {
                             await OpenDB();
@@ -70,7 +70,7 @@
 
     private string GetPhaseIcon(IState<SyncState> state)
     {
-        if (!state.HasValue)
+        if (!state.HasValue())
         {
             return Icons.Material.Outlined.QuestionMark;
         }
@@ -90,7 +90,7 @@
 
     private string GetStatusIcon(IState<SyncState> state)
     {
-        if (!state.HasValue)
+        if (!state.HasValue())
         {
             return Icons.Material.Filled.QuestionMark;
         }

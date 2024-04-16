@@ -3,7 +3,6 @@ using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 using System.Linq.Expressions;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 

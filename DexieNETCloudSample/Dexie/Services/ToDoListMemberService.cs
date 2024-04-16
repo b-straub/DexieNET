@@ -59,11 +59,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         // Transformers
         public IObservableStateProvider MemberStateProvider { get; }
-
-        public IStateTransformer<ToDoDBList> SetList;
-        public ICommandAsync<string> InviteUser;
-        public ICommandAsync<Member> ChangeMemberState;
-        public IInputGroupAsync<MemberRoleSelection, Member> MemberRoleSelection => new MemberRoleSelectionIPG(this);
+        public IStateGroupAsync<MemberRoleSelection> MemberRoleSelection;
 
         private readonly DexieCloudService _dbService;
         private ITable? _membersTable;
@@ -78,10 +74,10 @@ namespace DexieNETCloudSample.Dexie.Services
             _dbService = serviceProvider.GetRequiredService<DexieCloudService>();
             _configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
+            MemberRoleSelection = this.CreateStateGroupAsync(_roleSelections, )
             MemberStateProvider = this.CreateObservableStateProvider();
-            InviteUser = new InviteUserCmd(this);
-            ChangeMemberState = new ChangeMemberStateCmd(this);
-            SetList = new SetListST(this);
+            InviteUser = new InviteUserST(this);
+            ChangeMemberState = new ChangeMemberStateST(this);
         }
 
         protected override ValueTask ContextReadyAsync()
@@ -96,7 +92,7 @@ namespace DexieNETCloudSample.Dexie.Services
             var memberQuery = _dbService.DB.LiveQuery(async () =>
                 await _dbService.DB.Members.Where(m => m.RealmId).Equal(List?.RealmId).ToArray());
 
-            var useMemberQuery = memberQuery.UseLiveQuery(SetList.ExecutedObservable());
+            var useMemberQuery = memberQuery.UseLiveQuery(this.CreateStatePhaseObservable(SetList));
 
             _dbDisposeBag.Add(useMemberQuery.Select(m =>
             {

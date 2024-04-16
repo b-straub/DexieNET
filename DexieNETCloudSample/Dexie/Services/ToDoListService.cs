@@ -8,32 +8,15 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoListService : CrudService<ToDoDBList>
     {
-        public partial class Scope(ToDoListService service) : CrudItemScope(service)
-        {
-            public IServiceStateTransformer<ToDoDBList> ToggleListItemsOpenClose { get; } = new ToggleListItemsOpenCloseSST(service);
-            public IServiceStateTransformer<ToDoDBList> ToggleListShareOpenClose { get; } = new ToggleListShareOpenCloseSST(service);
-        }
-
-        public IEnumerable<ToDoDBList> ToDoLists => Items.Value ?? Enumerable.Empty<ToDoDBList>();
-        public IEnumerable<Invite> Invites => DbService.Invites.Value ?? Enumerable.Empty<Invite>();
+        public IEnumerable<ToDoDBList> ToDoLists => Items ?? [];
+        public IEnumerable<Invite> Invites => DbService.Invites.Value ?? [];
         public IState<IEnumerable<ListOpenClose>> ListOpenClose { get; }
-
-        // Transformers
-        public IServiceStateTransformer<Invite> AcceptInvite { get; }
-        public IServiceStateTransformer<Invite> RejectInvite { get; }
 
         private ToDoDB? _db;
 
         public ToDoListService(IServiceProvider serviceProvider) : base(serviceProvider)
         {
             ListOpenClose = this.CreateState(Enumerable.Empty<ListOpenClose>());
-            AcceptInvite = new AcceptInviteSST(this);
-            RejectInvite = new RejectInviteSST(this);
-        }
-
-        public override IRxBLScope CreateScope()
-        {
-            return new Scope(this);
         }
 
         public static ToDoDBList CreateList(string title, ToDoDBList? list = null)
@@ -82,19 +65,13 @@ namespace DexieNETCloudSample.Dexie.Services
             var listOpenQuery = _db.LiveQuery(GetListOpenCloseDo);
             DBDisposeBag.Add(listOpenQuery.Subscribe(i =>
             {
-                ListOpenClose.Transform(i);
+                ListOpenClose.Value = i;
             }));
 
-            if (DbService is not null)
+            DBDisposeBag.Add(DbService.Subscribe(cr =>
             {
-                Invites.Transform(DbService.Invites);
-            }
-
-            DBDisposeBag.Add(DbService.Subscribe(() =>
-            {
-                if (DbService.State is DBState.Invites && DbService.Invites is not null)
+                if (cr.ID == DbService.Invites.ID)
                 {
-                    Invites = DbService.Invites;
                     StateHasChanged();
                 }
             }));

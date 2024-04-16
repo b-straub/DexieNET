@@ -9,13 +9,7 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoItemService : CrudService<ToDoDBItem>
     {
-        public partial class Scope(ToDoItemService service) : CrudItemScope(service)
-        {
-            public IServiceStateTransformer<ToDoDBItem> ToggledItemCompleted { get; } = new ToggledItemCompletedSST(service);
-            public IServiceStateProvider DeleteCompletedItems { get; } = new DeleteCompletedItemsSSP(service);
-        }
-
-        public IEnumerable<ToDoDBItem> ToDoItems => Items.Value ?? Enumerable.Empty<ToDoDBItem>();
+        public IEnumerable<ToDoDBItem> ToDoItems => Items ?? [];
         public IState<ToDoDBList?> CurrentList { get; }
 
         private ToDoDB? _db;
@@ -23,11 +17,6 @@ namespace DexieNETCloudSample.Dexie.Services
         public ToDoItemService(IServiceProvider serviceProvider) : base(serviceProvider)
         {
             CurrentList = this.CreateState((ToDoDBList?)null);
-        }
-
-        public override IRxBLScope CreateScope()
-        {
-            return new Scope(this);
         }
 
         public static ToDoDBItem CreateItem(string text, DateTime dueDate, ToDoDBList list, ToDoDBItem? item = null)
@@ -53,7 +42,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return (Permissions?.CanAdd(CurrentList.Value)).True();
         }
 
-        protected override bool CanUpdate(ToDoDBItem item)
+        protected override bool CanUpdate(ToDoDBItem? item)
         {
             return CanUpdate(item, i => i.Text) || CanUpdate(item, i => i.DueDate);
         }
