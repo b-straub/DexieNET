@@ -34,6 +34,13 @@ namespace DexieNETCloudSample.Dexie.Services
             await _db.ToDoDBItems.BulkDelete(itemsToDelete);
         };
 
+        public Func<bool> CanDeleteCompletedItems => () =>
+        {
+            var item = Items.Where(i => i.Completed).FirstOrDefault();
+            return CanDelete(item);
+        };
+
+
         public Func<bool> CanProvide() => () =>
         {
             if (Items is not null)

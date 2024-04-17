@@ -15,7 +15,7 @@
         <MudTd DataLabel="Invite User"><MudText>@context</MudText></MudTd>
         <MudTd DataLabel="Invite" Style="text-align:center">
             <MudIconButtonAsyncPRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd
-                RxCommandAsyncFactory=@(() => Service.InviteUser) Parameter=@context PrepareExecutionAsync=@GetUser />
+                RxCommandAsyncFactory=@(() => Service.AddMember) Parameter=@context PrepareExecutionAsync=@GetUser />
         </MudTd>
     </RowTemplate>
 </MudTable>

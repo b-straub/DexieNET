@@ -1,0 +1,34 @@
+﻿@inherits RxBLServiceSubscriber<ToDoItemService>
+
+@if (AddMode)
+{
+    <MudFabAsyncRx StateCommand=@Service.DBCMDAsync CanChangeCallback=@Service.CanAdd Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" ExecuteAsyncCallback=@ShowAddUpdateDialog />
+}
+else
+{
+    <MudIconButtonAsyncRx StateCommand=@Service.DBCMDAsync CanChangeCallback=@(() => Service.CanUpdate(Item)) Color="Color.Info" Icon=@Icons.Material.Filled.Edit ExecuteAsyncCallback=@ShowAddUpdateDialog />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required bool AddMode { get; init; }
+
+    [Parameter, EditorRequired]
+    public required ToDoDBItem? Item { get; init; }
+
+    [Inject]
+    public required IDialogService DialogService { get; init; }
+
+    private async Task ShowAddUpdateDialog(IStateCommandAsync _)
+    {
+        var parameters = new DialogParameters { ["Item"] = Item };
+        var dialog = DialogService.Show<AddToDoItem>(AddMode ? "Add ToDo" : "Edit ToDo", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var scope = (ToDoItemService.ToDoItemItemInput)result.Data;
+            await scope.SubmitAsync();
+        }
+    }
+}

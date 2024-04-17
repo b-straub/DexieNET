@@ -54,11 +54,12 @@ namespace DexieNETCloudSample.Dexie.Services
         public bool IsDBOpen => _dbService.DB is not null;
         public ToDoDBList? List { get; private set; }
 
+        public IStateCommandAsync MemberCMDAsync { get; }
+
         public IEnumerable<Member> Members { get; private set; } = [];
         public IEnumerable<string> Users { get; private set; } = [];
 
         // Transformers
-        public IObservableStateProvider MemberStateProvider { get; }
         public IStateGroupAsync<MemberRoleSelection> MemberRoleSelection;
 
         private readonly DexieCloudService _dbService;
@@ -74,10 +75,8 @@ namespace DexieNETCloudSample.Dexie.Services
             _dbService = serviceProvider.GetRequiredService<DexieCloudService>();
             _configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
-            MemberRoleSelection = this.CreateStateGroupAsync(_roleSelections, )
-            MemberStateProvider = this.CreateObservableStateProvider();
-            InviteUser = new InviteUserST(this);
-            ChangeMemberState = new ChangeMemberStateST(this);
+            MemberCMDAsync = this.CreateStateCommandAsync();
+            MemberRoleSelection = this.CreateStateGroupAsync(_roleSelections);
         }
 
         protected override ValueTask ContextReadyAsync()
@@ -113,7 +112,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return ValueTask.CompletedTask;
         }
 
-        public bool CanAddMember()
+        public bool DoCanAddMember()
         {
             return Users.Any() && _membersTable is not null &&
                 (_permissionsMember?.CanAdd(List, _membersTable)).True();
@@ -272,7 +271,7 @@ namespace DexieNETCloudSample.Dexie.Services
             _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(MemberStateProvider));
         }
 
-        private async Task DoInviteUser(string user)
+        private async Task DoAddMember(string user)
         {
             ArgumentNullException.ThrowIfNull(List);
 

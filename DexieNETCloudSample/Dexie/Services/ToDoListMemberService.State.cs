@@ -2,82 +2,72 @@
 using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
-using System.Data.Common;
 using System.Reflection.Metadata;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoListMemberService
     {
+        public Action SetList(ToDoDBList list) => () =>
+        {
+            List = list;
+        };
 
         public Func<bool> CanSetList(ToDoDBList? list) => () =>
         {
             return list is not null && list != List;
         };
 
-        public Action SetList(ToDoDBList list) => () =>
+        public Func<IStateCommandAsync, Task> AddMember(string user) => async _ =>
         {
-            List = list;
+            await DoAddMember(user);
         };
 
-        private class InviteUserST(ToDoListMemberService service) : StateTransformerAsync<ToDoListMemberService, string>(service)
+        public Func<bool> CanAddMember() => () =>
         {
-            protected override async Task TransformStateAsync(string value, CancellationToken cancellationToken)
-            {
-                await Service.DoInviteUser(value);
-            }
+            return DoCanAddMember();
 
-            public override bool CanTransform(string? value)
-            {
-                return Service.CanAddMember();
-            }
+        };
 
-           
-        }
-
-        private class ChangeMemberStateST(ToDoListMemberService service) : StateTransformerAsync<ToDoListMemberService, Member>(service)
+        public Func<IStateCommandAsync, Task> ChangeMemberState(Member member) => async _ =>
         {
-            protected override async Task TransformStateAsync(Member value, CancellationToken cancellationToken)
+            ArgumentNullException.ThrowIfNull(List);
+
+            var memberAction = GetMemberAction(member);
+
+            if (memberAction is MemberAction.DELETE)
             {
-                ArgumentNullException.ThrowIfNull(Service.List);
+                await UnShareWith(List, member);
+            }
+            else if (memberAction is MemberAction.LEAVE)
+            {
+                await Leave(List);
+            }
+            else if (memberAction is MemberAction.ACCEPT)
+            {
+                ArgumentNullException.ThrowIfNull(_dbService.DB);
+                await _dbService.DB.AcceptInvite(member);
+            }
+        };
 
-                var memberAction = Service.GetMemberAction(value);
-
-                if (memberAction is MemberAction.DELETE)
-                {
-                    await Service.UnShareWith(Service.List, value);
-                }
-                else if (memberAction is MemberAction.LEAVE)
-                {
-                    await Service.Leave(Service.List);
-                }
-                else if (memberAction is MemberAction.ACCEPT)
-                {
-                    ArgumentNullException.ThrowIfNull(Service._dbService.DB);
-                    await Service._dbService.DB.AcceptInvite(value);
-                }
+        public Func<bool> CanChangeMemberState(Member? member) => () =>
+        {
+            if (member is null)
+            {
+                return false;
             }
 
-            public override bool CanTransform(Member? value)
+            var memberAction = GetMemberAction(member);
+
+            return memberAction switch
             {
-                if (value is null)
-                {
-                    return false;
-                }
+                MemberAction.DELETE => (_permissionsMember?.CanDelete(member)).True(),
+                MemberAction.LEAVE => true,
+                MemberAction.ACCEPT => (_permissionsMember?.CanUpdate(member, m => m.Accepted)).True(),
+                _ => false
+            };
+        };
 
-                var memberAction = Service.GetMemberAction(value);
-
-                return memberAction switch
-                {
-                    MemberAction.DELETE => (Service._permissionsMember?.CanDelete(value)).True(),
-                    MemberAction.LEAVE => true,
-                    MemberAction.ACCEPT => (Service._permissionsMember?.CanUpdate(value, m => m.Accepted)).True(),
-                    _ => false
-                };
-            }
-        }
-
-     
         private static readonly MemberRoleSelection[] _roleSelections =
         [
             new(MemberRole.OWNER),
@@ -86,16 +76,16 @@ namespace DexieNETCloudSample.Dexie.Services
             new(MemberRole.GUEST),
         ];
 
-        private MemberRoleSelection GetInitialMemberRole()
+        public MemberRoleSelection GetInitialMemberRole(Member? member)
         {
-            ArgumentNullException.ThrowIfNull(Parameter);
-            var role = GetMemberRole(Parameter);
+            ArgumentNullException.ThrowIfNull(member);
+            var role = GetMemberRole(member);
 
             MemberRoleSelection? initialSelection = null;
 
             foreach (var roleSelection in _roleSelections)
             {
-                var displayName = Service.GetRoleDisplayName(roleSelection.Role);
+                var displayName = GetRoleDisplayName(roleSelection.Role);
                 roleSelection.RoleName = displayName;
                 if (roleSelection.Role == role)
                 {
@@ -107,22 +97,20 @@ namespace DexieNETCloudSample.Dexie.Services
             return initialSelection;
         }
 
-            protected override async Task OnValueChangingAsync(MemberRoleSelection oldValue, MemberRoleSelection newValue)
-            {
-                ArgumentNullException.ThrowIfNull(Parameter);
-                await Service.ChangeAccess((Parameter, oldValue.Role, newValue.Role));
-            }
+        public async Task MemberRoleChangingAsync(Member member, MemberRoleSelection oldValue, MemberRoleSelection newValue)
+        {
+            await ChangeAccess((member, oldValue.Role, newValue.Role));
+        }
 
-            public override bool CanChange()
-            {
-                return Parameter is not null && Service.CanUpdateRole(Parameter);
-            }
+        public Func<bool> CanChangeMemberRole(Member member) => () =>
+        {
+            return CanUpdateRole(member);
+        };
 
-            public override bool IsItemDisabled(int index)
-            {
-                var role = _roleSelections[index].Role;
-                return !Service.CanChangeToRole(Parameter, role);
-            }
+        public bool IsMemberRoleDisabled(Member member, int index)
+        {
+            var role = _roleSelections[index].Role;
+            return !CanChangeToRole(member, role);
         }
     }
 }

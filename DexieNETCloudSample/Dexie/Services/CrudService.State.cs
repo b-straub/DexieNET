@@ -22,7 +22,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public Func<bool> CanAddItem => () => CanAdd();
 
-        protected virtual bool CanAdd()
+        public virtual bool CanAdd()
         {
             return (Permissions?.CanAdd()).True();
         }
@@ -43,7 +43,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public Func<bool> CanUpdateItem(T value) => () => CanUpdate(value);
 
-        protected virtual bool CanUpdate(T? item)
+        public virtual bool CanUpdate(T? item)
         {
             return true;
         }
@@ -71,28 +71,23 @@ namespace DexieNETCloudSample.Dexie.Services
             return item is not null && (Permissions?.CanDelete(item)).True();
         }
 
-        public Func<IStateCommandAsync, Task> ClearItems(T value)
+        public Func<IStateCommandAsync, Task> ClearItems => async _ =>
         {
             ArgumentNullException.ThrowIfNull(DbService.DB);
-            ArgumentNullException.ThrowIfNull(value.ID);
+            var itemsToClear = await GetTable().ToArray();
 
-            return async _ =>
+            foreach (var item in itemsToClear)
             {
-                var itemsToClear = await GetTable().ToArray();
+                ArgumentNullException.ThrowIfNull(item.ID);
 
-                foreach (var item in itemsToClear)
+                await DbService.DB.Transaction(async _ =>
                 {
-                    ArgumentNullException.ThrowIfNull(item.ID);
-
-                    await DbService.DB.Transaction(async _ =>
-                    {
-                        await PreDeleteAction(item.ID);
-                        await GetTable().Delete(item.ID);
-                        await PostDeleteAction(item.ID);
-                    });
-                }
+                    await PreDeleteAction(item.ID);
+                    await GetTable().Delete(item.ID);
+                    await PostDeleteAction(item.ID);
+                });
             };
-        }
+        };
 
         public Func<bool> CanClearItems => () => CanClearItemsDo();
 

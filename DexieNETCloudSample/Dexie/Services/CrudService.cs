@@ -39,7 +39,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             _dbDisposable = DbService.Subscribe(s =>
             {
-                if (s.StateID == DbService.State.ID && DbService.State.Value is DBState.Cloud)
+                if (s.ID == DbService.State.ID && DbService.State.Value is DBState.Cloud)
                 {
                     InitDB();
                 }
