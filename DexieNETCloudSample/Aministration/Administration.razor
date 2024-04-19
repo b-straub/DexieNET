@@ -1,4 +1,5 @@
-﻿
+﻿@inherits RxBLServiceSubscriber<AdministrationService>
+
 <MudCard Class="mt-16">
     <MudCardHeader>
         <CardHeaderAvatar>
@@ -10,17 +11,17 @@
             <MudText Typo="Typo.h3" GutterBottom="true">Administration</MudText>
             @if (Service.Exceptions.Any())
             {
-                <MudText Class="mt-4" Color="Color.Error">Error: @Service.Exceptions.FirstOrDefault()?.Message</MudText>
+                <MudText Class="mt-4" Color="Color.Error">Error: @GetExceptions()</MudText>
             }
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudButtonPRx Color="Color.Primary" Variant="Variant.Filled" StateTransformer=@Service.GetUsers ValueFactoryAsync=@GetCloudKeyData CancelText="Cancel Add">
+            <MudButtonAsyncRx Color="Color.Primary" Variant="Variant.Filled" StateCommand=@Service.CancellableCommandAsync ExecuteAsyncCallback=@GetUsers CancelText="Cancel Get Users">
                 Get Users
-            </MudButtonPRx>
+            </MudButtonAsyncRx>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
-        <MudTable Items=@Service.Users Hover="true" Breakpoint="Breakpoint.Sm" Loading=@Service.GetUsers.Running() LoadingProgressColor="Color.Info">
+        <MudTable Items=@Service.Users Hover="true" Breakpoint="Breakpoint.Sm" Loading=@Service.CancellableCommandAsync.Changing() LoadingProgressColor="Color.Info">
             <HeaderContent>
                 <MudTh>UserId</MudTh>
                 <MudTh>LastLogin</MudTh>

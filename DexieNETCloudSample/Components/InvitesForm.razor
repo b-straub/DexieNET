@@ -1,6 +1,7 @@
 ﻿@using DexieNET
+@inherits RxBLServiceSubscriber<ToDoListService>
 
-<MudTable Class="mt-2" T="Invite" Items=@(DBService.Invites)>
+<MudTable Class="mt-2" T="Invite" Items=@(DBService.Invites.Value)>
     <ColGroup>
         <col />
         <col style="width:50px;" />
@@ -18,22 +19,21 @@
     <RowTemplate>
         <MudTd DataLabel="Invite"><MudText>@GetInviteText(context)</MudText></MudTd>
         <MudTd DataLabel="Accept" Style="text-align:center">
-            <MudIconButtonPRx Color="Color.Success" Icon=@Icons.Material.Outlined.AddCircleOutline
-                    RxCommandFactory=@(() => Service?.AcceptInvite) Parameter=@context
-                    ConfirmExecution=@(async _ => await ConfirmInvite(true)) />
+            <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.AddCircleOutline
+                    StateCommand=@Service.CommandAsync
+                    ExecuteCallback=@Service.AcceptInvite(context)
+                    ConfirmExecutionAsync=@(async () => await ConfirmInvite(true)) />
         </MudTd>
         <MudTd DataLabel="Reject" Style="text-align:center">
-            <MudIconButtonPRx Color="Color.Error" Icon=@Icons.Material.Outlined.RemoveCircleOutline
-                    RxCommandFactory=@(() => Service?.RejectInvite) Parameter=@context
-                    ConfirmExecution=@(async _ => await ConfirmInvite(false)) />
+            <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.RemoveCircleOutline
+                             StateCommand=@Service.CommandAsync
+                             ExecuteCallback=@Service.RejectInvite(context)
+                             ConfirmExecutionAsync=@(async () => await ConfirmInvite(true)) />
         </MudTd>
     </RowTemplate>
 </MudTable>
 
 @code {
-    [CascadingParameter]
-    public required ToDoListService Service { get; init; }
-
     [Inject]
     public required DexieCloudService DBService { get; init; }
 

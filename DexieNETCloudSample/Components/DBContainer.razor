@@ -1,4 +1,4 @@
-﻿@inherits OwningComponentBase
+﻿@inherits RxBLServiceSubscriber<DexieCloudService>
 
 <MudStack Row=@true>
     <MudIcon Icon=@GetStatusIcon(Service.SyncState) />
@@ -17,47 +17,26 @@
     [Inject]
     public required IConfiguration Configuration { get; init; }
 
-    [CascadingParameter]
-    public required DexieCloudService Service { get; init; }
-
-    private IDisposable? _sDisposable;
-
-    protected override async Task OnInitializedAsync()
+    protected override async Task ServiceStateHasChangedAsync(ServiceChangeReason cr)
     {
-        await base.OnInitializedAsync();
-
-        _sDisposable = Service.Subscribe(async cr =>
-            {
-                switch (cr.ID)
-                {
-                    case var value when value == Service.UIInteraction.ID:
-                        if (Service.DB is not null && Service.UIInteraction.HasValue())
-                        {
-                            bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction.Value, DialogService);
-                            if (Service.UIInteraction.Value.Type is UIInteraction.InteractionType.LOGOUT_CONFIRMATION && res)
-                            {
-                                await Service.DB.Logout(true);
-                            }
-                        }
-                        break;
-                    case var value when value == Service.State.ID:
-                        if (Service.State.Value is DBState.Closed)
-                        {
-                            await OpenDB();
-                        }
-                        break;
-                }
-            });
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
+        switch (cr.ID)
         {
-            _sDisposable?.Dispose();
+            case var value when value == Service.UIInteraction.ID:
+                if (Service.DB is not null && Service.UIInteraction.HasValue())
+                {
+                    bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction.Value, DialogService);
+                    if (Service.UIInteraction.Value.Type is UIInteraction.InteractionType.LOGOUT_CONFIRMATION && res)
+                    {
+                        await Service.DB.Logout(true);
+                    }
+                }
+                break;
         }
 
-        base.Dispose(disposing);
+        if (Service.State.Value is DBState.Closed)
+        {
+            await OpenDB();
+        }
     }
 
     private async Task OpenDB()
@@ -68,7 +47,7 @@
         Service.ConfigureCloud(Configuration.GetDBUrl());
     }
 
-    private string GetPhaseIcon(IState<SyncState> state)
+    private string GetPhaseIcon(IState<SyncState?> state)
     {
         if (!state.HasValue())
         {
@@ -88,7 +67,7 @@
         };
     }
 
-    private string GetStatusIcon(IState<SyncState> state)
+    private string GetStatusIcon(IState<SyncState?> state)
     {
         if (!state.HasValue())
         {

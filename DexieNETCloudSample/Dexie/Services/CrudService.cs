@@ -11,8 +11,6 @@ namespace DexieNETCloudSample.Dexie.Services
     public abstract partial class CrudService<T> : RxBLService, IDisposable where T : IIDPrimaryIndex, IDBStore, IDBCloudEntity
     {
         public IEnumerable<T> Items { get; private set; }
-        public IStateCommandAsync DBCMDAsync { get; }
-
         public bool IsDBOpen => DbService.DB is not null;
 
         // Transformers
@@ -27,7 +25,6 @@ namespace DexieNETCloudSample.Dexie.Services
         {
             Items = [];
             DbService = serviceProvider.GetRequiredService<DexieCloudService>();
-            DBCMDAsync = this.CreateStateCommandAsync();
         }
 
         protected override ValueTask ContextReadyAsync()
@@ -93,6 +90,7 @@ namespace DexieNETCloudSample.Dexie.Services
                 Console.WriteLine($"CRUD new items: {l.Aggregate(string.Empty, (p, n) => p += n.ToString())}");
 #endif
                 Items = l;
+                StateHasChanged();
             }));
 
             Permissions = GetTable().CreateUsePermissions();

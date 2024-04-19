@@ -1,4 +1,5 @@
 ﻿@using DexieNET
+@inherits RxBLServiceSubscriber<ToDoListMemberService>
 
 <MudCard Class="ma-8" Elevation="0" Outlined="true">
     <MudCardHeader>
@@ -16,7 +17,7 @@
         {
             <MemberForm List=@List />
         }
-        @if (Service.DoCanAddMember())
+        @if (Service.CanAddMember())
         {
             <InviteForm />
         }
@@ -25,24 +26,21 @@
 
 
 @code {
-    [CascadingParameter]
-    public required ToDoListMemberService Service { get; init; }
-
     [Parameter, EditorRequired]
     public required ToDoDBList List { get; init; }
 
     protected override Task OnInitializedAsync()
     {
-        Service.SetList.Transform(List);
+        Service.List.Value = List;
 
         return base.OnInitializedAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Service.List != List)
+        if (Service.List.Value != List)
         {
-            Service.SetList.Transform(List);
+            Service.List.Value = List;
         }
 
         await base.OnParametersSetAsync();

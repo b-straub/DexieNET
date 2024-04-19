@@ -9,12 +9,6 @@ namespace DexieNETCloudSample.Components
 {
     public partial class ToDoList
     {
-        [CascadingParameter]
-        public required ToDoListService Service { get; init; }
-
-        [CascadingParameter]
-        public required ToDoListService.Scope Scope { get; init; }
-
         [Inject]
         public required IDialogService DialogService { get; init; }
 
@@ -24,7 +18,7 @@ namespace DexieNETCloudSample.Components
             One
         }
 
-        private async Task AddOrUpdate(IStateTransformer<ToDoDBList> tf, ToDoDBList? item)
+        private Func<IStateCommandAsync, Task> AddOrUpdate(ToDoDBList? item) => async commandAsync =>
         {
             ToDoListData data = item is null ? new ToDoListData(string.Empty) : new ToDoListData(item.Title);
 
@@ -42,9 +36,9 @@ namespace DexieNETCloudSample.Components
                     ToDoListService.CreateList(data.Title) :
                     ToDoListService.CreateList(data.Title, item);
 
-                tf.Transform(list);
+                await commandAsync.ExecuteAsync(Service.AddItem(list));
             }
-        }
+        };
 
         private async Task<bool> ConfirmDelete(DeleteType type)
         {
@@ -68,14 +62,14 @@ namespace DexieNETCloudSample.Components
             return true;
         }
 
-        private async Task DeleteList(IStateTransformer<ToDoDBList> tf, ToDoDBList list)
+        private Func<IStateCommandAsync, Task> DeleteList(ToDoDBList list) => async commandAsync =>
         {
             var confirmed = await ConfirmDelete(DeleteType.One);
 
             if (confirmed)
             {
-                tf.Transform(list);
+                await commandAsync.ExecuteAsync(Service.DeleteItem(list));
             }
-        }
+        };
     }
 }

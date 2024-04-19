@@ -1,4 +1,5 @@
 ﻿@using DexieNET
+@inherits RxBLServiceSubscriber<ToDoListMemberService>
 
 <MudTable Class="mt-2" T="string" Items=@(Service.Users)>
     <ColGroup>
@@ -14,16 +15,13 @@
     <RowTemplate>
         <MudTd DataLabel="Invite User"><MudText>@context</MudText></MudTd>
         <MudTd DataLabel="Invite" Style="text-align:center">
-            <MudIconButtonAsyncPRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd
-                RxCommandAsyncFactory=@(() => Service.AddMember) Parameter=@context PrepareExecutionAsync=@GetUser />
+            <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd StateCommand=@Service.CommandAsync
+                CanChangeCallback=@Service.CanAddMember ExecuteAsyncCallback=@AddMember(context) />
         </MudTd>
     </RowTemplate>
 </MudTable>
 
 @code {
-    [CascadingParameter]
-    public required ToDoListMemberService Service { get; init; }
-
     [Inject]
     public required DexieCloudService DBService { get; init; }
 
@@ -37,10 +35,8 @@
         return base.OnInitializedAsync();
     }
 
-    private async Task<bool> GetUser(ICommandAsync<string> cmd, CancellationToken cancellationToken)
+    private Func<IStateCommandAsync, Task> AddMember(string user) => async _ =>
     {
-        var user = cmd.Parameter;
-
         if (user == Service.Users.Last())
         {
             ArgumentNullException.ThrowIfNull(DialogService);
@@ -53,11 +49,11 @@
             var result = await dialog.Result;
             if (result.Canceled)
             {
-                return false;
+                return;
             }
             else
-            { 
-                user = data.Email; 
+            {
+                user = data.Email;
             }
         }
         else
@@ -70,13 +66,10 @@
 
             if (res.Canceled)
             {
-                return false;
+                return;
             }
-
-            return true;
         }
 
-        cmd.SetParameter(user);
-        return true;
-    }
+        await Service.AddMember(user);
+    };
 }

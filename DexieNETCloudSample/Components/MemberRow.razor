@@ -1,15 +1,16 @@
 ﻿@using DexieNET
+@inherits RxBLServiceSubscriber<ToDoListMemberService>
 
 <MudTd DataLabel="Member">
     <MudText>@MemberName(Member)</MudText>
 </MudTd>
 <MudTd DataLabel="Role">
-    <MudSelectAsyncPRx Parameter=@Member RxInputGroupAsyncFactory=@(() => Service.MemberRoleSelection)
+    <MudSelectAsyncRx StateGroupAsync=@Service.MemberRoleSelection InitializeCallback=@Service.GetInitialMemberRole(Member) ChangingAsyncCallback=@Service.MemberRoleChangingAsync(Member)
         HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
 </MudTd>
 <MudTd>
-    <MudFabAsyncPRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
-        StartIcon=@GetMemberActionIcon() Size="Size.Small" PrepareExecutionAsync=@DoPrepareChangeMemberState RxCommandAsyncFactory=@(() => Service.ChangeMemberState) Parameter=@Member />
+    <MudFabAsyncRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
+        StartIcon=@GetMemberActionIcon() Size="Size.Small" StateCommand=@Service.CommandAsync ConfirmExecutionAsync=@ConfirmChangeMemberStateAsync ExecuteAsyncCallback=@Service.ChangeMemberState(Member) />
     @if (_isOwnList && _currentMemberAction is not MemberAction.OWNER)
     {
         <MudIcon Class="ml-4" Color=@(_currentMemberState is MemberState.ACCEPTED ? Color.Success : Color.Error) Icon=@GetMemberStateIcon() />
@@ -17,9 +18,6 @@
 </MudTd>
 
 @code {
-    [CascadingParameter]
-    public required ToDoListMemberService Service { get; init; }
-
     [Inject]
     public required DexieCloudService DBService { get; init; }
 
@@ -88,7 +86,7 @@
         };
     }
 
-    private async Task<bool> DoPrepareChangeMemberState(ICommandAsync<Member> cmd, CancellationToken token)
+    private async Task<bool> ConfirmChangeMemberStateAsync()
     {
         var message = _currentMemberAction switch
         {

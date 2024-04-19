@@ -6,25 +6,14 @@ using DexieNET;
 
 namespace DexieNETCloudSample.Aministration
 {
-    public sealed partial class AdministrationService : RxBLService
+    public sealed partial class AdministrationService(IServiceProvider serviceProvider) : RxBLService
     {
-        public IState<IEnumerable<UserResponse>, List<UserResponse>> Users { get; }
-        public DexieCloudService DBService { get; }
+        public List<UserResponse> Users { get; } = [];
+        public DexieCloudService DBService { get; } = serviceProvider.GetRequiredService<DexieCloudService>();
 
-        // Commands
-        public IStateTransformer<CloudKeyData> GetUsers => new GetUsersST(this, Users);
-        public IStateProvider DeleteUser => new DeleteUserSP(this);
+        private readonly HttpClient _httpClient = serviceProvider.GetRequiredService<HttpClient>();
 
-        private readonly HttpClient _httpClient;
-
-        public AdministrationService(IServiceProvider serviceProvider)
-        {
-            DBService = serviceProvider.GetRequiredService<DexieCloudService>();
-            _httpClient = serviceProvider.GetRequiredService<HttpClient>();
-            Users = this.CreateState<AdministrationService, IEnumerable<UserResponse>, List<UserResponse>>([]);
-        }
-
-        private async Task DoGetUsers(CloudKeyData data, List<UserResponse> users, CancellationToken cancellationToken)
+        private async Task DoGetUsers(CloudKeyData data, CancellationToken cancellationToken)
         {
             var body = new AccesssTokenRequest([DBScopes.AccessDB, DBScopes.GlobalRead, DBScopes.GlobalWrite], data.ClientId, data.ClientSecret);
             var bodyJson = JsonSerializer.Serialize(body, AccesssTokenRequestContext.Default.AccesssTokenRequest);
@@ -60,8 +49,8 @@ namespace DexieNETCloudSample.Aministration
 
                     if (usersResponse is not null)
                     {
-                        users.Clear();
-                        users.AddRange(usersResponse.Data);
+                        Users.Clear();
+                        Users.AddRange(usersResponse.Data);
                     }
                 }
             }

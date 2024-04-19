@@ -67,63 +67,63 @@ namespace DexieNETCloudSample.Dexie.Services
             await _dbService.DB.Members.Where(m => m.RealmId, list.RealmId, m => m.UserId, currentUserId).Delete();
         }
 
-        private async Task ChangeAccess((Member Member, MemberRole Role, MemberRole NewRole)? MemberAccess)
+        private async Task ChangeAccess(Member Member, MemberRole Role, MemberRole NewRole)
         {
             ArgumentNullException.ThrowIfNull(_dbService.DB);
-            ArgumentNullException.ThrowIfNull(List?.ID);
-            ArgumentNullException.ThrowIfNull(List?.Owner);
-            ArgumentNullException.ThrowIfNull(MemberAccess?.Member.Id);
-            ArgumentNullException.ThrowIfNull(MemberAccess?.Role);
-            ArgumentNullException.ThrowIfNull(MemberAccess?.NewRole);
+            ArgumentNullException.ThrowIfNull(List.Value?.ID);
+            ArgumentNullException.ThrowIfNull(List.Value?.Owner);
+            ArgumentNullException.ThrowIfNull(Member.Id);
+            ArgumentNullException.ThrowIfNull(Role);
+            ArgumentNullException.ThrowIfNull(NewRole);
 
-            var realmId = _dbService.DB.GetTiedRealmID(List.ID);
+            var realmId = _dbService.DB.GetTiedRealmID(List.Value.ID);
 
             await _dbService.DB.Transaction(async _ =>
             {
-                if (MemberAccess.Value.Role is not MemberRole.OWNER && MemberAccess.Value.NewRole is MemberRole.OWNER)
+                if (Role is not MemberRole.OWNER && NewRole is MemberRole.OWNER)
                 {
                     // Cannot give ownership to user before invite is accepted.
-                    ArgumentNullException.ThrowIfNull(MemberAccess?.Member.UserId);
+                    ArgumentNullException.ThrowIfNull(Member.UserId);
 
                     // Before changing owner, give full permissions to the old owner:
                     await _dbService.DB.Members
-                        .Where(m => m.RealmId, realmId, m => m.UserId, List.Owner)
+                        .Where(m => m.RealmId, realmId, m => m.UserId, List.Value.Owner)
                         .Modify(m => m.Roles, new[] { MemberRole.ADMIN.ToString().ToLowerInvariant() });
 
                     // Change owner of all members in the realm:
                     await _dbService.DB.Members
                         .Where(m => m.RealmId, realmId)
-                        .Modify(m => m.Owner, MemberAccess.Value.Member.UserId);
+                        .Modify(m => m.Owner, Member.UserId);
 
                     // Change owner of the todo list:
                     await _dbService.DB.ToDoDBLists
-                        .Update(List.ID, l => l.Owner, MemberAccess.Value.Member.UserId);
+                        .Update(List.Value.ID, l => l.Owner, Member.UserId);
 
                     // Change owner of the todo list items
                     await _dbService.DB.ToDoDBItems
-                       .Where(i => i.ListID, List.ID)
-                       .Modify(i => i.Owner, MemberAccess.Value.Member.UserId);
+                       .Where(i => i.ListID, List.Value.ID)
+                       .Modify(i => i.Owner, Member.UserId);
 
                     // Change owner of realm:
                     await _dbService.DB.Realms
-                        .Update(realmId, r => r.Owner, MemberAccess.Value.Member.UserId);
+                        .Update(realmId, r => r.Owner, Member.UserId);
                 }
 
-                if (MemberAccess.Value.NewRole is not MemberRole.OWNER)
+                if (NewRole is not MemberRole.OWNER)
                 {
                     await _dbService.DB.Members
-                        .Update(MemberAccess.Value.Member.Id, m => m.Permissions, new Permission(), m => m.Roles, new[] { MemberAccess.Value.NewRole.ToString().ToLowerInvariant() });
+                        .Update(Member.Id, m => m.Permissions, new Permission(), m => m.Roles, new[] { NewRole.ToString().ToLowerInvariant() });
                 }
 
-                if (MemberAccess.Value.Role is MemberRole.OWNER && MemberAccess.Value.NewRole is not MemberRole.OWNER)
+                if (Role is MemberRole.OWNER && NewRole is not MemberRole.OWNER)
                 {
                     // Remove ownership by letting current user take ownership instead:
                     await _dbService.DB.ToDoDBLists
-                        .Update(List.ID, l => l.Owner, _dbService.DB.CurrentUserId());
+                        .Update(List.Value.ID, l => l.Owner, _dbService.DB.CurrentUserId());
 
                     // Change ownership of the todo list items
                     await _dbService.DB.ToDoDBItems
-                       .Where(i => i.ListID).Equal(List.ID)
+                       .Where(i => i.ListID).Equal(List.Value.ID)
                        .Modify(i => i.Owner, _dbService.DB.CurrentUserId());
 
                     await _dbService.DB.Realms

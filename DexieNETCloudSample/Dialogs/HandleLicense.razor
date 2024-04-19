@@ -1,11 +1,11 @@
 ﻿@using DexieNET
-@inherits OwningComponentBase
+@inherits RxBLServiceSubscriber<AdministrationService, DexieCloudService>
 
 <MudTooltip Text=@GetLicenseTooltip()>
     <MudIcon Icon=@GetLicenseIcon() />
 </MudTooltip>
 
-@if (_userLogin?.License is not null && (_userLogin.License.Status is not LicenseStatus.OK || _userLogin.License.EvalDaysLeft < 7))
+@if (Service2.UserLogin.Value?.License is not null && (Service2.UserLogin.Value.License.Status is not LicenseStatus.OK || Service2.UserLogin.Value.License.EvalDaysLeft < 7))
 {
     <MudMenu>
         <ActivatorContent>
@@ -14,13 +14,13 @@
             </MudIconButton>
         </ActivatorContent>
         <ChildContent>
-            @if (_userLogin.License.Status is not LicenseStatus.OK)
+            @if (Service2.UserLogin.Value.License.Status is not LicenseStatus.OK)
             {
-                <MudMenuItem OnClick=@ConfirmDeleteUser OnTouch=@ConfirmDeleteUser>Delete account for: @_userLogin.UserId</MudMenuItem>
+                <MudMenuItem OnClick=@ConfirmDeleteUser OnTouch=@ConfirmDeleteUser>Delete account for: @Service2.UserLogin.Value.UserId</MudMenuItem>
             }
-            @if (_userLogin.License.Status is LicenseStatus.EXPIRED || _userLogin.License.EvalDaysLeft < 7)
+            @if (Service2.UserLogin.Value.License.Status is LicenseStatus.EXPIRED || Service2.UserLogin.Value.License.EvalDaysLeft < 7)
             {
-                <MudMenuItem OnClick=@BuyLicense OnTouch=@BuyLicense>Buy license for: @_userLogin.UserId</MudMenuItem>
+                <MudMenuItem OnClick=@BuyLicense OnTouch=@BuyLicense>Buy license for: @Service2.UserLogin.Value.UserId</MudMenuItem>
             }
         </ChildContent>
     </MudMenu>
@@ -28,52 +28,17 @@
 
 @code {
     [Inject]
-    public required AdministrationService AdministrationService { get; init; }
-
-    [Inject]
     public required IDialogService DialogService { get; init; }
-
-    private UserLogin? _userLogin;
-    private IDisposable? _sDisposable;
-    //private readonly License _testLicense = new(LicenseType.EVAL, LicenseStatus.EXPIRED, null, 6);
-
-    protected override void OnInitialized()
-    {
-        ArgumentNullException.ThrowIfNull(AdministrationService.DBService);
-
-        _sDisposable = AdministrationService.DBService.Subscribe(() =>
-        {
-            if (AdministrationService.DBService.State is DBState.UserLogin)
-            {
-                _userLogin = AdministrationService.DBService.UserLogin;
-                /*if (_userLogin is not null)
-                {
-                    _userLogin = _userLogin with { License = _testLicense };
-                }*/
-                InvokeAsync(StateHasChanged);
-            }
-        });
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _sDisposable?.Dispose();
-        }
-
-        base.Dispose(disposing);
-    }
 
     private async Task<bool> ConfirmDeleteUser()
     {
-        ArgumentNullException.ThrowIfNull(AdministrationService.DeleteUser);
-        ArgumentNullException.ThrowIfNull(_userLogin);
+        ArgumentNullException.ThrowIfNull(Service1.DeleteUser);
+        ArgumentNullException.ThrowIfNull(Service2.UserLogin.Value);
 
-        var message = $"Are you sure you want to delete your user completely along all stored data for {_userLogin.UserId}? Private data will be deleted. Shared data will not be deleted. This action cannot be undone.";
+        var message = $"Are you sure you want to delete your user completely along all stored data for {Service2.UserLogin.Value.UserId}? Private data will be deleted. Shared data will not be deleted. This action cannot be undone.";
 
-        return await DialogAsyncRx.Show(DialogService, AdministrationService.DeleteUser, $"Delete {_userLogin.UserId}",
-            message, $"Delete {_userLogin.UserId}", "Cancel", false, "Cancel Delete");
+        return await DialogAsyncRx<AdministrationService>.Show(DialogService, Service1.CommandAsync, Service1.DeleteUser, $"Delete {Service2.UserLogin.Value.UserId}",
+            message, $"Delete {Service2.UserLogin.Value.UserId}", "Cancel", false, "Cancel Delete");
     }
 
     private async Task BuyLicense()
@@ -83,49 +48,49 @@
 
     private string GetLicenseIcon()
     {
-        @if (_userLogin?.License is null)
+        @if (Service2.UserLogin.Value?.License is null)
         {
             return Icons.Material.Outlined.QuestionMark;
         }
 
-        return _userLogin.License.Type switch
+        return Service2.UserLogin.Value.License.Type switch
         {
             LicenseType.DEMO => Icons.Material.Outlined.Quiz,
             LicenseType.EVAL => Icons.Material.Outlined.AddShoppingCart,
             LicenseType.PROD => Icons.Material.Outlined.Paid,
             LicenseType.CLIENT => Icons.Material.Outlined.AccountBalance,
-            _ => throw new ArgumentOutOfRangeException(nameof(_userLogin.License.Type))
+            _ => throw new ArgumentOutOfRangeException(nameof(Service2.UserLogin.Value.License.Type))
         };
     }
 
     private string GetLicenseTooltip()
     {
-        @if (_userLogin?.License is null)
+        @if (Service2.UserLogin.Value?.License is null)
         {
             return "No user logged in.";
         }
 
-        @if (_userLogin.License.Type is LicenseType.DEMO)
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.DEMO)
         {
             return "You are in demonstration mode.";
         }
 
-        @if (_userLogin.License.Type is LicenseType.EVAL)
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.EVAL)
         {
-            return $"You are in evaluation mode. {_userLogin.License.EvalDaysLeft} days left.";
+            return $"You are in evaluation mode. {Service2.UserLogin.Value.License.EvalDaysLeft} days left.";
         }
 
-        @if (_userLogin.License.Type is LicenseType.PROD)
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.PROD)
         {
             return $"You have a valid purchased license.";
         }
 
-        @if (_userLogin.License.Type is LicenseType.CLIENT)
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.CLIENT)
         {
             return $"You have a valid site license.";
         }
 
-        return _userLogin.License.Status switch
+        return Service2.UserLogin.Value.License.Status switch
         {
             LicenseStatus.OK => "You have a valid license.",
             LicenseStatus.EXPIRED => "Your license has expired.You are in offline mode until a valid license is purchased.",

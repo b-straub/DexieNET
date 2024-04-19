@@ -2,46 +2,29 @@
 using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
-using System.Reflection.Metadata;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoListMemberService
     {
-        public Action SetList(ToDoDBList list) => () =>
-        {
-            List = list;
-        };
-
         public Func<bool> CanSetList(ToDoDBList? list) => () =>
         {
-            return list is not null && list != List;
-        };
-
-        public Func<IStateCommandAsync, Task> AddMember(string user) => async _ =>
-        {
-            await DoAddMember(user);
-        };
-
-        public Func<bool> CanAddMember() => () =>
-        {
-            return DoCanAddMember();
-
+            return list is not null && list != List.Value;
         };
 
         public Func<IStateCommandAsync, Task> ChangeMemberState(Member member) => async _ =>
         {
-            ArgumentNullException.ThrowIfNull(List);
+            ArgumentNullException.ThrowIfNull(List.Value);
 
             var memberAction = GetMemberAction(member);
 
             if (memberAction is MemberAction.DELETE)
             {
-                await UnShareWith(List, member);
+                await UnShareWith(List.Value, member);
             }
             else if (memberAction is MemberAction.LEAVE)
             {
-                await Leave(List);
+                await Leave(List.Value);
             }
             else if (memberAction is MemberAction.ACCEPT)
             {
@@ -76,7 +59,7 @@ namespace DexieNETCloudSample.Dexie.Services
             new(MemberRole.GUEST),
         ];
 
-        public MemberRoleSelection GetInitialMemberRole(Member? member)
+        public Func<MemberRoleSelection> GetInitialMemberRole(Member? member) => () =>
         {
             ArgumentNullException.ThrowIfNull(member);
             var role = GetMemberRole(member);
@@ -95,12 +78,12 @@ namespace DexieNETCloudSample.Dexie.Services
 
             ArgumentNullException.ThrowIfNull(initialSelection);
             return initialSelection;
-        }
+        };
 
-        public async Task MemberRoleChangingAsync(Member member, MemberRoleSelection oldValue, MemberRoleSelection newValue)
+        public Func<MemberRoleSelection, MemberRoleSelection, Task> MemberRoleChangingAsync(Member member) => async (or, nr) =>
         {
-            await ChangeAccess((member, oldValue.Role, newValue.Role));
-        }
+            await ChangeAccess(member, or.Role, nr.Role);
+        };
 
         public Func<bool> CanChangeMemberRole(Member member) => () =>
         {

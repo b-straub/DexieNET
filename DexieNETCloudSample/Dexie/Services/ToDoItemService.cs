@@ -19,7 +19,7 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 ArgumentNullException.ThrowIfNull(service.CurrentList.Value);
                 var newItem = ToDoDBItem.Create(Text.Value, DueDateDate.Value + DueDateTime.Value, service.CurrentList.Value, item);
-                await service.DBCMDAsync.ExecuteAsync(service.AddItem(newItem));
+                await service.CommandAsync.ExecuteAsync(service.AddItem(newItem));
             }
             public bool CanSubmit()
             {
@@ -89,11 +89,6 @@ namespace DexieNETCloudSample.Dexie.Services
         {
             return new ToDoItemItemInput(this, item);
         }
-
-        /*public static ToDoDBItem CreateItem(string text, DateTime dueDate, ToDoDBList list, ToDoDBItem? item = null)
-        {
-            return ToDoDBItem.Create(text, dueDate, list, item);
-        }*/
 
         protected override Table<ToDoDBItem, string> GetTable()
         {

@@ -1,5 +1,4 @@
-﻿using DexieNETCloudSample.Dexie.Services;
-using DexieNETCloudSample.Dialogs;
+﻿using DexieNETCloudSample.Dialogs;
 using DexieNETCloudSample.Logic;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
@@ -8,9 +7,6 @@ namespace DexieNETCloudSample.Components
 {
     public partial class ToDoItem
     {
-        [CascadingParameter]
-        public required ToDoItemService Service { get; init; }
-
         [Inject]
         public required IDialogService DialogService { get; init; }
 

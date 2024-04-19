@@ -1,4 +1,5 @@
-﻿
+﻿@inherits RxBLServiceSubscriber<ToDoListService>
+
 <MudCard Class="mt-16">
     <MudCardHeader>
         <CardHeaderAvatar>
@@ -17,8 +18,9 @@
             @if (Service.IsDBOpen)
             {
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                    <MudFabPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateTransformer=@Scope.AddItem ValueFactoryAsync=@(st => AddOrUpdate(st, null)) />
-                    <MudFabRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All)) StateProvider=@Scope.ClearItems />
+                    <MudFabAsyncRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(null) />
+                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
+                                   StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@Service.ClearItems />
                 </MudHidden>
             }
         </CardHeaderActions>
@@ -33,8 +35,9 @@
 
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 <MudContainer Class="ml-n3 mb-8">
-                    <MudFabPRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateTransformer=@Scope.AddItem ValueFactoryAsync=@(st => AddOrUpdate(st, null)) />
-                    <MudFabRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All)) StateProvider=@Scope.ClearItems />
+                    <MudFabAsyncRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(null) />
+                    <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
+                                   StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@Service.ClearItems />
                 </MudContainer>
             </MudHidden>
             <MudTable T="ToDoDBList" Items=@(Service.ToDoLists)>
@@ -62,21 +65,21 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="ToggleItemOpenClose" Style="text-align:center">
-                        <MudButtonPRx Color="Color.Info" StartIcon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
-                            Context=@context StateTransformer=@Scope.ToggleListItemsOpenClose ValueFactoryAsync=@(st => Task.FromResult(context)) />
+                        <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
+                                              StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@Service.ToggleListItemsOpenClose(context) />
                     </MudTd>
                     <MudTd DataLabel="ToDoList"><MudText>@context.Title</MudText></MudTd>
                     <MudTd DataLabel="Share" Style="text-align:center">
-                        <MudIconButtonPRx Color="Color.Info" Icon=@(Service.IsListShareOpen(context) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share)
-                            Context=@context StateTransformer=@Scope.ToggleListShareOpenClose ValueFactoryAsync=@(st => Task.FromResult(context)) />
+                        <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListShareOpen(context) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share)
+                                              StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanToggleListShareOpenClose(context) ExecuteAsyncCallback=@Service.ToggleListShareOpenClose(context) />
                     </MudTd>
                     <MudTd DataLabel="Edit" Style="text-align:center">
-                        <MudIconButtonPRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit
-                            Context=@context StateTransformer=@Scope.UpdateItem ValueFactoryAsync=@(st => AddOrUpdate(st, context)) />
+                        <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit
+                                              StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(context) />
                     </MudTd>
                     <MudTd DataLabel="DeleteItem" Style="text-align:center">
-                        <MudIconButtonPRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete
-                            Context=@context StateTransformer=@Scope.DeleteItem ValueFactoryAsync=@(st => DeleteList(st, context)) />
+                        <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteItem(context)
+                                              ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.One)) ExecuteAsyncCallback=@Service.DeleteItem(context) />
                     </MudTd>
                 </RowTemplate>
                 <ChildRowContent>
@@ -86,17 +89,13 @@
                         {
                             <MudTr>
                                 <td colspan="4">
-                                    <RxBLServiceScope TScope=@ToDoListMemberService.Scope TService=@ToDoListMemberService>
-                                        <Share List=@context />
-                                    </RxBLServiceScope>
+                                    <Share List=@context />
                                 </td>
                             </MudTr>
                         }
                         <MudTr>
                             <td colspan="4">
-                                <RxBLServiceScope TScope=@ToDoItemService.Scope TService=@ToDoItemService>
-                                    <ToDoItem List=@context />
-                                </RxBLServiceScope>
+                                <ToDoItem List=@context />
                             </td>
                         </MudTr>
                     }

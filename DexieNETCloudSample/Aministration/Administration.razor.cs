@@ -7,13 +7,10 @@ namespace DexieNETCloudSample.Aministration
 {
     public partial class Administration
     {
-        [CascadingParameter]
-        public required AdministrationService Service { get; init; }
-
         [Inject]
         public required IDialogService DialogService { get; init; }
 
-        private async Task GetCloudKeyData(IStateTransformer<CloudKeyData> st)
+        private Func<IStateCommandAsync, Task> GetUsers => async stateCommandAsync =>
         {
             CloudKeyData data = new("clientId", "clientSecret");
 
@@ -23,9 +20,9 @@ namespace DexieNETCloudSample.Aministration
             var result = await dialog.Result;
             if (!result.Canceled)
             {
-                st.Transform((CloudKeyData)result.Data);
+                await stateCommandAsync.ExecuteAsync(Service.GetUsers((CloudKeyData)result.Data));
             }
-        }
+        };
 
         private string GetExceptions()
         {

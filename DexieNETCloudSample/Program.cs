@@ -20,11 +20,13 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.Services.AddDexieNET<ToDoDB>();
-builder.Services.AddRxBLService(sp => new DexieCloudService(sp));
-builder.Services.AddRxBLService(sp => new AdministrationService(sp));
-builder.Services.AddRxBLService(sp => new ToDoItemService(sp));
-builder.Services.AddRxBLService(sp => new ToDoListService(sp));
-builder.Services.AddRxBLService(sp => new ToDoListMemberService(sp));
+var collector = builder.Services.AddRxBLServiceCollector();
+
+builder.Services.AddRxBLService(collector, sp => new DexieCloudService(sp));
+builder.Services.AddRxBLService(collector, sp => new AdministrationService(sp));
+builder.Services.AddRxBLService(collector, sp => new ToDoItemService(sp));
+builder.Services.AddRxBLService(collector, sp => new ToDoListService(sp));
+builder.Services.AddRxBLService(collector, sp => new ToDoListMemberService(sp));
 
 await builder.LoadConfigurationAsync(); // also adds HttpClient
 
