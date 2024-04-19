@@ -61,15 +61,5 @@ namespace DexieNETCloudSample.Components
 
             return true;
         }
-
-        private Func<IStateCommandAsync, Task> DeleteList(ToDoDBList list) => async commandAsync =>
-        {
-            var confirmed = await ConfirmDelete(DeleteType.One);
-
-            if (confirmed)
-            {
-                await commandAsync.ExecuteAsync(Service.DeleteItem(list));
-            }
-        };
     }
 }

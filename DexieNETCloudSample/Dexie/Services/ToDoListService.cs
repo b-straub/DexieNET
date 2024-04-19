@@ -8,7 +8,7 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoListService : CrudService<ToDoDBList>
     {
-        public IEnumerable<ToDoDBList> ToDoLists => Items ?? [];
+        public IEnumerable<ToDoDBList> ToDoLists => ItemsState.Value;
         public IEnumerable<Invite> Invites => DbService.Invites.Value ?? [];
         public IState<IEnumerable<ListOpenClose>> ListOpenClose { get; }
 

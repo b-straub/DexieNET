@@ -10,7 +10,7 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public abstract partial class CrudService<T> : RxBLService, IDisposable where T : IIDPrimaryIndex, IDBStore, IDBCloudEntity
     {
-        public IEnumerable<T> Items { get; private set; }
+        public IState<IEnumerable<T>> ItemsState { get; }
         public bool IsDBOpen => DbService.DB is not null;
 
         // Transformers
@@ -23,7 +23,8 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public CrudService(IServiceProvider serviceProvider)
         {
-            Items = [];
+            ItemsState = this.CreateState(Enumerable.Empty<T>());
+
             DbService = serviceProvider.GetRequiredService<DexieCloudService>();
         }
 
@@ -46,9 +47,9 @@ namespace DexieNETCloudSample.Dexie.Services
         }
 
 
-        public bool CanUpdate<Q>(T? item, Expression<Func<T, Q>> query)
+        public bool CanUpdate<Q>(IDBCloudEntity? entity, Expression<Func<T, Q>> query)
         {
-            return item is not null && (Permissions?.CanUpdate(item, query)).True();
+            return entity is not null && (Permissions?.CanUpdate(entity, query)).True();
         }
 
         public void Dispose()
@@ -89,8 +90,7 @@ namespace DexieNETCloudSample.Dexie.Services
 #if DEBUG
                 Console.WriteLine($"CRUD new items: {l.Aggregate(string.Empty, (p, n) => p += n.ToString())}");
 #endif
-                Items = l;
-                StateHasChanged();
+                ItemsState.Value = l;
             }));
 
             Permissions = GetTable().CreateUsePermissions();

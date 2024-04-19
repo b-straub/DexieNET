@@ -20,6 +20,8 @@ namespace DexieNETCloudSample.Aministration
             var result = await dialog.Result;
             if (!result.Canceled)
             {
+                stateCommandAsync.NotifyChanging();
+                await Task.Delay(2000, stateCommandAsync.CancellationToken);
                 await stateCommandAsync.ExecuteAsync(Service.GetUsers((CloudKeyData)result.Data));
             }
         };

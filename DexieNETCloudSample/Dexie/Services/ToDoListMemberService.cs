@@ -49,15 +49,13 @@ namespace DexieNETCloudSample.Dexie.Services
         REJECTED,
     }
 
+
     public sealed partial class ToDoListMemberService : RxBLService
     {
         public bool IsDBOpen => _dbService.DB is not null;
         public IState<ToDoDBList?> List { get; }
         public IEnumerable<Member> Members { get; private set; } = [];
         public IEnumerable<string> Users { get; private set; } = [];
-
-        // Transformers
-        public IStateGroupAsync<MemberRoleSelection> MemberRoleSelection;
 
         private readonly DexieCloudService _dbService;
         private ITable? _membersTable;
@@ -73,7 +71,6 @@ namespace DexieNETCloudSample.Dexie.Services
             _configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
             List = this.CreateState((ToDoDBList?)null);
-            MemberRoleSelection = this.CreateStateGroupAsync(_roleSelections);
         }
 
         protected override ValueTask ContextReadyAsync()
@@ -109,20 +106,25 @@ namespace DexieNETCloudSample.Dexie.Services
             return ValueTask.CompletedTask;
         }
 
+        public MemberRowScope CreateRowScope()
+        {
+            return new MemberRowScope(this); 
+        }
+
         public bool CanAddMember()
         {
             return Users.Any() && _membersTable is not null &&
                 (_permissionsMember?.CanAdd(List.Value, _membersTable)).True();
         }
 
-        public bool CanUpdateRole(Member Member)
+        private bool CanUpdateRole(Member Member)
         {
             var isOwner = GetMemberRole(Member) is MemberRole.OWNER;
 
             return !isOwner && (_permissionsMember?.CanUpdate(Member, m => m.Roles)).True();
         }
 
-        public bool CanChangeToRole(Member? Member, MemberRole newRole)
+        private bool CanChangeToRole(Member? Member, MemberRole newRole)
         {
             ArgumentNullException.ThrowIfNull(_dbService.DB);
             ArgumentNullException.ThrowIfNull(Member);
@@ -198,7 +200,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return MemberState.NONE;
         }
 
-        public MemberRole GetMemberRole(Member member)
+        private MemberRole GetMemberRole(Member member)
         {
             ArgumentNullException.ThrowIfNull(_dbService?.Roles);
             ArgumentNullException.ThrowIfNull(List.Value);

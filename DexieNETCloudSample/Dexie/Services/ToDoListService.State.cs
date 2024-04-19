@@ -6,6 +6,11 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoListService
     {
+        protected override bool CanUpdate(ToDoDBList? item)
+        {
+            return CanUpdate(item, i => i.Title);
+        }
+
         public Func<IStateCommandAsync, Task> ToggleListItemsOpenClose(ToDoDBList list) => async _ =>
         {
             ArgumentNullException.ThrowIfNull(_db);

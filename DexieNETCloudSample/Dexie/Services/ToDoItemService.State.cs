@@ -36,16 +36,16 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public Func<bool> CanDeleteCompletedItems => () =>
         {
-            var item = Items.Where(i => i.Completed).FirstOrDefault();
+            var item = ItemsState.Value.Where(i => i.Completed).FirstOrDefault();
             return CanDelete(item);
         };
 
 
         public Func<bool> CanProvide() => () =>
         {
-            if (Items is not null)
+            if (ItemsState is not null)
             {
-                var item = Items.Where(i => i.Completed).FirstOrDefault();
+                var item = ItemsState.Value.Where(i => i.Completed).FirstOrDefault();
                 return CanDelete(item);
             }
 

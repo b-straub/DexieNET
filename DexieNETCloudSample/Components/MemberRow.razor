@@ -5,12 +5,15 @@
     <MudText>@MemberName(Member)</MudText>
 </MudTd>
 <MudTd DataLabel="Role">
-    <MudSelectAsyncRx StateGroupAsync=@Service.MemberRoleSelection InitializeCallback=@Service.GetInitialMemberRole(Member) ChangingAsyncCallback=@Service.MemberRoleChangingAsync(Member)
+    <MudSelectAsyncRx StateGroupAsync=@Scope.MemberRoleSelection InitializeCallback=@Scope.GetInitialMemberRole(Member) 
+        CanChangeCallback=@(Scope.CanChangeMemberRole(Member)) ChangingAsyncCallback=@Scope.MemberRoleChangingAsync(Member)
         HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
 </MudTd>
 <MudTd>
     <MudFabAsyncRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
-        StartIcon=@GetMemberActionIcon() Size="Size.Small" StateCommand=@Service.CommandAsync ConfirmExecutionAsync=@ConfirmChangeMemberStateAsync ExecuteAsyncCallback=@Service.ChangeMemberState(Member) />
+        StartIcon=@GetMemberActionIcon() Size="Size.Small" StateCommand=@Service.CommandAsync 
+        CanChangeCallback=@Service.CanChangeMemberState(Member)
+        ConfirmExecutionAsync=@ConfirmChangeMemberStateAsync ExecuteAsyncCallback=@Service.ChangeMemberState(Member) />
     @if (_isOwnList && _currentMemberAction is not MemberAction.OWNER)
     {
         <MudIcon Class="ml-4" Color=@(_currentMemberState is MemberState.ACCEPTED ? Color.Success : Color.Error) Icon=@GetMemberStateIcon() />
@@ -29,6 +32,9 @@
 
     [Parameter, EditorRequired]
     public required Member Member { get; init; }
+
+    [CascadingParameter]
+    public required ToDoListMemberService.MemberRowScope Scope { get; set; }
 
     private MemberAction _currentMemberAction = MemberAction.NONE;
     private MemberState _currentMemberState = MemberState.NONE;

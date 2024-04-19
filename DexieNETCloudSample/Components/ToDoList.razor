@@ -75,7 +75,7 @@
                     </MudTd>
                     <MudTd DataLabel="Edit" Style="text-align:center">
                         <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit
-                                              StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(context) />
+                                              StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanUpdateItem(context) ExecuteAsyncCallback=@AddOrUpdate(context) />
                     </MudTd>
                     <MudTd DataLabel="DeleteItem" Style="text-align:center">
                         <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteItem(context)

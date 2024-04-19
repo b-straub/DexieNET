@@ -21,14 +21,16 @@
         <MudTd DataLabel="Accept" Style="text-align:center">
             <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.AddCircleOutline
                     StateCommand=@Service.CommandAsync
+                    CanChangeCallback=@ToDoListService.CanAcceptInvite(context)
                     ExecuteCallback=@Service.AcceptInvite(context)
                     ConfirmExecutionAsync=@(async () => await ConfirmInvite(true)) />
         </MudTd>
         <MudTd DataLabel="Reject" Style="text-align:center">
             <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.RemoveCircleOutline
                              StateCommand=@Service.CommandAsync
+                             CanChangeCallback=@ToDoListService.CanRejectInvite(context)
                              ExecuteCallback=@Service.RejectInvite(context)
-                             ConfirmExecutionAsync=@(async () => await ConfirmInvite(true)) />
+                             ConfirmExecutionAsync=@(async () => await ConfirmInvite(false)) />
         </MudTd>
     </RowTemplate>
 </MudTable>

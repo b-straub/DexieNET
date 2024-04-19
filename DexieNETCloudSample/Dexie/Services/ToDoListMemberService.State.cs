@@ -7,6 +7,57 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoListMemberService
     {
+        public class MemberRowScope(ToDoListMemberService service) : RxBLStateScope<ToDoListMemberService>(service)
+        {
+            private static readonly MemberRoleSelection[] _roleSelections =
+             [
+                new(MemberRole.OWNER),
+                new(MemberRole.ADMIN),
+                new(MemberRole.USER),
+                new(MemberRole.GUEST),
+            ];
+
+            public IStateGroupAsync<MemberRoleSelection> MemberRoleSelection =
+                            service.CreateStateGroupAsync(_roleSelections);
+
+            public Func<MemberRoleSelection> GetInitialMemberRole(Member? member) => () =>
+            {
+                ArgumentNullException.ThrowIfNull(member);
+                var role = Service.GetMemberRole(member);
+
+                MemberRoleSelection? initialSelection = null;
+
+                foreach (var roleSelection in _roleSelections)
+                {
+                    var displayName = Service.GetRoleDisplayName(roleSelection.Role);
+                    roleSelection.RoleName = displayName;
+                    if (roleSelection.Role == role)
+                    {
+                        initialSelection = roleSelection;
+                    }
+                }
+
+                ArgumentNullException.ThrowIfNull(initialSelection);
+                return initialSelection;
+            };
+
+            public Func<MemberRoleSelection, MemberRoleSelection, Task> MemberRoleChangingAsync(Member member) => async (or, nr) =>
+            {
+                await Service.ChangeAccess(member, or.Role, nr.Role);
+            };
+
+            public Func<bool> CanChangeMemberRole(Member member) => () =>
+            {
+                return Service.CanUpdateRole(member);
+            };
+
+            public bool IsMemberRoleDisabled(Member member, int index)
+            {
+                var role = _roleSelections[index].Role;
+                return !Service.CanChangeToRole(member, role);
+            }
+        }
+
         public Func<bool> CanSetList(ToDoDBList? list) => () =>
         {
             return list is not null && list != List.Value;
@@ -50,50 +101,5 @@ namespace DexieNETCloudSample.Dexie.Services
                 _ => false
             };
         };
-
-        private static readonly MemberRoleSelection[] _roleSelections =
-        [
-            new(MemberRole.OWNER),
-            new(MemberRole.ADMIN),
-            new(MemberRole.USER),
-            new(MemberRole.GUEST),
-        ];
-
-        public Func<MemberRoleSelection> GetInitialMemberRole(Member? member) => () =>
-        {
-            ArgumentNullException.ThrowIfNull(member);
-            var role = GetMemberRole(member);
-
-            MemberRoleSelection? initialSelection = null;
-
-            foreach (var roleSelection in _roleSelections)
-            {
-                var displayName = GetRoleDisplayName(roleSelection.Role);
-                roleSelection.RoleName = displayName;
-                if (roleSelection.Role == role)
-                {
-                    initialSelection = roleSelection;
-                }
-            }
-
-            ArgumentNullException.ThrowIfNull(initialSelection);
-            return initialSelection;
-        };
-
-        public Func<MemberRoleSelection, MemberRoleSelection, Task> MemberRoleChangingAsync(Member member) => async (or, nr) =>
-        {
-            await ChangeAccess(member, or.Role, nr.Role);
-        };
-
-        public Func<bool> CanChangeMemberRole(Member member) => () =>
-        {
-            return CanUpdateRole(member);
-        };
-
-        public bool IsMemberRoleDisabled(Member member, int index)
-        {
-            var role = _roleSelections[index].Role;
-            return !CanChangeToRole(member, role);
-        }
     }
 }

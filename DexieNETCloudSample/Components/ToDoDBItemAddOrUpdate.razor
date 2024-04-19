@@ -6,7 +6,7 @@
 }
 else
 {
-    <MudIconButtonAsyncRx StateCommand=@Service.CommandAsync CanChangeCallback=@(() => Service.CanUpdate(Item)) Color="Color.Info" Icon=@Icons.Material.Filled.Edit ExecuteAsyncCallback=@ShowAddUpdateDialog />
+    <MudIconButtonAsyncRx StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanUpdateItem(Item) Color="Color.Info" Icon=@Icons.Material.Filled.Edit ExecuteAsyncCallback=@ShowAddUpdateDialog />
 }
 
 @code {
@@ -14,7 +14,7 @@ else
     public required bool AddMode { get; init; }
 
     [Parameter, EditorRequired]
-    public required ToDoDBItem? Item { get; init; }
+    public required ToDoDBItem Item { get; init; }
 
     [Inject]
     public required IDialogService DialogService { get; init; }

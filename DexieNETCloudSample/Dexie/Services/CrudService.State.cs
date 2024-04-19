@@ -43,7 +43,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         public Func<bool> CanUpdateItem(T value) => () => CanUpdate(value);
 
-        public virtual bool CanUpdate(T? item)
+        protected virtual bool CanUpdate(T? value)
         {
             return true;
         }
@@ -93,7 +93,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         private bool CanClearItemsDo()
         {
-            return Items.Any(CanDelete);
+            return ItemsState.Value.Any(CanDelete);
         }
     }
 }

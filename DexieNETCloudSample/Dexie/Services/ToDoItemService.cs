@@ -19,7 +19,14 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 ArgumentNullException.ThrowIfNull(service.CurrentList.Value);
                 var newItem = ToDoDBItem.Create(Text.Value, DueDateDate.Value + DueDateTime.Value, service.CurrentList.Value, item);
-                await service.CommandAsync.ExecuteAsync(service.AddItem(newItem));
+                if (item is null)
+                {
+                    await service.CommandAsync.ExecuteAsync(service.AddItem(newItem));
+                }
+                else
+                {
+                    await service.CommandAsync.ExecuteAsync(service.UpdateItem(newItem));
+                }
             }
             public bool CanSubmit()
             {
@@ -32,12 +39,12 @@ namespace DexieNETCloudSample.Dexie.Services
 
             public Func<string, bool> CanUpdateText => _ =>
             {
-                return service.CanUpdate(item, i => i.Text);
+                return service.CanUpdate(service.CurrentList.Value, i => i.Text);
             };
 
             public Func<DateTime, bool> CanUpdateDueDate => _ =>
             {
-                return service.CanUpdate(item, i => i.DueDate);
+                return service.CanUpdate(service.CurrentList.Value, i => i.DueDate);
             };
 
             public static Func<string, StateValidation> ValidateText => v =>
@@ -60,7 +67,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             public Func<TimeSpan, bool> CanUpdateTime => _ =>
             {
-                return service.CanUpdate(item, i => i.DueDate);
+                return service.CanUpdate(service.CurrentList.Value, i => i.DueDate);
             };
 
             private static DateTime? NoSeconds(DateTime? dateTime)
@@ -75,7 +82,7 @@ namespace DexieNETCloudSample.Dexie.Services
             }
         }
 
-        public IEnumerable<ToDoDBItem> ToDoItems => Items ?? [];
+        public IEnumerable<ToDoDBItem> ToDoItems => ItemsState.Value;
         public IState<ToDoDBList?> CurrentList { get; }
 
         private ToDoDB? _db;
@@ -108,7 +115,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return (Permissions?.CanAdd(CurrentList.Value)).True();
         }
 
-        public override bool CanUpdate(ToDoDBItem? item)
+        protected override bool CanUpdate(ToDoDBItem? item)
         {
             return CanUpdate(item, i => i.Text) || CanUpdate(item, i => i.DueDate);
         }

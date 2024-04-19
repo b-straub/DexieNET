@@ -11,7 +11,9 @@
         <MudTh>Role</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MemberRow List=@List Member=@context />
+        <RxBLStateScope TScope=@ToDoListMemberService.MemberRowScope TService=@ToDoListMemberService ScopeFactory=@Service.CreateRowScope>
+            <MemberRow List=@List Member=@context />
+        </RxBLStateScope>
     </RowTemplate>
 </MudTable>
 
