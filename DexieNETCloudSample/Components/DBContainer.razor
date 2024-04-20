@@ -17,7 +17,7 @@
     [Inject]
     public required IConfiguration Configuration { get; init; }
 
-    protected override async Task ServiceStateHasChangedAsync(ServiceChangeReason cr)
+    protected override async Task OnServiceStateHasChangedAsync(ServiceChangeReason cr)
     {
         switch (cr.ID)
         {
