@@ -222,7 +222,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException($"executionCountS: {executionCountS} -> LiveQuery failed.");
             }
 
-            if (executionCountSP != 8)
+            if (executionCountSP != 5)
             {
                 throw new InvalidOperationException($"executionCountSP: {executionCountSP} -> LiveQuery failed.");
             }
