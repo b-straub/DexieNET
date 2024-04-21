@@ -1,4 +1,4 @@
-﻿import { Collection } from 'dexie';
+﻿import { Collection, replacePrefix } from 'dexie';
 
 // Wrappers
 export async function CollectionPrimarykeysByteArray(collection: Collection): Promise<Uint8Array[]> {
@@ -50,4 +50,8 @@ export async function CollectionModify(collection: Collection, dotnetRef: any): 
             ref.value = newItem;
         }
     })
+}
+
+export async function CollectionModifyReplacePrefix(collection: Collection, keyPath: string, a: string, b: string): Promise<number> {
+    return await collection.modify({[keyPath]: replacePrefix(a, b)});
 }

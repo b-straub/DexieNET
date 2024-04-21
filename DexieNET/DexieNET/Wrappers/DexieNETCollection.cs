@@ -527,6 +527,16 @@ namespace DexieNET
             return await collection.JSObject.Module.InvokeAsync<double>("CollectionModify", collection.JSObject.Reference, collection.CollectionJS.DotnetRef);
         }
 
+        public static async ValueTask<double> ModifyReplacePrefix<T, I, K>(this Collection<T, I, K> collection, Expression<Func<T, string>> query, string a, string b) where T : IDBStore
+        {
+            if (collection.Table.AddTableInfo((collection.Table.Name, TAMode.ReadWrite)))
+            {
+                return 0;
+            }
+
+            return await collection.JSObject.Module.InvokeAsync<double>("CollectionModifyReplacePrefix", collection.JSObject.Reference, query.GetKey(), a, b);
+        }
+
         public static async ValueTask<double> Modify<T, I, K, Q>(this Collection<T, I, K> collection, Expression<Func<T, Q>> query, Q? value) where T : IDBStore
         {
             var queryF = QueryFactory<T>.Update(query, value);

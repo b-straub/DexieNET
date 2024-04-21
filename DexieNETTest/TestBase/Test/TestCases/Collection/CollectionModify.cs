@@ -34,6 +34,19 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Some Items not modified.");
             }
 
+            modifiedCount = await table.ToCollection().ModifyReplacePrefix(p => p.Name, "U", "X");
+            personUpdated = (await table.ToArray()).LastOrDefault();
+
+            if (personUpdated?.Name != "Xpdated")
+            {
+                throw new InvalidOperationException("Item not modified.");
+            }
+
+            if (modifiedCount != persons.Count())
+            {
+                throw new InvalidOperationException("Some Items not modified.");
+            }
+
             await table.Clear();
             await table.BulkAdd(persons);
 
