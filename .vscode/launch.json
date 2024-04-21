@@ -5,8 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "DexieNETTest",
             "type": "blazorwasm",
-            "name": "Launch and Debug Blazor WebAssembly Application",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/DexieNETTest/Client"
+        },
+        {
+            "type": "blazorwasm",
+            "name": "DexieNETCloudSample",
             "request": "launch",
             "url": "http://localhost:5223",
             "cwd": "${workspaceFolder}/DexieNETCloudSample"
