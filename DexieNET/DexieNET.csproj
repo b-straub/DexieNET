@@ -22,15 +22,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="." />
-	
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="yarn\package.json" Pack="false" />
 		<None Include="yarn\tsconfig.json" Pack="false" />
 		<Content Include="yarn\src\*.js" Pack="false" />
 		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
-	
-		<SupportedPlatform Include="browser" />
-	
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
 	
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
