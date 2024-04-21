@@ -245,6 +245,12 @@ namespace DexieNET
 
     internal static class JsonExtensions
     {
+         static readonly JsonSerializerOptions Options = new()
+         {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
         public static JsonElement? FromObject(this object? element)
         {
             if (element is null)
@@ -252,13 +258,7 @@ namespace DexieNET
                 return null;
             }
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            };
-
-            var json = JsonSerializer.SerializeToElement(element, options);
+            var json = JsonSerializer.SerializeToElement(element, Options);
             return json;
         }
     }
