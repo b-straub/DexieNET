@@ -24,3 +24,4 @@ DexieNETCloudSample/wwwroot/dexie-cloud.json
 DexieNETCloudSample/wwwroot/importfile.json
 DexieNET/yarn/node_modules
 DexieNET/yarn/yarn.lock
+.DS_Store
