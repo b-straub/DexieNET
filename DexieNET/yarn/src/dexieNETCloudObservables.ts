@@ -25,6 +25,7 @@ import { UserLogin } from "dexie-cloud-addon/dist/modern/db/entities/UserLogin";
 import { DBRealmRole, Invite } from "dexie-cloud-addon";
 import { PermissionChecker } from "dexie-cloud-addon/dist/modern/PermissionChecker";
 import { Subscription } from 'rxjs';
+import { PersistedSyncState } from "dexie-cloud-addon/dist/modern/db/entities/PersistedSyncState";
 
 let _uiInteractions: { [key: number]: DXCUserInteraction } = {};
 
@@ -140,6 +141,15 @@ export function OnCancelUserInteraction(key: number) {
     }
 }
 
+export function SubscribeWebSocketStatus(db: DB, dotnetRef: any): Subscription {
+
+    const action = (res: string) => {
+        return res;
+    };
+
+    return DotNetObservable(db.cloud.webSocketStatus, action, dotnetRef);
+}
+
 // sync with DexieNETSync.cs
 export function SubscribeSyncState(db: DB, dotnetRef: any): Subscription {
 
@@ -174,6 +184,25 @@ export function SubscribeSyncState(db: DB, dotnetRef: any): Subscription {
     };
 
     return DotNetObservable(db.cloud.syncState, action, dotnetRef);
+}
+
+// sync with DexieNETSync.cs
+export function SubscribePersistedSyncState(db: DB, dotnetRef: any): Subscription {
+
+    const action = (res: PersistedSyncState) => {
+        return res;
+    };
+
+    return DotNetObservable(db.cloud.persistedSyncState, action, dotnetRef);
+}
+
+export function SubscribeSyncComplete(db: DB, dotnetRef: any): Subscription {
+
+    const action = (_: void) => {
+        return true;
+    };
+
+    return DotNetObservable(db.cloud.events.syncComplete, action, dotnetRef, true);
 }
 
 // sync with DexieNETCloudUser.cs

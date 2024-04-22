@@ -111,7 +111,7 @@ namespace DexieNETCloudSample.Logic
             SyncState = this.CreateState((SyncState?)null);
             UserLogin = this.CreateState((UserLogin?)null);
             UIInteraction = this.CreateState((UIInteraction?)null);
-            Invites = this.CreateState((IEnumerable<Invite>?) null);
+            Invites = this.CreateState((IEnumerable<Invite>?)null);
             Roles = this.CreateState((Dictionary<string, Role>?)null);
         }
 
@@ -165,6 +165,21 @@ namespace DexieNETCloudSample.Logic
                 SyncState.Value = ss;
             }));
 
+            _DBServicesDisposeBag.Add(DB.PersistedSyncStateStateObservable().Subscribe(pss =>
+            {
+                Console.WriteLine(pss);
+            }));
+
+            _DBServicesDisposeBag.Add(DB.WebSocketStatusObservable().Subscribe(wss =>
+            {
+                Console.WriteLine(wss);
+            }));
+
+            _DBServicesDisposeBag.Add(DB.SyncCompleteObservable().Subscribe(pss =>
+            {
+                Console.WriteLine("SyncComplete");
+            }));
+
             _DBServicesDisposeBag.Add(DB.UserLoginObservable().Subscribe(ul =>
             {
                 UserLogin.Value = ul;
@@ -181,6 +196,13 @@ namespace DexieNETCloudSample.Logic
             }));
 
             State.Value = DBState.Cloud;
+
+#if DEBUG
+            Console.WriteLine($"We're using dexie-cloud-addon {DB.AddOnVersion()}");
+            var cloudOptions = DB.Options();
+            var schema = DB.Schema();
+            var usingServiceWorker = DB.UsingServiceWorker();
+#endif
         }
 
         public async ValueTask<string?> Login(LoginInformation loginInformation)
@@ -188,6 +210,12 @@ namespace DexieNETCloudSample.Logic
             ArgumentNullException.ThrowIfNull(DB);
 
             return await DB.UserLogin(loginInformation);
+        }
+
+        public async ValueTask Sync(SyncOptions syncOptions)
+        {
+            ArgumentNullException.ThrowIfNull(DB);
+            await DB.Sync(syncOptions);
         }
     }
 }

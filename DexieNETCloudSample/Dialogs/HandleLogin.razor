@@ -81,5 +81,9 @@
         {
             Snackbar.Add(error, Severity.Error);
         }
+        else
+        {
+            await Service.Sync(new SyncOptions(SyncOptions.SyncPurpose.PULL));
+        }
     }
 }

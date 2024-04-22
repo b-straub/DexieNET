@@ -161,6 +161,32 @@ namespace DexieNET
             dexie.TestCloudSync();
             return new JSObservable<SyncState>(dexie, "SubscribeSyncState");
         }
+
+        public static IObservable<PersistedSyncState> PersistedSyncStateStateObservable(this DBBase dexie)
+        {
+            dexie.TestCloudSync();
+            return new JSObservable<PersistedSyncState>(dexie, "SubscribePersistedSyncState");
+        }
+
+        public static async ValueTask Sync(this DBBase dexie, SyncOptions syncOptions)
+        {
+            dexie.TestCloudSync();
+            await dexie.DBBaseJS.Module.InvokeVoidAsync("Sync", dexie.DBBaseJS.Reference, syncOptions);
+        }
+
+        public static IObservable<bool> SyncCompleteObservable(this DBBase dexie)
+        {
+            dexie.TestCloudSync();
+            return new JSObservable<bool>(dexie, "SubscribeSyncComplete");
+        }
+        #endregion
+
+        #region WebSocketStatus
+        public static IObservable<string> WebSocketStatusObservable(this DBBase dexie)
+        {
+            dexie.TestCloudSync();
+            return new JSObservable<string>(dexie, "SubscribeWebSocketStatus");
+        }
         #endregion
 
         #region UserLogin
@@ -174,6 +200,30 @@ namespace DexieNET
         {
             dexie.TestCloudSync();
             return dexie.DBBaseJS.Module.Invoke<string>("CurrentUserId", dexie.DBBaseJS.Reference);
+        }
+
+        public static string AddOnVersion(this DBBase dexie)
+        {
+            dexie.TestCloudSync();
+            return dexie.DBBaseJS.Module.Invoke<string>("AddOnVersion", dexie.DBBaseJS.Reference);
+        }
+
+        public static DexieCloudOptions Options(this DBBase dexie)
+        {
+            dexie.TestCloudSync();
+            return dexie.DBBaseJS.Module.Invoke<DexieCloudOptions>("Options", dexie.DBBaseJS.Reference);
+        }
+
+        public static Dictionary<string, DexieCloudSchema>? Schema(this DBBase dexie)
+        {
+            dexie.TestCloudSync();
+            return dexie.DBBaseJS.Module.Invoke<Dictionary<string, DexieCloudSchema>?>("Schema", dexie.DBBaseJS.Reference);
+        }
+
+        public static bool? UsingServiceWorker(this DBBase dexie)
+        {
+            dexie.TestCloudSync();
+            return dexie.DBBaseJS.Module.Invoke<bool?>("UsingServiceWorker", dexie.DBBaseJS.Reference);
         }
 
         public static async ValueTask<string?> UserLogin(this DBBase dexie, LoginInformation userLogin)

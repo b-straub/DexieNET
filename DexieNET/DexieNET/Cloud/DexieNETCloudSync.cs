@@ -43,4 +43,26 @@ namespace DexieNET
             OFFLINE
         }
     }
+
+    public record PersistedSyncState(
+        string? ServerRevision,
+        Dictionary<string, long> LatestRevisions,
+        string[] Realms,
+        string[] InviteRealms,
+        string ClientIdentity,
+        bool? InitiallySynced,
+        string? RemoteDbId,
+        string[] SyncedTables,
+        DateTime? Timestamp,
+        string? Error
+    );
+
+    public record SyncOptions(SyncOptions.SyncPurpose Purpose = SyncOptions.SyncPurpose.PUSH, bool Wait = true)
+    {
+        public enum SyncPurpose
+        {
+            PUSH,
+            PULL
+        }
+    }
 }

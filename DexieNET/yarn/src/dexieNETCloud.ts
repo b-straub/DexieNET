@@ -18,11 +18,28 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-import { getTiedRealmId } from "dexie-cloud-addon";
+import { DexieCloudSyncOptions, getTiedRealmId } from "dexie-cloud-addon";
 import { DB } from "./dexieNETBase";
+import { DexieCloudSchema } from "dexie-cloud-common";
+
+export function AddOnVersion(db: DB): string {
+    return db.cloud.version;
+}
 
 export function CurrentUserId(db: DB): string {
     return db.cloud.currentUserId;
+}
+
+export function Options(db: DB): any {
+    return db.cloud.options;
+}
+
+export function Schema(db: DB): DexieCloudSchema | null {
+    return db.cloud.schema;
+}
+
+export function UsingServiceWorker(db: DB): boolean | undefined {
+    return db.cloud.usingServiceWorker;
 }
 
 export async function UserLogin(db: DB, email: string, grantType: "demo" | "otp" | undefined, userId?: string): Promise<string | undefined> {
@@ -37,6 +54,16 @@ export async function UserLogin(db: DB, email: string, grantType: "demo" | "otp"
     }
 
     return httpError;
+}
+
+// sync with DexieNETCloudSync.cs record Sync 
+interface NETSync {
+    wait: boolean;
+    purpose: number;
+}
+
+export async function Sync(db: DB, sync: NETSync ): Promise<void> {
+    await db.cloud.sync({purpose: sync.purpose == 0 ? "push" : "pull", wait: sync.wait });
 }
 
 export async function Logout(db: DB, force?: boolean | undefined): Promise<void> {

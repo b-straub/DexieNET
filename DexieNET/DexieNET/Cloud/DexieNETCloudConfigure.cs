@@ -51,6 +51,7 @@ namespace DexieNET
         string[]? UnsyncedTables = null,
         bool? NameSuffix = true,
         bool? DisableWebSocket = null,
+        bool? DisableEagerSync = null,
         Func<TokenParams, ValueTask<TokenFinalResponse>>? FetchTokens = null)
     {
         public DexieCloudOptions WithRequireAuth(bool requireAuth) => this with { RequireAuth = requireAuth };
@@ -62,4 +63,13 @@ namespace DexieNET
         public DexieCloudOptions WithDisableWebSocket(bool disableWebSocket) => this with { DisableWebSocket = disableWebSocket };
         public DexieCloudOptions WithFetchTokens(Func<TokenParams, ValueTask<TokenFinalResponse>> fetchTokens) => this with { FetchTokens = fetchTokens };
     }
+
+    public record DexieCloudSchema(
+        bool? GeneratedGlobalId,
+        string? IdPrefix,
+        bool? Deleted,
+        bool? MarkedForSync,
+        bool? InitiallySynced,
+        string PrimaryKey
+    );
 }

@@ -70,11 +70,11 @@ export function UnSubscribeJSObservable(disposable: Subscription): void {
     disposable.unsubscribe();
 }
 
-export function DotNetObservable<T>(observable: Observable<T>, action: (input: T) => any, dotnetRef: any): Subscription {
+export function DotNetObservable<T>(observable: Observable<T>, action: (input: T) => any, dotnetRef: any, voidObservable: boolean = false): Subscription {
 
     return observable.subscribe({
         next: (v) => {
-            if (v != undefined) {
+            if (voidObservable || v != undefined) {
                 dotnetRef.invokeMethod('OnNext', action(v))
             }
         },
