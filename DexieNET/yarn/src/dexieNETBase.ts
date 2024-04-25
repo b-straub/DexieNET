@@ -22,8 +22,6 @@ import Dexie from 'dexie';
 
 import DexieCloudDB from 'dexie';
 import DexieCloud from "dexie-cloud-addon";
-import { DexieCloudOptions } from "dexie-cloud-addon/dist/modern/DexieCloudOptions";
-import { Observable, Subscription } from 'rxjs';
 
 // @ts-ignore
 export class DB extends DexieCloudDB {
@@ -42,17 +40,6 @@ export function Create(name: string, cloudSync: boolean): DB {
     return db;
 }
 
-export function ConfigureCloud(db: DB, cloudOptions: DexieCloudOptions): string | null {
-    try {
-        db.cloud.configure(cloudOptions);
-    }
-    catch (err) {
-        return err.message
-    }
-
-    return null;
-}
-
 export function Delete(name: string): Promise<void> {
     return Dexie.delete(name);
 }
@@ -63,22 +50,4 @@ export function Name(): string {
 
 export function Version(db: DB): number {
     return db.verno;
-}
-
-export function UnSubscribeJSObservable(disposable: Subscription): void {
-
-    disposable.unsubscribe();
-}
-
-export function DotNetObservable<T>(observable: Observable<T>, action: (input: T) => any, dotnetRef: any, voidObservable: boolean = false): Subscription {
-
-    return observable.subscribe({
-        next: (v) => {
-            if (voidObservable || v != undefined) {
-                dotnetRef.invokeMethod('OnNext', action(v))
-            }
-        },
-        error: (e) => dotnetRef.invokeMethod('OnError', e.message),
-        complete: () => dotnetRef.invokeMethod('OnCompleted')
-    });
 }

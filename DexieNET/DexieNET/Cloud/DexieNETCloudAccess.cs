@@ -18,7 +18,6 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-using DexieNET;
 using System.Linq.Expressions;
 
 namespace DexieNET

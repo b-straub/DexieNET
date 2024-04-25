@@ -1,4 +1,5 @@
 ﻿using RxBlazorLightCore;
+using DexieNET;
 
 namespace DexieNETCloudSample.Aministration
 {

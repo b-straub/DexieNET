@@ -15,8 +15,8 @@ namespace DexieNETCloudSample.Aministration
 
         private async Task DoGetUsers(CloudKeyData data, CancellationToken cancellationToken)
         {
-            var body = new AccesssTokenRequest([DBScopes.AccessDB, DBScopes.GlobalRead, DBScopes.GlobalWrite], data.ClientId, data.ClientSecret);
-            var bodyJson = JsonSerializer.Serialize(body, AccesssTokenRequestContext.Default.AccesssTokenRequest);
+            var body = new ClientCredentialsTokenRequest([DBScopes.AccessDB, DBScopes.GlobalRead, DBScopes.GlobalWrite], data.ClientId, data.ClientSecret);
+            var bodyJson = JsonSerializer.Serialize(body, ClientCredentialsTokenRequestContext.Default.ClientCredentialsTokenRequest);
 
             using StringContent jsonContent = new(bodyJson, Encoding.UTF8, "application/json");
             using HttpResponseMessage tokenResponse = await _httpClient.PostAsync($"{DBService.CloudURL}/token", jsonContent, cancellationToken);
@@ -28,7 +28,7 @@ namespace DexieNETCloudSample.Aministration
             else
             {
                 var jsonStringToken = await tokenResponse.Content.ReadAsStringAsync(cancellationToken);
-                var accessToken = JsonSerializer.Deserialize(jsonStringToken, AccesssTokenResponseContext.Default.AccesssTokenResponse);
+                var accessToken = JsonSerializer.Deserialize(jsonStringToken, TokenFinalResponseContext.Default.TokenFinalResponse);
 
                 var token = accessToken?.AccessToken;
 
@@ -74,6 +74,32 @@ namespace DexieNETCloudSample.Aministration
             {
                 await DBService.Logout(true);
             }
+        }
+
+        public async Task<TokenFinalResponse?> GetUserCredentials(CloudKeyData data, TokenParams tokenParams, CancellationToken cancellationToken)
+        { 
+            ArgumentNullException.ThrowIfNull(tokenParams.Hints?.EMail);
+            var name = tokenParams.Hints.EMail.Split('@').First();
+            var claims = new TokenRequestClaims(tokenParams.Hints.EMail, tokenParams.Hints.EMail, name);
+            var body = new ClientCredentialsTokenRequest([DBScopes.AccessDB],
+                data.ClientId, data.ClientSecret, tokenParams.Public_key, claims);
+            var bodyJson = JsonSerializer.Serialize(body, ClientCredentialsTokenRequestContext.Default.ClientCredentialsTokenRequest);
+
+            using StringContent jsonContent = new(bodyJson, Encoding.UTF8, "application/json");
+            using HttpResponseMessage tokenResponse = await _httpClient.PostAsync($"{DBService.CloudURL}/token", jsonContent, cancellationToken);
+
+            if (!tokenResponse.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Administration - Can not get token!");
+            }
+            else
+            {
+                var jsonStringToken = await tokenResponse.Content.ReadAsStringAsync(cancellationToken);
+                var accessToken = JsonSerializer.Deserialize(jsonStringToken, TokenFinalResponseContext.Default.TokenFinalResponse);
+                return accessToken;
+            }
+
+            return null;
         }
     }
 }

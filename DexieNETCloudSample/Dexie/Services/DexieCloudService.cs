@@ -1,4 +1,5 @@
 ﻿using DexieNET;
+using DexieNETCloudSample.Aministration;
 using RxBlazorLightCore;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -99,6 +100,7 @@ namespace DexieNETCloudSample.Logic
 
         public string? CloudURL { get; private set; }
 
+        private readonly IServiceProvider _serviceProvider;
         private readonly DexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
 
@@ -106,6 +108,7 @@ namespace DexieNETCloudSample.Logic
         {
             var dexieService = serviceProvider.GetRequiredService<IDexieNETService<ToDoDB>>();
             _dexieFactory = dexieService.DexieNETFactory;
+            _serviceProvider = serviceProvider;
 
             State = this.CreateState(DBState.Closed);
             SyncState = this.CreateState((SyncState?)null);
@@ -151,6 +154,7 @@ namespace DexieNETCloudSample.Logic
             var options = new DexieCloudOptions(CloudURL)
                 .WithCustomLoginGui(true)
                 .WithRequireAuth(false);
+                //.WithFetchTokens(FetchTokens);
 
             // call before configure cloud to have login UI ready when needed
             _DBServicesDisposeBag.Add(DB.UserInteractionObservable().Subscribe(ui =>
@@ -217,5 +221,20 @@ namespace DexieNETCloudSample.Logic
             ArgumentNullException.ThrowIfNull(DB);
             await DB.Sync(syncOptions);
         }
+
+        /*
+        private async Task<TokenFinalResponse?> FetchTokens(TokenParams tokenParams)
+        {
+            var adminstrationService = _serviceProvider.GetRequiredService<AdministrationService>();
+    
+            var cloudKeyData = new CloudKeyData
+            {
+                ClientId = "xx",
+                ClientSecret = "xxx"
+            };
+            var tokenFinalResponse = await adminstrationService.GetUserCredentials(cloudKeyData, tokenParams, CancellationToken.None);
+            return tokenFinalResponse;
+        }
+        */
     }
 }

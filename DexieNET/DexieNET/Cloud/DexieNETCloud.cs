@@ -45,8 +45,28 @@ namespace DexieNET
         public string EntityKey => Owner + RealmId;
     }
 
+    public sealed class DBCloudFetchTokens
+    {
+        public DotNetObjectReference<DBCloudFetchTokens> DotnetRef { get; }
+
+        private readonly Func<TokenParams, Task<TokenFinalResponse?>> _fetchTokens;
+
+        [JSInvokable]
+        public async Task<TokenFinalResponse?> FetchTokens(TokenParams tokenParams)
+        {
+            return await _fetchTokens(tokenParams);
+        }
+
+        public DBCloudFetchTokens(Func<TokenParams, Task<TokenFinalResponse?>> fetchTokens)
+        {
+            DotnetRef = DotNetObjectReference.Create(this);
+            _fetchTokens = fetchTokens;
+        }
+    }
+
     public static partial class DBCloudExtensions
     {
+       
         public static void ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions)
         {
             if (!dexie.CloudSync)
@@ -60,8 +80,18 @@ namespace DexieNET
                     .WithUnsyncedTables(dexie.UnsyncedTables);
             }
 
-            var jsi = cloudOptions.FromObject();
-            var err = dexie.DBBaseJS.Module.Invoke<string?>("ConfigureCloud", dexie.DBBaseJS.Reference, jsi);
+            DotNetObjectReference<DBCloudFetchTokens>? dotnetRef = null;
+
+            if (cloudOptions.FetchTokens is not null)
+            {
+                var fetchTokensWrapper = new DBCloudFetchTokens(cloudOptions.FetchTokens);
+                dotnetRef = fetchTokensWrapper.DotnetRef;
+                cloudOptions = cloudOptions.WithFetchTokens(null);
+            }
+
+            //var jsi = cloudOptions.FromObject();    
+
+            var err = dexie.DBBaseJS.Module.Invoke<string?>("ConfigureCloud", dexie.DBBaseJS.Reference, cloudOptions, dotnetRef);
 
             if (err is not null)
             {

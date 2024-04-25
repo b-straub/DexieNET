@@ -18,16 +18,34 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-import { DB, DotNetObservable } from "./dexieNETBase";
+import { DB } from "./dexieNETBase";
 import { DXCUserInteraction } from "dexie-cloud-addon/dist/modern/types/DXCUserInteraction";
 import { SyncState } from "dexie-cloud-addon/dist/modern/types/SyncState";
 import { UserLogin } from "dexie-cloud-addon/dist/modern/db/entities/UserLogin";
 import { DBRealmRole, Invite } from "dexie-cloud-addon";
 import { PermissionChecker } from "dexie-cloud-addon/dist/modern/PermissionChecker";
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { PersistedSyncState } from "dexie-cloud-addon/dist/modern/db/entities/PersistedSyncState";
 
 let _uiInteractions: { [key: number]: DXCUserInteraction } = {};
+
+export function UnSubscribeJSObservable(disposable: Subscription): void {
+
+    disposable.unsubscribe();
+}
+
+export function DotNetObservable<T>(observable: Observable<T>, action: (input: T) => any, dotnetRef: any, voidObservable: boolean = false): Subscription {
+
+    return observable.subscribe({
+        next: (v) => {
+            if (voidObservable || v != undefined) {
+                dotnetRef.invokeMethod('OnNext', action(v))
+            }
+        },
+        error: (e) => dotnetRef.invokeMethod('OnError', e.message),
+        complete: () => dotnetRef.invokeMethod('OnCompleted')
+    });
+}
 
 // sync with DexieNETCloudUI.cs
 export function SubscribeUserInteraction(db: DB, dotnetRef: any): Subscription {

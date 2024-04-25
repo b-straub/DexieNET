@@ -18,9 +18,27 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-import { DexieCloudSyncOptions, getTiedRealmId } from "dexie-cloud-addon";
+import { getTiedRealmId } from "dexie-cloud-addon";
 import { DB } from "./dexieNETBase";
 import { DexieCloudSchema } from "dexie-cloud-common";
+import { DexieCloudOptions } from "dexie-cloud-addon/dist/modern/DexieCloudOptions";
+
+export function ConfigureCloud(db: DB, cloudOptions: DexieCloudOptions, dotnetRef: any): string | null {
+    try {
+        if (dotnetRef !== null)
+        {
+            cloudOptions.fetchTokens = async (tokenParams) => {
+                return await dotnetRef.invokeMethodAsync('FetchTokens', tokenParams);
+            }
+        }
+        db.cloud.configure(cloudOptions);
+    }
+    catch (err) {
+        return err.message
+    }
+
+    return null;
+}
 
 export function AddOnVersion(db: DB): string {
     return db.cloud.version;
@@ -57,12 +75,12 @@ export async function UserLogin(db: DB, email: string, grantType: "demo" | "otp"
 }
 
 // sync with DexieNETCloudSync.cs record Sync 
-interface NETSync {
+interface CloudSyncOptions {
     wait: boolean;
     purpose: number;
 }
 
-export async function Sync(db: DB, sync: NETSync ): Promise<void> {
+export async function Sync(db: DB, sync: CloudSyncOptions ): Promise<void> {
     await db.cloud.sync({purpose: sync.purpose == 0 ? "push" : "pull", wait: sync.wait });
 }
 

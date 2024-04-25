@@ -1,5 +1,5 @@
 ﻿/*
-DexieNETCloud.cs
+DexieNETCloudConfigure.cs
 
 Copyright(c) 2023 Bernhard Straub
 
@@ -20,26 +20,6 @@ limitations under the License.
 
 namespace DexieNET
 {
-    public record TokenHint(string? UserdID, string? EMail);
-    public record TokenParams(string Public_key, TokenHint? Hint);
-    public record TokenResponseClaim(string ClaimName);
-    public record TokenResponseClaims(string Sub, TokenResponseClaim[] Claims);
-
-    public record TokenAlerts(
-        string Type,
-        string MessageCode,
-        string Message,
-        Dictionary<string, string>? MessageParams = null);
-
-    public record TokenFinalResponse(
-        string Type,
-        TokenResponseClaim Claims,
-        string AccessToken,
-        double AccessTokenExpiration,
-        string? RefreshToken = null,
-        double? RefreshTokenExpiration = null,
-        TokenAlerts? Alerts = null);
-
     public record PeriodicSyncOptions(double MinInterval);
 
     public record DexieCloudOptions(
@@ -52,7 +32,7 @@ namespace DexieNET
         bool? NameSuffix = true,
         bool? DisableWebSocket = null,
         bool? DisableEagerSync = null,
-        Func<TokenParams, ValueTask<TokenFinalResponse>>? FetchTokens = null)
+        Func<TokenParams, Task<TokenFinalResponse?>>? FetchTokens = null)
     {
         public DexieCloudOptions WithRequireAuth(bool requireAuth) => this with { RequireAuth = requireAuth };
         public DexieCloudOptions WithTryUseServiceWorker(bool tryServiceWorker) => this with { TryUseServiceWorker = tryServiceWorker };
@@ -61,7 +41,7 @@ namespace DexieNET
         public DexieCloudOptions WithUnsyncedTables(string[] unsyncedTables) => this with { UnsyncedTables = unsyncedTables };
         public DexieCloudOptions WithNameSuffix(bool nameSuffix) => this with { NameSuffix = nameSuffix };
         public DexieCloudOptions WithDisableWebSocket(bool disableWebSocket) => this with { DisableWebSocket = disableWebSocket };
-        public DexieCloudOptions WithFetchTokens(Func<TokenParams, ValueTask<TokenFinalResponse>> fetchTokens) => this with { FetchTokens = fetchTokens };
+        public DexieCloudOptions WithFetchTokens(Func<TokenParams, Task<TokenFinalResponse?>>? fetchTokens) => this with { FetchTokens = fetchTokens };
     }
 
     public record DexieCloudSchema(

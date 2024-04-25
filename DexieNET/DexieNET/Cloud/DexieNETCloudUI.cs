@@ -18,11 +18,15 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace DexieNET
 {
-    public record UIAlert(UIAlert.AlertType Type, UIAlert.MessageCode Code, string Message, Dictionary<string, string> Params)
+    public record UIAlert(
+        [property: JsonConverter(typeof(EnumCamelCaseConverter<UIAlert.AlertType>))] UIAlert.AlertType Type,
+        [property: JsonConverter(typeof(EnumSnakeCaseUpperConverter<UIAlert.MessageCode>))] UIAlert.MessageCode Code, 
+        string Message, Dictionary<string, string> Params)
     {
         public enum AlertType
         {
