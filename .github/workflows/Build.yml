@@ -24,6 +24,12 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: BuildDexieNET
+      run: dotnet build DexieNET/DexieNET.csproj -c Release
+
+    - name: BuildDexieCloudNET
+      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
+
     - name: Build
       run: dotnet build -c Release
       
