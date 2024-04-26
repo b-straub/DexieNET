@@ -1,4 +1,5 @@
 ﻿using DexieNET;
+using DexieCloudNET;
 using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;

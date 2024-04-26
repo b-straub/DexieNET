@@ -13,8 +13,16 @@
 		<PackageReference Include="RxMudBlazorLight" Version="0.8.5" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<DexieNETTableGeneratorForCloud>true</DexieNETTableGeneratorForCloud>
+	</PropertyGroup>
+	
 	<ItemGroup>
-		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
+		<CompilerVisibleProperty Include="DexieNETTableGeneratorForCloud" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\DexieCloudNET\DexieCloudNET.csproj" />
 		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" OutputItemType="Analyzer" />
 	</ItemGroup>
 

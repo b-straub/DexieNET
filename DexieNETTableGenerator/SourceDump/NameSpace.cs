@@ -24,17 +24,17 @@ namespace DNTGenerator.SourceDump
 {
     internal static class NameSpace
     {
-        public static string DumpNamespace(this IEnumerable<DBRecord> records, string usedNamespace)
+        public static string DumpNamespace(this IEnumerable<DBRecord> records, string usedNamespace, bool forCloud)
         {
             StringBuilder sb = new();
 
-            var usings = DefaultUsings();
+            var usings = DefaultUsings(forCloud);
 
             IEnumerable<DBRecord> usedRecords = records.Where(r => r.Namespace == usedNamespace);
 
             var recordGroups = usedRecords.GroupBy(r => r.DBName);
 
-            _ = sb.Append(DumpNamespaceFirst(usedNamespace, usings));
+            _ = sb.Append(DumpNamespaceFirst(usedNamespace, usings, forCloud));
 
             foreach (var recordGroup in recordGroups)
             {
@@ -45,7 +45,7 @@ namespace DNTGenerator.SourceDump
             return sb.ToString();
         }
 
-        public static string DumpNamespaceFirst(string namespaceName, IEnumerable<string> usings)
+        public static string DumpNamespaceFirst(string namespaceName, IEnumerable<string> usings, bool forCloud)
         {
             StringBuilder sb = new();
 
@@ -134,7 +134,7 @@ namespace {namespaceName}
             return sb.ToString();
         }
 
-        private static IEnumerable<string> DefaultUsings()
+        private static IEnumerable<string> DefaultUsings(bool forCloud)
         {
             List<string> usings = new();
             UsingSortComparer comparer = new();
@@ -142,6 +142,10 @@ namespace {namespaceName}
             usings.Add("Microsoft.JSInterop");
             usings.Add("System.CodeDom.Compiler");
             usings.Add("DexieNET");
+            if (forCloud)
+            {
+                usings.Add("DexieCloudNET");
+            }
 
             return usings.OrderBy(u => u, comparer);
         }

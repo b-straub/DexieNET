@@ -40,6 +40,10 @@ namespace DNTGenerator
         /// </summary>
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+            var forCloudProvider = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
+                options.GlobalOptions.TryGetValue("build_property.DexieNETTableGeneratorForCloud", out var generateCloudCodeSwitch)
+                    && generateCloudCodeSwitch.Equals("true", StringComparison.InvariantCultureIgnoreCase));
+
             IncrementalValuesProvider<TypeDeclarationSyntax?> records = context.SyntaxProvider
                 .CreateSyntaxProvider(
                     predicate: static (syntaxNode, _) => syntaxNode.MatchDeclaration(),
@@ -48,15 +52,16 @@ namespace DNTGenerator
 
             IncrementalValueProvider<(Compilation, ImmutableArray<TypeDeclarationSyntax?>)> compilationWithRecords
                 = context.CompilationProvider.Combine(records.Collect());
+            var compilationWithRecordsAndOptions = compilationWithRecords.Combine(forCloudProvider);
 
             // Generate the source using the compilation and enums
-            context.RegisterImplementationSourceOutput(compilationWithRecords,
-                static (context, compilationWithRecords) => AddDBRecordClasses(context, compilationWithRecords));
+            context.RegisterImplementationSourceOutput(compilationWithRecordsAndOptions,
+                static (context, compilationWithRecordsAndOptions) => AddDBRecordClasses(context, compilationWithRecordsAndOptions));
         }
 
-        private static void AddDBRecordClasses(SourceProductionContext context, (Compilation compilation, ImmutableArray<TypeDeclarationSyntax?> records) compilationWithRecords)
+        private static void AddDBRecordClasses(SourceProductionContext context, ((Compilation compilation, ImmutableArray<TypeDeclarationSyntax?> records) compilationWithRecords, bool ForCloud) cro)
         {
-            var dbRecords = compilationWithRecords.records.DBRecords(compilationWithRecords.compilation, context.CancellationToken).ToList();
+            var dbRecords = cro.compilationWithRecords.records.DBRecords(cro.compilationWithRecords.compilation, context.CancellationToken).ToList();
 
             foreach (var dbRecord in dbRecords)
             {
@@ -76,7 +81,7 @@ namespace DNTGenerator
 
             foreach (var dbRecord in dbRecordsToUse)
             {
-                var diagnostics = dbRecord.Verify(compilationWithRecords.compilation);
+                var diagnostics = dbRecord.Verify(cro.compilationWithRecords.compilation);
                 foreach (var diagnostic in diagnostics)
                 {
                     if (!DBRecordAnalyzer.Diagnostics.Any(d => d.Id == diagnostic.Id))
@@ -89,7 +94,7 @@ namespace DNTGenerator
 
             if (error)
             {
-                context.ReportDiagnostic(Diagnostic.Create(GeneratorDiagnostic.Error, Location.None, compilationWithRecords.compilation.AssemblyName));
+                context.ReportDiagnostic(Diagnostic.Create(GeneratorDiagnostic.Error, Location.None, cro.compilationWithRecords.compilation.AssemblyName));
                 return;
             }
 
@@ -118,7 +123,7 @@ namespace DNTGenerator
 
                 try
                 {
-                    source = dbRecordsToUse.DumpNamespace(usedNS);
+                    source = dbRecordsToUse.DumpNamespace(usedNS, cro.ForCloud);
                 }
                 catch (Exception ex)
                 {
@@ -130,7 +135,7 @@ namespace DNTGenerator
 
                 string sourceName = $"{usedNS}.Generated.cs";
 
-                if (source.Any())
+                if (source.Length != 0)
                 {
                     context.AddSource(sourceName, generated + source);
                 }
@@ -139,7 +144,7 @@ namespace DNTGenerator
 #if DEBUG
             if (success)
             {
-                context.ReportDiagnostic(Diagnostic.Create(GeneratorDiagnostic.Success, Location.None, compilationWithRecords.compilation.AssemblyName));
+                context.ReportDiagnostic(Diagnostic.Create(GeneratorDiagnostic.Success, Location.None, [cro.compilationWithRecords.compilation.AssemblyName, cro.ForCloud.ToString()]));
             }
 #endif
         }

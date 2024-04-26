@@ -66,9 +66,9 @@ namespace DexieNET
         public abstract Version Version(double versionNumber);
         public bool CloudSync { get; }
         public abstract string[] UnsyncedTables { get; }
+        public DexieJSObject DBBaseJS { get; }
 
         internal bool LiveQueryRunning { get; set; } = false;
-        internal DexieJSObject DBBaseJS { get; }
         internal Transaction? CurrentTransaction { get; set; }
         internal Stack<Transaction> TransactionCollectStack { get; }
         internal Dictionary<int, Transaction> TransactionDict { get; }
@@ -92,7 +92,7 @@ namespace DexieNET
         }
     }
 
-    public sealed class DexieNETFactory<T> : IAsyncDisposable where T : IDBBase
+    public sealed class DexieNETFactory<T> : IDexieNETFactory<T>, IAsyncDisposable where T : IDBBase
     {
         private readonly Lazy<Task<IJSInProcessObjectReference>> _moduleTask;
         public DexieNETFactory(IJSRuntime jsRuntime)
@@ -108,7 +108,7 @@ namespace DexieNET
         public async ValueTask<T> Create(bool cloudSync = false)
         {
             var module = await _moduleTask.Value;
-            var reference = await module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name, cloudSync);
+            var reference = await module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name);
 
             return (T)T.Create(module, reference, cloudSync);
         }

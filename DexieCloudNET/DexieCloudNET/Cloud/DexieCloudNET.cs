@@ -19,8 +19,9 @@ limitations under the License.
 */
 
 using Microsoft.JSInterop;
+using DexieNET;
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     public interface IDBCloudEntity
     {
@@ -66,7 +67,6 @@ namespace DexieNET
 
     public static partial class DBCloudExtensions
     {
-       
         public static void ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions)
         {
             if (!dexie.CloudSync)
@@ -283,6 +283,13 @@ namespace DexieNET
             {
                 throw new InvalidOperationException("Cloud Sync not enabled, call 'Create' with DexieCloudOptions.");
             }
+        }
+        #endregion
+
+        #region Table
+        public static IUsePermissions<T> CreateUsePermissions<T, I>(this Table<T, I> table) where T : IDBStore, IDBCloudEntity
+        {
+            return UsePermissions<T, I>.Create(table);
         }
         #endregion
     }

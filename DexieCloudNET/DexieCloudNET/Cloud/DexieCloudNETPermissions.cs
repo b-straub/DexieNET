@@ -24,8 +24,9 @@ using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DexieNET;
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     public interface IUsePermissions<T> : IObservable<Unit>, IDisposable where T : IDBStore, IDBCloudEntity
     {

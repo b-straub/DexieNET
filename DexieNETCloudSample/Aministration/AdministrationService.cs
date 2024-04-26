@@ -3,6 +3,7 @@ using RxBlazorLightCore;
 using System.Text.Json;
 using System.Text;
 using DexieNET;
+using DexieCloudNET;
 
 namespace DexieNETCloudSample.Aministration
 {

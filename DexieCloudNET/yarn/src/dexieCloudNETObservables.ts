@@ -18,7 +18,7 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-import { DB } from "./dexieNETBase";
+import { CloudDB } from "./dexieCloudNETBase";
 import { DXCUserInteraction } from "dexie-cloud-addon/dist/modern/types/DXCUserInteraction";
 import { SyncState } from "dexie-cloud-addon/dist/modern/types/SyncState";
 import { UserLogin } from "dexie-cloud-addon/dist/modern/db/entities/UserLogin";
@@ -48,7 +48,7 @@ export function DotNetObservable<T>(observable: Observable<T>, action: (input: T
 }
 
 // sync with DexieNETCloudUI.cs
-export function SubscribeUserInteraction(db: DB, dotnetRef: any): Subscription {
+export function SubscribeUserInteraction(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: DXCUserInteraction) => {
         var type: number = -1;
@@ -159,7 +159,7 @@ export function OnCancelUserInteraction(key: number) {
     }
 }
 
-export function SubscribeWebSocketStatus(db: DB, dotnetRef: any): Subscription {
+export function SubscribeWebSocketStatus(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: string) => {
         return res;
@@ -169,7 +169,7 @@ export function SubscribeWebSocketStatus(db: DB, dotnetRef: any): Subscription {
 }
 
 // sync with DexieNETSync.cs
-export function SubscribeSyncState(db: DB, dotnetRef: any): Subscription {
+export function SubscribeSyncState(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: SyncState) => {
 
@@ -205,7 +205,7 @@ export function SubscribeSyncState(db: DB, dotnetRef: any): Subscription {
 }
 
 // sync with DexieNETSync.cs
-export function SubscribePersistedSyncState(db: DB, dotnetRef: any): Subscription {
+export function SubscribePersistedSyncState(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: PersistedSyncState) => {
         return res;
@@ -214,7 +214,7 @@ export function SubscribePersistedSyncState(db: DB, dotnetRef: any): Subscriptio
     return DotNetObservable(db.cloud.persistedSyncState, action, dotnetRef);
 }
 
-export function SubscribeSyncComplete(db: DB, dotnetRef: any): Subscription {
+export function SubscribeSyncComplete(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (_: void) => {
         return true;
@@ -224,7 +224,7 @@ export function SubscribeSyncComplete(db: DB, dotnetRef: any): Subscription {
 }
 
 // sync with DexieNETCloudUser.cs
-export function SubscribeUserLogin(db: DB, dotnetRef: any): Subscription {
+export function SubscribeUserLogin(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: UserLogin) => {
 
@@ -270,7 +270,7 @@ export function SubscribeUserLogin(db: DB, dotnetRef: any): Subscription {
 // sync with DexieNETCloudAccesss.cs
 let _invites: { [key: string]: Invite } = {};
 
-export function SubscribeInvites(db: DB, dotnetRef: any): Subscription {
+export function SubscribeInvites(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: Invite[]) => {
         ClearInvites();
@@ -303,7 +303,7 @@ export function RejectInvite(key: string) {
     }
 }
 
-export function SubscribeRoles(db: DB, dotnetRef: any): Subscription {
+export function SubscribeRoles(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: {[roleName: string]: DBRealmRole}) => {
         return res;
@@ -319,7 +319,7 @@ interface NETCloudEntity {
 
 let _permissionChecker: { [key: number]: PermissionChecker<NETCloudEntity> } = {};
 
-export function SubscribePermissionChecker(db: DB, dotnetRef: any, tableName: string, item?: NETCloudEntity): Subscription {
+export function SubscribePermissionChecker(db: CloudDB, dotnetRef: any, tableName: string, item?: NETCloudEntity): Subscription {
 
     const key = Date.now();
     item ??= { owner: undefined, realmId: undefined };

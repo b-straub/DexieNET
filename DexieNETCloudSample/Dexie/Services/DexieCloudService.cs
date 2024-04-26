@@ -1,5 +1,6 @@
 ﻿using DexieNET;
-using DexieNETCloudSample.Aministration;
+using DexieCloudNET;
+//using DexieNETCloudSample.Aministration;
 using RxBlazorLightCore;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -101,7 +102,7 @@ namespace DexieNETCloudSample.Logic
         public string? CloudURL { get; private set; }
 
         private readonly IServiceProvider _serviceProvider;
-        private readonly DexieNETFactory<ToDoDB> _dexieFactory;
+        private readonly IDexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
 
         public DexieCloudService(IServiceProvider serviceProvider)

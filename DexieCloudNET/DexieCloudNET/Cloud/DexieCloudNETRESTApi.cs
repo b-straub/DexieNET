@@ -20,7 +20,7 @@ limitations under the License.
 
 using System.Text.Json.Serialization;
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     public enum DBScopes
     {

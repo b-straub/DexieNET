@@ -18,28 +18,17 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-import Dexie from 'dexie';
+import DexieCloudDB from 'dexie';
+import DexieCloud from "dexie-cloud-addon";
 
 // @ts-ignore
-export class DB extends Dexie {
+export class CloudDB extends DexieCloudDB {
     constructor(name: string) {
-        super(name);
+        super(name, { addons: [DexieCloud] });
     }
 }
 
-export function Create(name: string): DB {
-    let db = new DB(name);
+export function CreateCloud(name: string): CloudDB {
+    let db = new CloudDB(name);
     return db;
-}
-
-export function Delete(name: string): Promise<void> {
-    return Dexie.delete(name);
-}
-
-export function Name(): string {
-    return Dexie.name;
-}
-
-export function Version(db: DB): number {
-    return db.verno;
 }

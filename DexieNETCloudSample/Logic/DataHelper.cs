@@ -1,4 +1,4 @@
-﻿using DexieNET;
+﻿using DexieCloudNET;
 using System.ComponentModel.DataAnnotations;
 
 namespace DexieNETCloudSample.Logic

@@ -1,5 +1,6 @@
 ﻿
 using DexieNET;
+using DexieCloudNET;
 using DexieNETCloudSample.Dialogs;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;

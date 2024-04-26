@@ -21,7 +21,7 @@ limitations under the License.
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     public record UIAlert(
         [property: JsonConverter(typeof(EnumCamelCaseConverter<UIAlert.AlertType>))] UIAlert.AlertType Type,

@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     internal class PermissionArrayConverter : JsonConverter<string[]>
     {

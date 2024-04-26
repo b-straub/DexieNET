@@ -369,7 +369,7 @@ namespace DexieNET
         }
     }
 
-    internal static class QueryExtensions
+    public static class QueryExtensions
     {
         public static string GetKey<T, V>(this Expression<Func<T, V>> expression)
         {

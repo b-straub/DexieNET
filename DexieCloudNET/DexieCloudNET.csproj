@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Title>DexieCloudNET</Title>
+		<Description>A .NET wrapper for dexie.js minimalist wrapper for IndexedDB with cloud support.</Description>
+		<Authors>Bernhard Straub</Authors>
+		<Copyright>Bernhard Straub</Copyright>
+		<PackageProjectUrl>https://github.com/b-straub/DexieNET</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/b-straub/DexieNET</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageTags>Dexie, Dexie Cloud, IndexedDB</PackageTags>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>..\Nuget</PackageOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="." />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="yarn\package.json" Pack="false" />
+		<None Include="yarn\tsconfig.json" Pack="false" />
+		<Content Include="yarn\src\*.js" Pack="false" />
+		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
+	
+		<PackageReference Include="System.Reactive" Version="6.0.0" />
+
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.4.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	
+		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<!-- File with mtime of last successful npm install -->
+		<YarnInstallStampFile>npm/node_modules/.install-stamp</YarnInstallStampFile>
+		<Authors>Bernhard Straub</Authors>
+	</PropertyGroup>
+
+	<Target Name="DeleteJSFiles" BeforeTargets="BeforeBuild">
+		<Delete Files="wwwroot\js\*.*" />
+	</Target>
+
+	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
+		<Exec Command="yarn install" WorkingDirectory="yarn" />
+		<Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
+	</Target>
+
+	<Target Name="YarnCommandsDebug" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn" />
+	</Target>
+
+	<Target Name="YarnCommandsRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
+	</Target>
+
+</Project>

@@ -19,11 +19,11 @@ limitations under the License.
 */
 
 import { getTiedRealmId } from "dexie-cloud-addon";
-import { DB } from "./dexieNETBase";
+import { CloudDB } from "./dexieCloudNETBase";
 import { DexieCloudSchema } from "dexie-cloud-common";
 import { DexieCloudOptions } from "dexie-cloud-addon/dist/modern/DexieCloudOptions";
 
-export function ConfigureCloud(db: DB, cloudOptions: DexieCloudOptions, dotnetRef: any): string | null {
+export function ConfigureCloud(db: CloudDB, cloudOptions: DexieCloudOptions, dotnetRef: any): string | null {
     try {
         if (dotnetRef !== null)
         {
@@ -40,27 +40,27 @@ export function ConfigureCloud(db: DB, cloudOptions: DexieCloudOptions, dotnetRe
     return null;
 }
 
-export function AddOnVersion(db: DB): string {
+export function AddOnVersion(db: CloudDB): string {
     return db.cloud.version;
 }
 
-export function CurrentUserId(db: DB): string {
+export function CurrentUserId(db: CloudDB): string {
     return db.cloud.currentUserId;
 }
 
-export function Options(db: DB): any {
+export function Options(db: CloudDB): any {
     return db.cloud.options;
 }
 
-export function Schema(db: DB): DexieCloudSchema | null {
+export function Schema(db: CloudDB): DexieCloudSchema | null {
     return db.cloud.schema;
 }
 
-export function UsingServiceWorker(db: DB): boolean | undefined {
+export function UsingServiceWorker(db: CloudDB): boolean | undefined {
     return db.cloud.usingServiceWorker;
 }
 
-export async function UserLogin(db: DB, email: string, grantType: "demo" | "otp" | undefined, userId?: string): Promise<string | undefined> {
+export async function UserLogin(db: CloudDB, email: string, grantType: "demo" | "otp" | undefined, userId?: string): Promise<string | undefined> {
 
     let httpError: string | undefined = undefined;
 
@@ -80,11 +80,11 @@ interface CloudSyncOptions {
     purpose: number;
 }
 
-export async function Sync(db: DB, sync: CloudSyncOptions ): Promise<void> {
+export async function Sync(db: CloudDB, sync: CloudSyncOptions ): Promise<void> {
     await db.cloud.sync({purpose: sync.purpose == 0 ? "push" : "pull", wait: sync.wait });
 }
 
-export async function Logout(db: DB, force?: boolean | undefined): Promise<void> {
+export async function Logout(db: CloudDB, force?: boolean | undefined): Promise<void> {
     await db.cloud.logout({ force: force });
 }
 
@@ -92,14 +92,14 @@ export function GetTiedRealmID(id: string): string {
     return getTiedRealmId(id);
 }
 
-export async function AcceptInviteMember(db: DB, id: string): Promise<void> {
+export async function AcceptInviteMember(db: CloudDB, id: string): Promise<void> {
     await db.members.update(id, { accepted: new Date(), rejected: undefined })
 }
 
-export async function RejectInviteMember(db: DB, id: string): Promise<void> {
+export async function RejectInviteMember(db: CloudDB, id: string): Promise<void> {
     await db.members.update(id, { rejected: new Date(), accepted: undefined })
 }
 
-export async function ClearInviteMember(db: DB, id: string): Promise<void> {
+export async function ClearInviteMember(db: CloudDB, id: string): Promise<void> {
     await db.members.update(id, { rejected: undefined, accepted: undefined })
 }

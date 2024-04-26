@@ -36,7 +36,7 @@ namespace DNTGenerator.Diagnostics
             new(
                 "DNTGG001",
                 "Generator success",
-                "'{0}': successfully created 'DexieNetTables'",
+                "'{0}': successfully created 'DexieNetTables' using Cloud: {1}",
                 "DNTGenerator",
                 DiagnosticSeverity.Info,
                 isEnabledByDefault: true);

@@ -18,7 +18,7 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     public enum GrantType
     {

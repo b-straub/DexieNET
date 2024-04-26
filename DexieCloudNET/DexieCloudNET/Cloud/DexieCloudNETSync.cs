@@ -18,7 +18,7 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     public record SyncState(SyncState.SyncStatus Status, SyncState.SyncStatePhase Phase, int Progress, string? Error)
     {

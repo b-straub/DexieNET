@@ -19,8 +19,9 @@ limitations under the License.
 */
 
 using System.Linq.Expressions;
+using DexieNET;
 
-namespace DexieNET
+namespace DexieCloudNET
 {
     // records are not actually compiled to DB stores but are prebuild in SG when any table with '[Schema(CloudSync = true)]' exist in DB
     public record Permission

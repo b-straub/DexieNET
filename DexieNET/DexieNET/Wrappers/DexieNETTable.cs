@@ -35,7 +35,7 @@ namespace DexieNET
         public bool CloudSync { get; }
     }
 
-    internal sealed class TableJS(IJSInProcessObjectReference module, IJSInProcessObjectReference reference) : DexieJSObject(module, reference)
+    public sealed class TableJS(IJSInProcessObjectReference module, IJSInProcessObjectReference reference) : DexieJSObject(module, reference)
     {
     }
 
@@ -44,8 +44,9 @@ namespace DexieNET
         public Expression<Func<T, I>> PrimaryKey => _ => DefaultPrimaryKey;
         public string Name { get; }
         public bool CloudSync { get; }
-
-        internal DBBase DB { get; }
+        public TableJS TableJS { get; }
+        public DBBase DB { get; }
+        
         internal bool PKGuid { get; }
         internal string[] Keys { get; }
         internal string[] MultiEntry { get; }
@@ -53,7 +54,6 @@ namespace DexieNET
         internal I DefaultPrimaryKey { get; }
 
         internal bool TransactionCollectMode => (DB.CurrentTransaction is not null && DB.CurrentTransaction.Collecting);
-        internal TableJS TableJS { get; }
 
         private readonly Dictionary<Type, object> _emptyCollection;
         private readonly Dictionary<Type, object> _emptyWhereClause;
@@ -141,13 +141,6 @@ namespace DexieNET
 
     public static class TableExtensions
     {
-        #region Cloud
-        public static IUsePermissions<T> CreateUsePermissions<T, I>(this Table<T, I> table) where T : IDBStore, IDBCloudEntity
-        {
-            return UsePermissions<T, I>.Create(table);
-        }
-        #endregion
-
         #region Add
         public static async ValueTask<I> Add<T, I>(this Table<T, I> table, T? item, I primaryKey) where T : IDBStore
         {

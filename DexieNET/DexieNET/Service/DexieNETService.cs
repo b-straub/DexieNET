@@ -23,14 +23,20 @@ using Microsoft.JSInterop;
 
 namespace DexieNET
 {
+    public interface IDexieNETFactory<T>
+    {
+        public ValueTask<T> Create(bool cloudSync = false);
+        public ValueTask Delete();
+    }
+
     public interface IDexieNETService<T> where T : DBBase, IDBBase
     {
-        public DexieNETFactory<T> DexieNETFactory { get; }
+        public IDexieNETFactory<T> DexieNETFactory { get; }
     }
 
     public sealed class DexieNETService<T>(IJSRuntime jsRuntime) : IDexieNETService<T> where T : DBBase, IDBBase
     {
-        public DexieNETFactory<T> DexieNETFactory { get; } = new DexieNETFactory<T>(jsRuntime);
+        public IDexieNETFactory<T> DexieNETFactory { get; } = new DexieNETFactory<T>(jsRuntime);
     }
 
     public static class ServiceCollectionExtensions
