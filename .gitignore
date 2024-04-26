@@ -25,4 +25,8 @@ DexieNETCloudSample/wwwroot/importfile.json
 DexieNET/yarn/node_modules
 DexieNET/yarn/yarn.lock
 .DS_Store
+.idea
 DexieCloudNET/yarn/node_modules
+DexieCloudNET/yarn/src/**/*.js
+DexieCloudNET/wwwroot/
+DexieCloudNET/yarn/src/DexieNET

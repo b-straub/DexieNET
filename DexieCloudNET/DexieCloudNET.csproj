@@ -59,6 +59,17 @@
 		<Delete Files="wwwroot\js\*.*" />
 	</Target>
 
+	<Target Name="CopyDexieNETFiles" BeforeTargets="BeforeBuild">
+        <ItemGroup>
+            <TSFiles Include="..\DexieNET\yarn\src\*.ts"/>
+        </ItemGroup>
+
+        <Copy
+            SourceFiles="@(TSFiles)"
+            DestinationFolder="yarn\src\DexieNET"
+        />
+    </Target>
+
 	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
 		<Exec Command="yarn install" WorkingDirectory="yarn" />
 		<Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
