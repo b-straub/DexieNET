@@ -1,4 +1,5 @@
 ﻿const path = require('path')
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
     mode: 'production',
@@ -18,5 +19,9 @@ module.exports = {
         path: path.resolve(__dirname, '../wwwroot/js'),
         filename: 'dexieNET.js',
         publicPath: '_content/DexieNET/js/'
-    }
+    },
+    optimization: {
+        minimize: true,
+        minimizer: [new TerserPlugin()],
+    },
 }
