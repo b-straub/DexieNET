@@ -31,6 +31,9 @@ jobs:
     - name: BuildDexieNET
       run: dotnet build DexieNET/DexieNET.csproj -c Release
 
+    - name: BuildDexieCloudNET
+      run: dotnet build DexieNET/DexieCloudNET.csproj -c Release
+
     - name: Build
       run: dotnet build --configuration Release
 
