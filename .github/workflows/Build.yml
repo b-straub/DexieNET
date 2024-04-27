@@ -22,8 +22,11 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Run build
-      run: dotnet build -c Release
+    - name: Build DexieNET normal and cloud
+      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
 
-    - name: Run tests
-      run: dotnet test --configuration Release --verbosity normal
+    - name: TestSG
+      run: dotnet test DexieNETTest/TableGeneratorTest/DexieNETTest.TableGeneratorTest.csproj -c Release
+
+    - name: TestDB
+      run: dotnet test DexieNETTest/Tests/DexieNETTest.Tests.csproj -c Release
