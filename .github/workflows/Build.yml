@@ -24,7 +24,7 @@ jobs:
     - name: Setup .NET 8.0
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.
+        dotnet-version: 8.0.x
 
     - name: BuildDexieNET
       run: dotnet build DexieNET/DexieNET.csproj -c Release
@@ -40,7 +40,7 @@ jobs:
     - name: Setup .NET 8.0
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.
+        dotnet-version: 8.0.x
 
     - name: BuildDexieCloudNET
       run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
@@ -56,7 +56,7 @@ jobs:
     - name: Setup .NET 8.0
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.
+        dotnet-version: 8.0.x
 
     - name: Test
       run: dotnet test -c Release
