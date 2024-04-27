@@ -1,11 +1,7 @@
 ﻿namespace DexieNETTest.TestBase.Test
 {
-    internal class PersistanceTest : DexieTest<TestDB>
+    internal class PersistanceTest(TestDB db) : DexieTest<TestDB>(db)
     {
-        public PersistanceTest(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "PersistanceTest";
 
         public override async ValueTask<string?> RunTest()

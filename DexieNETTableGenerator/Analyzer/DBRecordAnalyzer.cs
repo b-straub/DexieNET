@@ -34,8 +34,10 @@ namespace DNTGenerator.Analyzer
         {
             GeneratorDiagnostic.NotPartial,
             GeneratorDiagnostic.NotPartialAutoGuid,
+            GeneratorDiagnostic.NotPartialCloud,
+            GeneratorDiagnostic.ReservedStoreName,
             GeneratorDiagnostic.AutoIncrementNotNullable,
-            GeneratorDiagnostic.AutoIncrementNotNumeric,
+            GeneratorDiagnostic.AutoIncrementNotAllowedType,
             GeneratorDiagnostic.AutoWithoutPrimaryKeyArgument,
             GeneratorDiagnostic.MultiEntryNotIEnumerable,
             GeneratorDiagnostic.NonMultiEntryNotArray,

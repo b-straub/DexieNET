@@ -34,9 +34,11 @@ namespace DexieNETTest.TestBase.Components
         private string _queryName = string.Empty;
         private readonly Subject<Unit> _queryChanged = new();
         private LiveQuery<IEnumerable<Friend>>? _friendsQuery = null;
-        private LiveQuery<IEnumerable<Friend>>? _searchFriendsQuery = null;
+        private UseLiveQuery<IEnumerable<Friend>>? _searchFriendsQuery = null;
         private bool _hasData = false;
         private IDisposable? _hasDataDisposable = null;
+
+        public DBComponentTest() : base() { }
 
         protected override async Task OnInitializedAsync()
         {
@@ -44,42 +46,44 @@ namespace DexieNETTest.TestBase.Components
 
             if (Dexie is not null)
             {
-                await Dexie.Version(1).Stores();
-                if (await Dexie.Friends().Count() == 0)
+                Dexie.Version(2).Stores();
+                if (await Dexie.Friends.Count() == 0)
                 {
-                    await Dexie.Friends().BulkAdd(DataGenerator.GetFriends());
+                    await Dexie.Friends.BulkAdd(DataGenerator.GetFriends());
                 }
 
-                _friendsQuery = await Dexie.LiveQuery(async () =>
+                _friendsQuery = Dexie.LiveQuery(async () =>
                 {
                     if (CreateByTransaction)
                     {
                         await Dexie.Transaction(async ta =>
                         {
-                            await Dexie.Friends().Add(new Components.Friend("TA1", 55));
+                            await Dexie.Friends.Add(new Components.Friend("TA1", 55));
 
                             await Dexie.Transaction(async _ =>
                             {
-                                await Dexie.Friends().Add(new Components.Friend("TA2", 57));
+                                await Dexie.Friends.Add(new Components.Friend("TA2", 57));
                             }, TAType.TopLevel);
                         });
 
                         CreateByTransaction = false; // caution reset to prevent endless recursion
                     }
 
-                    var f = await Dexie.Friends().ToArray();
+                    var f = await Dexie.Friends.ToArray();
                     return f;
                 });
 
-                _searchFriendsQuery = await Dexie.LiveQuery(async () =>
+                var lq = Dexie.LiveQuery(async () =>
                 {
-                    var sf = await Dexie.Friends().Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
+                    var sf = await Dexie.Friends.Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
                     return sf;
-                }, _queryChanged);
+                });
 
-                var hasDataQuery = await Dexie.LiveQuery(async () =>
+                _searchFriendsQuery = lq.UseLiveQuery(_queryChanged);
+
+                var hasDataQuery = Dexie.LiveQuery(async () =>
                 {
-                    return await Dexie.Friends().Count();
+                    return await Dexie.Friends.Count();
                 });
 
                 _hasDataDisposable = hasDataQuery.Subscribe(c =>
@@ -95,7 +99,7 @@ namespace DexieNETTest.TestBase.Components
         private async Task HandleValidSubmit()
         {
             var friend = new Friend(Name, Age);
-            await Dexie.Friends().Add(friend);
+            await Dexie.Friends.Add(friend);
         }
 
         private void QueryChanged()
@@ -105,7 +109,7 @@ namespace DexieNETTest.TestBase.Components
 
         private async Task ClearDatabase()
         {
-            await Dexie.Friends().Clear();
+            await Dexie.Friends.Clear();
         }
 
         private void Subscribe()
@@ -159,11 +163,6 @@ namespace DexieNETTest.TestBase.Components
             _searchedFriends = Enumerable.Empty<Friend>();
             _queryName = string.Empty;
             InvokeAsync(StateHasChanged);
-        }
-
-        async Task<bool> HasDBItems()
-        {
-            return await Dexie.Friends().Count() > 0;
         }
 
         public async ValueTask DisposeAsync()

@@ -2,20 +2,16 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class PutPExtern : DexieTest<TestDB>
+    internal class PutPExtern(TestDB db) : DexieTest<TestDB>(db)
     {
-        public PutPExtern(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "PutPExtern";
 
         public override async ValueTask<string?> RunTest()
         {
-            var byteTable = await DB.FriendNPs<byte[]>();
-            var guidTable = await DB.FriendNPs<Guid>();
+            var byteTable = DB.FriendNPs<byte[]>();
+            var guidTable = DB.FriendNPs<Guid>();
             await guidTable.Clear();
-            var cTable = await DB.FriendNPs<(string, int)>();
+            var cTable = DB.FriendNPs<(string, int)>();
             await cTable.Clear();
 
             var friends = new[] {

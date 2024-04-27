@@ -2,20 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class BulkAdd : DexieTest<TestDB>
+    internal class BulkAdd(TestDB db, bool allKeys = false) : DexieTest<TestDB>(db)
     {
-        public BulkAdd(TestDB db, bool allKeys = false) : base(db)
-        {
-            AllKeys = allKeys;
-        }
-
         public override string Name => AllKeys ? "BulkAddAllKeys" : "BulkAdd";
 
-        public bool AllKeys { get; private set; }
+        public bool AllKeys { get; private set; } = allKeys;
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();

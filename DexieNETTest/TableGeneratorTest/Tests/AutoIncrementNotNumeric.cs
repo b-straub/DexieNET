@@ -26,7 +26,7 @@ namespace Test
 {{
     public partial class Person : IDBStore
     {{
-        [Index(IsPrimary = true, IsAuto = true)] Guid? PKey {{ get; set; }}
+        [Index(IsPrimary = true, IsAuto = true)] Guid? {{|{GeneratorDiagnostic.AutoIncrementNotAllowedType.Id}:Pkey|}} {{ get; set; }}
     }}
 }}
 ";
@@ -45,7 +45,7 @@ namespace Test
     {{
         string? NotIndexed {{ get; set; }}
 
-        [Index(IsPrimary = true, IsAuto = true)] string? {{|{GeneratorDiagnostic.AutoIncrementNotNumeric.Id}:ID|}} {{ get; set; }}
+        [Index(IsPrimary = true, IsAuto = true)] char? {{|{GeneratorDiagnostic.AutoIncrementNotAllowedType.Id}:ID|}} {{ get; set; }}
     }}
 }}
 ";
@@ -63,7 +63,7 @@ namespace Test
 {{
     public partial record Person
     (
-        [property: Index(IsPrimary = true, IsAuto = true)] Guid? PKey
+        [property: Index(IsPrimary = true, IsAuto = true)] Guid? {{|{GeneratorDiagnostic.AutoIncrementNotAllowedType.Id}:PKey|}}
     ) : IDBStore;
 }}
 ";
@@ -81,7 +81,7 @@ namespace Test
     public record Person
     (
         string NotIndexed,
-        [property: Index(IsPrimary = true, IsAuto = true)] string? {{|{GeneratorDiagnostic.AutoIncrementNotNumeric.Id}:ID|}}
+        [property: Index(IsPrimary = true, IsAuto = true)] char? {{|{GeneratorDiagnostic.AutoIncrementNotAllowedType.Id}:ID|}}
     ) : IDBStore;
 }}
 ";
@@ -100,7 +100,7 @@ namespace Test
     {{
         string? NotIndexed {{ get; set; }}
 
-        [Index(IsPrimary = true, IsAuto = true)] string? {{|{GeneratorDiagnostic.AutoIncrementNotNumeric.Id}:ID|}} {{ get; set; }}
+        [Index(IsPrimary = true, IsAuto = true)] char? {{|{GeneratorDiagnostic.AutoIncrementNotAllowedType.Id}:ID|}} {{ get; set; }}
     }}
 }}
 ";
@@ -132,7 +132,7 @@ namespace Test
     public record Person
     (
         string NotIndexed,
-        [property: Index(IsPrimary = true, IsAuto = true)] string? {{|{GeneratorDiagnostic.AutoIncrementNotNumeric.Id}:ID|}}
+        [property: Index(IsPrimary = true, IsAuto = true)] char? {{|{GeneratorDiagnostic.AutoIncrementNotAllowedType.Id}:ID|}}
     ) : IDBStore;
 }}
 ";

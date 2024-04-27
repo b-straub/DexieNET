@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionPrimaryKeys : DexieTest<TestDB>
+    internal class CollectionPrimaryKeys(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionPrimaryKeys(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionPrimaryKeys";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -21,8 +17,8 @@ namespace DexieNETTest.TestBase.Test
             var personsData = await table.ToArray();
 
             var primaryKeysData = personsData
-                .Where(p => p.ID is not null)
-                .Select(p => (ulong)p.ID!);
+                .Where(p => p.Id is not null)
+                .Select(p => (ulong)p.Id!);
 
             var primaryKeys = await table.ToCollection().PrimaryKeys();
 
@@ -32,8 +28,8 @@ namespace DexieNETTest.TestBase.Test
             }
 
             var primaryKeysDataAge = personsData
-               .Where(p => p.Age > 30 && p.ID is not null)
-               .Select(p => (ulong)p.ID!)
+               .Where(p => p.Age > 30 && p.Id is not null)
+               .Select(p => (ulong)p.Id!)
                .OrderBy(p => p);
 
             var primaryKeysAge = await table.Where(p => p.Age).Above(30).PrimaryKeys();
@@ -45,11 +41,11 @@ namespace DexieNETTest.TestBase.Test
 
             await DB.Transaction(async _ =>
             {
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
                 primaryKeys = await collection.PrimaryKeys();
 
-                var whereClause = await table.Where(p => p.Age);
-                var collectionAbove = await whereClause.Above(30);
+                var whereClause = table.Where(p => p.Age);
+                var collectionAbove = whereClause.Above(30);
                 primaryKeysAge = await collectionAbove.PrimaryKeys();
             });
 

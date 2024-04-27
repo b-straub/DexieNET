@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Get : DexieTest<TestDB>
+    internal class Get(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Get(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Get";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
 
             await table.Clear();
 

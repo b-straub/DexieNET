@@ -2,19 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class NotEqual : DexieTest<TestDB>
+    internal class NotEqual(TestDB db) : DexieTest<TestDB>(db)
     {
-        public NotEqual(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "NotEqual";
 
         public override async ValueTask<string?> RunTest()
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -41,11 +37,11 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var whereClauseAge = await table.Where(p => p.Age);
-                var whereClauseName = await table.Where(p => p.Name);
+                var whereClauseAge = table.Where(p => p.Age);
+                var whereClauseName = table.Where(p => p.Name);
 
-                var collectionAge = await whereClauseAge.NotEqual(11);
-                var collectionName = await whereClauseName.NotEqual("Person1");
+                var collectionAge = whereClauseAge.NotEqual(11);
+                var collectionName = whereClauseName.NotEqual("Person1");
 
                 personsAge = await collectionAge.ToArray();
                 personsName = await collectionName.ToArray();

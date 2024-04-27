@@ -2,18 +2,14 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class AddComplex : DexieTest<TestDB>
+    internal class AddComplex(TestDB db) : DexieTest<TestDB>(db)
     {
-        public AddComplex(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "AddComplex";
 
         public override async ValueTask<string?> RunTest()
         {
-            var tablePerson = await DB.Persons();
-            var tableStudents = await DB.Students();
+            var tablePerson = DB.Persons;
+            var tableStudents = DB.Students;
 
             await tablePerson.Clear();
             await tableStudents.Clear();

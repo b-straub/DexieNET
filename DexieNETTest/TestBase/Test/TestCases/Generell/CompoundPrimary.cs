@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CompoundPrimary : DexieTest<TestDB>
+    internal class CompoundPrimary(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CompoundPrimary(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CompoundPrimary";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.PersonCompounds();
+            var table = DB.PersonCompounds;
             await table.Clear();
 
             var persons = DataGenerator.GetPersonCompounds();

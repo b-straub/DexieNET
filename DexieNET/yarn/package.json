@@ -1,0 +1,28 @@
+{
+  "name": "dexienet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dexieNET.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "buildDebug": "webpack --config webpackDEV.config.js",
+    "buildRelease": "webpack --config webpackREL.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@microsoft/dotnet-js-interop": "^8.0.0",
+    "dexie": "4.0.4"
+  },
+  "devDependencies": {
+    "css-loader": "^6.7.3",
+    "file-loader": "^6.2.0",
+    "source-map-loader": "^5.0.0",
+    "style-loader": "^3.3.2",
+    "terser": "^5.30.4",
+    "typescript": "^5.3.3",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

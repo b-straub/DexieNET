@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Update : DexieTest<TestDB>
+    internal class Update(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Update(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Update";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var person = DataGenerator.GetPerson1();
@@ -26,7 +22,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Item not identical.");
             }
 
-            if (personAdded?.ID is null || personAdded.ID != res)
+            if (personAdded?.Id is null || personAdded.Id != res)
             {
                 throw new InvalidOperationException("Updated preparation failed.");
             }

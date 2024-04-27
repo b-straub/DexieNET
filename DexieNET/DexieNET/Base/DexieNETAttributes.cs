@@ -46,17 +46,13 @@ namespace DexieNET
         }
     }
 
+    /// <summary>
+    /// Constructor to setup default values
+    /// </summary>
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
-    public class DBNameAttribute : Attribute
+    public class DBNameAttribute(string name) : Attribute
     {
-        public string Name { get; private set; }
-        /// <summary>
-        /// Constructor to setup default values
-        /// </summary>
-        public DBNameAttribute(string name)
-        {
-            Name = name;
-        }
+        public string Name { get; private set; } = name;
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
@@ -81,7 +77,7 @@ namespace DexieNET
 
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-    public abstract class IndexConverterAttribute<T, C1, C2> : JsonConverterAttribute, IIndexAttribute 
+    public abstract class IndexConverterAttribute<T, C1, C2> : JsonConverterAttribute, IIndexAttribute
         where C1 : IndexConverter<T>, new() where C2 : IndexConverter<IEnumerable<T>>, new()
     {
         public bool IsPrimary { get; set; }
@@ -162,6 +158,8 @@ namespace DexieNET
         public string PrimaryKeyName { get; set; }
         public bool PrimaryKeyGuid { get; set; }
         public bool OutboundPrimaryKey { get; set; }
+        public bool CloudSync { get; set; }
+
 
         /// <summary>
         /// Constructor to setup default values
@@ -173,6 +171,7 @@ namespace DexieNET
             PrimaryKeyName = string.Empty;
             OutboundPrimaryKey = false;
             PrimaryKeyGuid = true;
+            CloudSync = false;
         }
     }
 }

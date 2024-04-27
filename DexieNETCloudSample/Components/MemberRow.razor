@@ -1,0 +1,132 @@
+﻿@inherits RxBLServiceSubscriber<ToDoListMemberService>
+
+<MudTd DataLabel="Member">
+    <MudText>@MemberName(Member)</MudText>
+</MudTd>
+<MudTd DataLabel="Role">
+    <MudSelectAsyncRx StateGroupAsync=@Scope.MemberRoleSelection InitializeCallback=@Scope.GetInitialMemberRole(Member) 
+        CanChangeCallback=@(Scope.CanChangeMemberRole(Member)) ChangingAsyncCallback=@Scope.MemberRoleChangingAsync(Member)
+        HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
+</MudTd>
+<MudTd>
+    <MudFabAsyncRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
+        StartIcon=@GetMemberActionIcon() Size="Size.Small" StateCommand=@Service.CommandAsync 
+        CanChangeCallback=@Service.CanChangeMemberState(Member)
+        ConfirmExecutionAsync=@ConfirmChangeMemberStateAsync ExecuteAsyncCallback=@Service.ChangeMemberState(Member) />
+    @if (_isOwnList && _currentMemberAction is not MemberAction.OWNER)
+    {
+        <MudIcon Class="ml-4" Color=@(_currentMemberState is MemberState.ACCEPTED ? Color.Success : Color.Error) Icon=@GetMemberStateIcon() />
+    }
+</MudTd>
+
+@code {
+    [Inject]
+    public required DexieCloudService DBService { get; init; }
+
+    [Inject]
+    public required IDialogService DialogService { get; init; }
+
+    [Parameter, EditorRequired]
+    public required ToDoDBList List { get; init; }
+
+    [Parameter, EditorRequired]
+    public required Member Member { get; init; }
+
+    [CascadingParameter]
+    public required ToDoListMemberService.MemberRowScope Scope { get; set; }
+
+    private MemberAction _currentMemberAction = MemberAction.NONE;
+    private MemberState _currentMemberState = MemberState.NONE;
+    private bool _isOwnList = false;
+
+    protected override void OnInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(DBService.DB);
+
+        _currentMemberAction = Service.GetMemberAction(Member);
+        _currentMemberState = ToDoListMemberService.GetMemberState(Member);
+        _isOwnList = List.Owner == DBService.DB.CurrentUserId();
+
+        base.OnInitialized();
+    }
+
+    private string MemberName(Member member)
+    {
+        ArgumentNullException.ThrowIfNull(DBService.DB);
+        var name = member.UserId;
+
+        name ??= member.Email;
+        name ??= "Unknown";
+
+        if (member.UserId == DBService.DB.CurrentUserId())
+        {
+            name += " (Me)";
+        }
+
+        return name;
+    }
+
+    private string GetMemberActionIcon()
+    {
+        return _currentMemberAction switch
+        {
+            MemberAction.DELETE => Icons.Material.Outlined.Delete,
+            MemberAction.LEAVE => Icons.Material.Outlined.ExitToApp,
+            MemberAction.ACCEPT => Icons.Material.Outlined.PersonAdd,
+            MemberAction.OWNER => Icons.Material.Outlined.People,
+            MemberAction.NONE => Icons.Material.Outlined.Error,
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
+        };
+    }
+
+    private string GetMemberStateIcon()
+    {
+        return _currentMemberState switch
+        {
+            MemberState.PENDING => Icons.Material.Outlined.Pending,
+            MemberState.ACCEPTED => Icons.Material.Outlined.Check,
+            MemberState.REJECTED => Icons.Material.Outlined.Clear,
+            MemberState.NONE => Icons.Material.Outlined.Error,
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberState))
+        };
+    }
+
+    private async Task<bool> ConfirmChangeMemberStateAsync()
+    {
+        var message = _currentMemberAction switch
+        {
+            MemberAction.DELETE => "Delete Member",
+            MemberAction.LEAVE => "Leave List",
+            MemberAction.ACCEPT => "Accept Invite",
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
+        };
+
+        var button = _currentMemberAction switch
+        {
+            MemberAction.DELETE => "Delete",
+            MemberAction.LEAVE => "Leave",
+            MemberAction.ACCEPT => "Accept",
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
+        };
+
+        bool successOnConfirm = _currentMemberAction switch
+        {
+            MemberAction.DELETE => false,
+            MemberAction.LEAVE => false,
+            MemberAction.ACCEPT => true,
+            _ => throw new ArgumentOutOfRangeException(nameof(_currentMemberAction))
+        };
+
+        var parameters = new DialogParameters { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = successOnConfirm };
+        var dialog = DialogService.Show<ConfirmDialog>("Member", parameters);
+
+        var res = await dialog.Result;
+
+        if (res.Canceled)
+        {
+            return false;
+        }
+
+        return true;
+    }
+}

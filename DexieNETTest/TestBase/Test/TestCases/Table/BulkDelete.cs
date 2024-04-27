@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class BulkDelete : DexieTest<TestDB>
+    internal class BulkDelete(TestDB db) : DexieTest<TestDB>(db)
     {
-        public BulkDelete(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "BulkDelete";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -24,7 +20,7 @@ namespace DexieNETTest.TestBase.Test
             await table.BulkDelete(evenKeys);
 
             var keysRemain = (await table.ToArray())
-                .Select(p => p.ID)
+                .Select(p => p.Id)
                 .Where(i => i is not null)
                 .Select(i => (ulong)i!);
 
@@ -42,7 +38,7 @@ namespace DexieNETTest.TestBase.Test
                 await table.BulkDelete(evenKeys);
 
                 keysRemain = (await table.ToArray())
-                .Select(p => p.ID)
+                .Select(p => p.Id)
                 .Where(i => i is not null)
                 .Select(i => (ulong)i!);
             });

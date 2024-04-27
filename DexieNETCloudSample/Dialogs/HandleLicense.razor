@@ -1,0 +1,101 @@
+﻿@using DexieNET
+@inherits RxBLServiceSubscriber<AdministrationService, DexieCloudService>
+
+<MudTooltip Text=@GetLicenseTooltip()>
+    <MudIcon Icon=@GetLicenseIcon() />
+</MudTooltip>
+
+@if (Service2.UserLogin.Value?.License is not null && (Service2.UserLogin.Value.License.Status is not LicenseStatus.OK || Service2.UserLogin.Value.License.EvalDaysLeft < 7))
+{
+    <MudMenu>
+        <ActivatorContent>
+            <MudIconButton Icon="@Icons.Material.Outlined.Payment" Color="Color.Inherit">
+                "Handle license"
+            </MudIconButton>
+        </ActivatorContent>
+        <ChildContent>
+            @if (Service2.UserLogin.Value.License.Status is not LicenseStatus.OK)
+            {
+                <MudMenuItem OnClick=@ConfirmDeleteUser OnTouch=@ConfirmDeleteUser>Delete account for: @Service2.UserLogin.Value.UserId</MudMenuItem>
+            }
+            @if (Service2.UserLogin.Value.License.Status is LicenseStatus.EXPIRED || Service2.UserLogin.Value.License.EvalDaysLeft < 7)
+            {
+                <MudMenuItem OnClick=@BuyLicense OnTouch=@BuyLicense>Buy license for: @Service2.UserLogin.Value.UserId</MudMenuItem>
+            }
+        </ChildContent>
+    </MudMenu>
+}
+
+@code {
+    [Inject]
+    public required IDialogService DialogService { get; init; }
+
+    private async Task<bool> ConfirmDeleteUser()
+    {
+        ArgumentNullException.ThrowIfNull(Service1.DeleteUser);
+        ArgumentNullException.ThrowIfNull(Service2.UserLogin.Value);
+
+        var message = $"Are you sure you want to delete your user completely along all stored data for {Service2.UserLogin.Value.UserId}? Private data will be deleted. Shared data will not be deleted. This action cannot be undone.";
+
+        return await DialogAsyncRx<AdministrationService>.Show(DialogService, Service1.CommandAsync, Service1.DeleteUser, $"Delete {Service2.UserLogin.Value.UserId}",
+            message, $"Delete {Service2.UserLogin.Value.UserId}", "Cancel", false, "Cancel Delete");
+    }
+
+    private async Task BuyLicense()
+    {
+        await DialogService.ShowMessageBox("Buy license", "Implement your buying process here.");
+    }
+
+    private string GetLicenseIcon()
+    {
+        @if (Service2.UserLogin.Value?.License is null)
+        {
+            return Icons.Material.Outlined.QuestionMark;
+        }
+
+        return Service2.UserLogin.Value.License.Type switch
+        {
+            LicenseType.DEMO => Icons.Material.Outlined.Quiz,
+            LicenseType.EVAL => Icons.Material.Outlined.AddShoppingCart,
+            LicenseType.PROD => Icons.Material.Outlined.Paid,
+            LicenseType.CLIENT => Icons.Material.Outlined.AccountBalance,
+            _ => throw new ArgumentOutOfRangeException(nameof(Service2.UserLogin.Value.License.Type))
+        };
+    }
+
+    private string GetLicenseTooltip()
+    {
+        @if (Service2.UserLogin.Value?.License is null)
+        {
+            return "No user logged in.";
+        }
+
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.DEMO)
+        {
+            return "You are in demonstration mode.";
+        }
+
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.EVAL)
+        {
+            return $"You are in evaluation mode. {Service2.UserLogin.Value.License.EvalDaysLeft} days left.";
+        }
+
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.PROD)
+        {
+            return $"You have a valid purchased license.";
+        }
+
+        @if (Service2.UserLogin.Value.License.Type is LicenseType.CLIENT)
+        {
+            return $"You have a valid site license.";
+        }
+
+        return Service2.UserLogin.Value.License.Status switch
+        {
+            LicenseStatus.OK => "You have a valid license.",
+            LicenseStatus.EXPIRED => "Your license has expired.You are in offline mode until a valid license is purchased.",
+            LicenseStatus.DEACTIVATED => "Your license has been deactivated.You are in offline mode until a valid license is purchased.",
+            _ => "You have no valid license.You are in offline mode until a valid license is purchased."
+        };
+    }
+}

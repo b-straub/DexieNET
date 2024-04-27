@@ -2,20 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class TransactionsParallel : DexieTest<TestDB>
+    internal class TransactionsParallel(TestDB db, bool fail = false) : DexieTest<TestDB>(db)
     {
-        public TransactionsParallel(TestDB db, bool fail = false) : base(db)
-        {
-            Fail = fail;
-        }
-
         public override string Name => Fail ? "TransactionsParallelFail" : "TransactionsParallel";
 
-        public bool Fail { get; private set; }
+        public bool Fail { get; private set; } = fail;
 
         public override async ValueTask<string?> RunTest()
         {
-            var tablePersons = await DB.Persons();
+            var tablePersons = DB.Persons;
             var personsR1 = DataGenerator.GetPersonsRandom(20, "Test1");
             var personsR2 = DataGenerator.GetPersonsRandom(20, "Test2");
             var personsR3 = DataGenerator.GetPersonsRandom(20, "Test3");
@@ -69,22 +64,22 @@ namespace DexieNETTest.TestBase.Test
                 {
                     await DB.Transaction(async _ =>
                     {
-                        var wc = await tablePersons.Where(t => t.Name);
-                        var c = await wc.Equal("Test1");
+                        var wc = tablePersons.Where(t => t.Name);
+                        var c = wc.Equal("Test1");
                         await c.EachKey(k => pList.Add(k));
                     }, TAType.TopLevel);
 
                     await DB.Transaction(async _ =>
                     {
-                        var wc = await tablePersons.Where(t => t.Name);
-                        var c = await wc.Equal("Test2");
+                        var wc = tablePersons.Where(t => t.Name);
+                        var c = wc.Equal("Test2");
                         await c.EachKey(k => pList.Add(k));
                     }, TAType.TopLevel);
 
                     await DB.Transaction(async _ =>
                     {
-                        var wc = await tablePersons.Where(t => t.Name);
-                        var c = await wc.Equal("Test3");
+                        var wc = tablePersons.Where(t => t.Name);
+                        var c = wc.Equal("Test3");
                         await c.EachKey(k => pList.Add(k));
 
                         item = Fail ? await tablePersons.Get(keys.LastOrDefault()) : DataGenerator.GetPerson3();

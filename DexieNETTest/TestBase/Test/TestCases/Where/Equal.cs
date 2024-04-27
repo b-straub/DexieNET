@@ -2,19 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Equal : DexieTest<TestDB>
+    internal class Equal(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Equal(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Equal";
 
         public override async ValueTask<string?> RunTest()
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -44,20 +40,29 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException("Items not identical.");
             }
 
+            var personsDataAgeNotIndexed = persons.Where(p => p.Age == 11 && p.NotIndexed == "NotIndexed");
+            var personsAgeNotIndexed = await table.Where(p => p.Age, 11, p => p.NotIndexed, "NotIndexed").ToArray();
+
+            if (!personsDataAgeNotIndexed.SequenceEqual(personsAgeNotIndexed, comparer))
+            {
+                throw new InvalidOperationException("Items not identical.");
+            }
+
             await DB.Transaction(async _ =>
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var whereClauseAge = await table.Where(p => p.Age);
-                var whereClauseName = await table.Where(p => p.Name);
+                var whereClauseAge = table.Where(p => p.Age);
+                var whereClauseName = table.Where(p => p.Name);
 
-                var collectionAge = await whereClauseAge.Equal(11);
-                var collectionName = await whereClauseName.EqualIgnoreCase("person1");
+                var collectionAge = whereClauseAge.Equal(11);
+                var collectionName = whereClauseName.EqualIgnoreCase("person1");
 
                 personsAge = await collectionAge.ToArray();
                 personsName = await collectionName.ToArray();
                 personsHN = await table.Where(p => p.Address.Housenumber).Equal(personHN).ToArray();
+                personsAgeNotIndexed = await table.Where(p => p.Age, 11, p => p.NotIndexed, "NotIndexed").ToArray();
             });
 
             if (!personsAge.SequenceEqual(personsDataAge, comparer))
@@ -71,6 +76,11 @@ namespace DexieNETTest.TestBase.Test
             }
 
             if (!personsName.SequenceEqual(personsDataName, comparer))
+            {
+                throw new InvalidOperationException("Items not identical.");
+            }
+
+            if (!personsDataAgeNotIndexed.SequenceEqual(personsAgeNotIndexed, comparer))
             {
                 throw new InvalidOperationException("Items not identical.");
             }

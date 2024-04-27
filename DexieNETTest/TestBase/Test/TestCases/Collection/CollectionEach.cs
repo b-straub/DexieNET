@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionEach : DexieTest<TestDB>
+    internal class CollectionEach(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionEach(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionEach";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -43,8 +39,8 @@ namespace DexieNETTest.TestBase.Test
             // EachPrimaryKey
             List<ulong> eachPrimaryKeys = new();
             var eachDataPrimaryKeys = (await table.ToArray())
-                .Where(p => p.ID is not null)
-                .Select(p => (ulong)p.ID!);
+                .Where(p => p.Id is not null)
+                .Select(p => (ulong)p.Id!);
 
             await table.ToCollection().EachPrimaryKey(k => eachPrimaryKeys.Add(k));
 
@@ -74,19 +70,19 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
                 eachDataPrimaryKeys = (await table.ToArray())
-                    .Where(p => p.ID is not null)
-                    .Select(p => (ulong)p.ID!);
+                    .Where(p => p.Id is not null)
+                    .Select(p => (ulong)p.Id!);
 
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
                 await collection.Each(p => eachNames.Add(p.Name));
 
-                var whereAge = await table.Where(p => p.Age);
-                var collectionAge = await whereAge.Above(30);
+                var whereAge = table.Where(p => p.Age);
+                var collectionAge = whereAge.Above(30);
                 await collectionAge.EachKey(a => eachAge.Add(a));
 
                 await collection.EachPrimaryKey(i => eachPrimaryKeys.Add(i));
 
-                var collectionNames = await table.OrderBy(p => p.Name);
+                var collectionNames = table.OrderBy(p => p.Name);
                 await collectionNames.EachUniqueKey(n => eachNamesU.Add(n));
             });
 

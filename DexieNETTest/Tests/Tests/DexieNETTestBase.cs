@@ -6,14 +6,9 @@ using Xunit;
 
 namespace DexieNETTest.Tests.Tests
 {
-    public abstract class DexieNETTestBase : IAsyncLifetime
+    public abstract class DexieNETTestBase(IWAFixture fixture) : IAsyncLifetime
     {
-        private readonly IWAFixture _fixture;
-
-        public DexieNETTestBase(IWAFixture fixture)
-        {
-            _fixture = fixture;
-        }
+        private readonly IWAFixture _fixture = fixture;
 
         public Task DisposeAsync()
         {
@@ -38,7 +33,7 @@ namespace DexieNETTest.Tests.Tests
         [InlineData("EqualSpecialFields")]
         [InlineData("Reverse")]
         [InlineData("CompoundPrimary")]
-        [InlineData("LiveQueryTest")]
+        [InlineData("LiveQueryTest", IWAFixture.BrowserType.All)] // only Playwright headless
         // Table
         [InlineData("ClearCount", IWAFixture.BrowserType.Webkit)] // only Playwright
         [InlineData("Add")]
@@ -83,7 +78,7 @@ namespace DexieNETTest.Tests.Tests
         [InlineData("StartsWith")]
         public async Task TestCase(string name, IWAFixture.BrowserType typeToSkip = IWAFixture.BrowserType.None)
         {
-            if (typeToSkip == _fixture.Type)
+            if (((int)typeToSkip & (int)_fixture.Type) != 0)
             {
                 return;
             }

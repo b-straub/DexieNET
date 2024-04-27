@@ -1,0 +1,48 @@
+﻿@using DexieNET
+@inherits RxBLServiceSubscriber<ToDoListMemberService>
+
+<MudCard Class="ma-8" Elevation="0" Outlined="true">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Inherit">
+                <MudIcon Icon="@Icons.Material.Filled.People" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.subtitle2">Share with</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Service.Members.Any())
+        {
+            <MemberForm List=@List />
+        }
+        @if (Service.CanAddMember())
+        {
+            <InviteForm />
+        }
+    </MudCardContent>
+</MudCard>
+
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToDoDBList List { get; init; }
+
+    protected override Task OnInitializedAsync()
+    {
+        Service.List.Value = List;
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Service.List.Value != List)
+        {
+            Service.List.Value = List;
+        }
+
+        await base.OnParametersSetAsync();
+    }
+}

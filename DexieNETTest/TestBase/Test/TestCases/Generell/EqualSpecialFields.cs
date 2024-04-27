@@ -1,25 +1,20 @@
 ﻿using DexieNET;
-using System.Text;
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class EqualSpecialFields : DexieTest<TestDB>
+    internal class EqualSpecialFields(TestDB db) : DexieTest<TestDB>(db)
     {
-        public EqualSpecialFields(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "EqualSpecialFields";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.FieldTests();
+            var table = DB.FieldTests;
             await table.Clear();
 
-            var fieldsData = DataGenerator.GetFieldTestRandom().ToArray().OrderBy(f => f.ID);
+            var fieldsData = DataGenerator.GetFieldTestRandom().ToArray().OrderBy(f => f.Id);
             await table.BulkAdd(fieldsData);
 
-            var fields = await table.OrderBy(f => f.ID).ToArray();
+            var fields = await table.OrderBy(f => f.Id).ToArray();
 
             var b1 = fieldsData.Last().Blob;
             var b2 = fields.Last().Blob;
@@ -85,7 +80,7 @@ namespace DexieNETTest.TestBase.Test
             var keyHigh = (dateHigh, true);
 
             var fieldsDataDate = fieldsData.Where(f => (f.Date >= dateLow && f.Date < dateHigh) && f.Include);
-            var col = await table.Where(f => f.Date, f => f.Include).Equal((dateHigh, true));
+            var col = table.Where(f => f.Date, f => f.Include).Equal((dateHigh, true));
             var c = await col.Count();
 
             var fieldsDate = await table.Where(f => f.Date, f => f.Include).Between(keyLow, keyHigh).ToArray();
@@ -116,23 +111,23 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(fieldsData);
 
-                var whereB = await table.Where(f => f.Blob);
-                var collectionB = await whereB.Equal(blobLast);
+                var whereB = table.Where(f => f.Blob);
+                var collectionB = whereB.Equal(blobLast);
                 blobs = await collectionB.ToArray();
 
-                var whereA = await table.Where(f => f.Array);
-                var collectionA = await whereA.Equal(arrayLast);
+                var whereA = table.Where(f => f.Array);
+                var collectionA = whereA.Equal(arrayLast);
                 arrays = await collectionA.ToArray();
 
-                var where1 = await table.Where(f => f.Include);
-                var collection1 = await where1.Equal(true);
+                var where1 = table.Where(f => f.Include);
+                var collection1 = where1.Equal(true);
                 fieldsInclude = await collection1.ToArray();
 
-                var where2 = await table.Where(f => f.Date, f => f.Include);
-                var collection2 = await where2.Between(keyLow, keyHigh);
+                var where2 = table.Where(f => f.Date, f => f.Include);
+                var collection2 = where2.Between(keyLow, keyHigh);
                 fieldsDate = await collection2.ToArray();
 
-                collection2 = await table.Where(f => f.Date, dateHigh, f => f.Include, true);
+                collection2 = table.Where(f => f.Date, dateHigh, f => f.Include, true);
                 fieldsDateInclude = await collection2.ToArray();
 
                 fieldsDateIncludeGet = await table.Get(f => f.Date, dateHigh, f => f.Include, true);

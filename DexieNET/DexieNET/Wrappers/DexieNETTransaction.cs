@@ -19,7 +19,6 @@ limitations under the License.
 */
 
 using Microsoft.JSInterop;
-using System.Diagnostics.CodeAnalysis;
 
 namespace DexieNET
 {
@@ -44,14 +43,11 @@ namespace DexieNET
         ParallelExecuting,
     }
 
-    public sealed class TransactionException : InvalidOperationException
+    public sealed class TransactionException(string? message) : InvalidOperationException(message)
     {
-        public TransactionException(string? message) : base(message)
-        {
-        }
     }
 
-    public sealed class Transaction : JSObject, IDisposable
+    public sealed class Transaction : DexieJSObject, IDisposable
     {
         public DBBase DB { get; }
         public bool Collecting { get; private set; }
@@ -75,7 +71,7 @@ namespace DexieNET
             _dotnetRef = DotNetObjectReference.Create(this);
             _mode = TAMode.Read;
             _parallel = parallel;
-            _tables = new();
+            _tables = [];
         }
 
         internal bool AddTableInfo((string Name, TAMode Mode) tableInfo)
@@ -101,7 +97,7 @@ namespace DexieNET
 
         internal void Commit(Func<Transaction, Task> create)
         {
-            if (!_tables.Any())
+            if (_tables.Count == 0)
             {
                 throw new InvalidOperationException("Found empty Transaction.");
             }
@@ -113,7 +109,7 @@ namespace DexieNET
 
         internal async ValueTask CommitAsync(Func<Transaction, Task> create)
         {
-            if (!_tables.Any())
+            if (_tables.Count == 0)
             {
                 throw new InvalidOperationException("Found empty Transaction.");
             }
@@ -159,7 +155,7 @@ namespace DexieNET
 
             if (Collecting)
             {
-               await waitFor();
+                await waitFor();
             }
             else
             {
@@ -186,7 +182,7 @@ namespace DexieNET
         [JSInvokable]
         public async ValueTask TransactionCallback()
         {
-            SetJSO(Module.Invoke<IJSObjectReference>("CurrentTransaction"));
+            SetReference(Module.Invoke<IJSInProcessObjectReference>("CurrentTransaction"));
 
             if (_create is not null)
             {
@@ -206,9 +202,10 @@ namespace DexieNET
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _dotnetRef.Dispose();
+            Dispose();
         }
     }
 }

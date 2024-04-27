@@ -56,7 +56,7 @@ namespace DexieNET
         {
             if (key is null)
             {
-                throw new InvalidOperationException("Key not set.");
+                throw new InvalidOperationException("EntityKey not set.");
             }
 
             if (typeof(Q).IsAssignableTo(typeof(ITuple)))
@@ -179,7 +179,7 @@ namespace DexieNET
         {
             return new Query<T, Q>
             {
-                { query.GetKey().ToLowerInvariant(), value },
+                { query.GetKey().ToCamelCase(), value },
             };
         }
 
@@ -189,8 +189,8 @@ namespace DexieNET
         {
             return new Query<T, (Q1, Q2)>
             {
-                { query1.GetKey().ToLowerInvariant(), value1 },
-                { query2.GetKey().ToLowerInvariant(), value2 }
+                { query1.GetKey().ToCamelCase(), value1 },
+                { query2.GetKey().ToCamelCase(), value2 }
             };
         }
 
@@ -208,9 +208,9 @@ namespace DexieNET
         {
             return new Query<T, (Q1, Q2, Q3)>
             {
-                { query1.GetKey().ToLowerInvariant(), value1 },
-                { query2.GetKey().ToLowerInvariant(), value2 },
-                { query3.GetKey().ToLowerInvariant(), value3 }
+                { query1.GetKey().ToCamelCase(), value1 },
+                { query2.GetKey().ToCamelCase(), value2 },
+                { query3.GetKey().ToCamelCase(), value3 }
             };
         }
 
@@ -222,20 +222,12 @@ namespace DexieNET
         }
     }
 
-    public class DBQuery<T, I, Q> where T : IDBStore
+    public class DBQuery<T, I, Q>(ITypeConverter? converter, params string[] keys) where T : IDBStore
     {
-        public string[] Keys { get; }
+        public string[] Keys { get; } = keys;
 
-        private readonly ITypeConverter? _converter;
-        private readonly bool _compoundType;
-
-        public DBQuery(ITypeConverter? converter, params string[] keys)
-        {
-            _converter = converter;
-            _compoundType = typeof(Q).IsAssignableTo(typeof(ITuple));
-
-            Keys = keys;
-        }
+        private readonly ITypeConverter? _converter = converter;
+        private readonly bool _compoundType = typeof(Q).IsAssignableTo(typeof(ITuple));
 
         public IEnumerable<Q> AsEnumerable(JsonElement jsonElement)
         {
@@ -256,7 +248,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"Can not deserialize to IEnumerable<{typeof(K).Name}>, invalid JSON.");
             }
 
-            List<K> values = new();
+            List<K> values = [];
 
             foreach (var element in jsonElements)
             {
@@ -377,7 +369,7 @@ namespace DexieNET
         }
     }
 
-    internal static class QueryExtensions
+    public static class QueryExtensions
     {
         public static string GetKey<T, V>(this Expression<Func<T, V>> expression)
         {
@@ -418,7 +410,7 @@ namespace DexieNET
                 }
             }
 
-            return propertyName.ToLowerInvariant();
+            return propertyName.ToCamelCase();
         }
     }
 }

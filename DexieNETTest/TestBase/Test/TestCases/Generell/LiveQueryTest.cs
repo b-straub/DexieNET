@@ -6,18 +6,14 @@ using System.Reactive.Subjects;
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class LiveQueryTest : DexieTest<TestDB>
+    internal class LiveQueryTest(TestDB db) : DexieTest<TestDB>(db)
     {
-        public LiveQueryTest(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "LiveQueryTest";
 
         private async Task<Unit> BulkAddOp()
         {
             var persons = DataGenerator.GetPersons();
-            await DB.Persons().BulkAdd(persons);
+            await DB.Persons.BulkAdd(persons);
             return Unit.Default;
         }
 
@@ -25,24 +21,24 @@ namespace DexieNETTest.TestBase.Test
 
         private async Task PersonAddOp()
         {
-            keyP = await DB.Persons().Add(DataGenerator.GetPerson3());
+            keyP = await DB.Persons.Add(DataGenerator.GetPerson3());
         }
 
         private async Task StudentAddOp()
         {
             ArgumentNullException.ThrowIfNull(keyP);
             var student = new Student("Physics", (int)keyP);
-            await DB.Students().Add(student);
+            await DB.Students.Add(student);
         }
 
         private async Task PersonPutOp()
         {
-            var person = await DB.Persons().ToCollection().First();
+            var person = await DB.Persons.ToCollection().First();
             person = person! with { Age = 100 };
 
             await DB.Transaction(async _ =>
             {
-                await DB.Persons().Put(person);
+                await DB.Persons.Put(person);
             });
         }
 
@@ -54,10 +50,10 @@ namespace DexieNETTest.TestBase.Test
             {
                 await DB.Transaction(async ta =>
                 {
-                    var person = await DB.Persons().ToCollection().First();
+                    var person = await DB.Persons.ToCollection().First();
                     person = ta.Collecting ? person : person! with { Age = 90 };
-                    await DB.Persons().Put(person);
-                    await DB.Persons().Add(person);
+                    await DB.Persons.Put(person);
+                    await DB.Persons.Add(person);
                 });
             }
             catch (Exception ex)
@@ -73,15 +69,15 @@ namespace DexieNETTest.TestBase.Test
             var disposeSubject = new BehaviorSubject<int>(0);
             string? firstError = null;
 
-            var tablePersons = await DB.Persons();
+            var tablePersons = DB.Persons;
             await tablePersons.Clear();
-            var tableStudents = await DB.Students();
+            var tableStudents = DB.Students;
             await tableStudents.Clear();
 
             var persons = DataGenerator.GetPersons();
             var expectedCountP = persons.Where(p => p.Age >= 50).Count();
 
-            var observableP = await DB.LiveQuery(async () =>
+            var observableP = DB.LiveQuery(async () =>
             {
                 await tablePersons.Count(); // First LiveQuery will not populate changed keys otherwise
 
@@ -93,7 +89,7 @@ namespace DexieNETTest.TestBase.Test
                 return values;
             });
 
-            var observableS = await DB.LiveQuery(async () =>
+            var observableS = DB.LiveQuery(async () =>
             {
                 var values = await tableStudents.ToArray();
                 if (values.Any() && values.Count() != 1)
@@ -103,14 +99,14 @@ namespace DexieNETTest.TestBase.Test
                 return values;
             });
 
-            var observableSP = await DB.LiveQuery(async () =>
+            var observableSP = DB.LiveQuery(async () =>
             {
                 Student? student = null;
 
                 var persons = await tablePersons.ToArray();
                 student = (await tableStudents.ToArray()).FirstOrDefault();
 
-                return persons.Where(p => (int?)p.ID == student?.ID).Select(p => p.Age);
+                return persons.Where(p => (int?)p.Id == student?.Id).Select(p => p.Age);
             });
 
             int executionCountP = 0;
@@ -180,18 +176,18 @@ namespace DexieNETTest.TestBase.Test
 
             var finished = false;
 
-            var testFinished = () =>
+            void testFinished()
             {
                 disposeBag.Dispose();
                 finished = true;
-            };
+            }
 
             disposeSubject
                .Timeout(TimeSpan.FromSeconds(10))
                .Subscribe(
                    onNext: d =>
                    {
-                       if ((d == 12) || firstError is not null)
+                       if (_exThrown || firstError is not null)
                        {
                            testFinished();
                        }
@@ -216,7 +212,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException(firstError);
             }
 
-            if (executionCountP != 4)
+            if (executionCountP != 7)
             {
                 throw new InvalidOperationException($"executionCountP : {executionCountP}-> LiveQuery failed.");
             }

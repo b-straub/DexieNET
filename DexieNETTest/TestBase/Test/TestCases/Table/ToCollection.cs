@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class ToCollection : DexieTest<TestDB>
+    internal class ToCollection(TestDB db) : DexieTest<TestDB>(db)
     {
-        public ToCollection(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "ToCollection";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -28,7 +24,7 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
                 count = await collection.Count();
             });
 

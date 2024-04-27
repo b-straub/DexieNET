@@ -1,9 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 	<PropertyGroup>
-		<TargetFrameworks>net7.0;net8.0</TargetFrameworks>
+		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<LangVersion>12.0</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -19,44 +18,34 @@
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageTags>Dexie, IndexedDB</PackageTags>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageOutputPath>..\Nuget</PackageOutputPath>
+		<PackageOutputPath>..\.nuget</PackageOutputPath>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="." />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="npm\package.json" Pack="false" />
-		<None Include="npm\tsconfig.json" Pack="false" />
-		<Content Include="npm\src\*.js" Pack="false" />
-		<Content Include="npm\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
+		<None Include="yarn\package.json" Pack="false" />
+		<None Include="yarn\tsconfig.json" Pack="false" />
+		<Content Include="yarn\src\*.js" Pack="false" />
+		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<SupportedPlatform Include="browser" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.4" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.1" />
-	</ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
 	
-	<ItemGroup>
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
 
-		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.3.3">
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.4.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-
-		<PackageReference Include="Yarn.MSBuild" Version="1.22.19" />
-	</ItemGroup>
-
-	<ItemGroup>
+	
 		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" Pack="false">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 			<OutputItemType>Content</OutputItemType>
@@ -64,7 +53,7 @@
 		</ProjectReference>
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+	<PropertyGroup>
 		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
@@ -80,22 +69,22 @@
 		<YarnInstallStampFile>npm/node_modules/.install-stamp</YarnInstallStampFile>
 		<Authors>Bernhard Straub</Authors>
 	</PropertyGroup>
-	
+
 	<Target Name="DeleteJSFiles" BeforeTargets="BeforeBuild">
 		<Delete Files="wwwroot\js\*.*" />
 	</Target>
-	
-	<Target Name="YarnInstall" BeforeTargets="YarnBuild" Inputs="npm/package.json" Outputs="$(YarnInstallStampFile)">
-		<Yarn Command="install" WorkingDirectory="npm" />
-		<Touch Files="$(YarnInstallStampFile)" AlwaysCreate="true" />
+
+	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
+		<Exec Command="yarn install" WorkingDirectory="yarn" />
+		<Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
 	</Target>
 
 	<Target Name="YarnCommandsDebug" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-		<Yarn Command="run buildDebug" WorkingDirectory="npm" />
+		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn" />
 	</Target>
 
 	<Target Name="YarnCommandsRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-		<Yarn Command="run buildRelease" WorkingDirectory="npm" />
+		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
 	</Target>
-	
+
 </Project>

@@ -15,6 +15,27 @@ namespace DNTGeneratorTest.Tests
             await Fixer.VerifyAnalyzerAsync(test);
         }
 
+        //No diagnostics expected to show up
+        [Fact]
+        public async Task RecordCloud()
+        {
+            var test = @$"
+using DexieNET;
+
+namespace Test
+{{
+    [Schema(CloudSync = true)]
+    [CompoundIndex(""FirstName"", ""RealmId"")]
+    public partial class Person : IDBStore
+    {{
+        string LastName1 {{ get; set; }}
+        string FirstName {{ get; set; }}
+    }}
+}}
+";
+            await Fixer.VerifyAnalyzerAsync(test);
+        }
+
         [Fact]
         public async Task ClassCompoundIndexNotFound()
         {

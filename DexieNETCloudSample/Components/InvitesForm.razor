@@ -1,0 +1,76 @@
+﻿@using DexieNET
+@inherits RxBLServiceSubscriber<ToDoListService>
+
+<MudTable Class="mt-2" T="Invite" Items=@(DBService.Invites.Value)>
+    <ColGroup>
+        <col />
+        <col style="width:50px;" />
+        <col style="width:50px;" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Invitations</MudTh>
+        <MudTh Style="text-align:center">
+            <MudIcon Icon="@Icons.Material.Outlined.AddCircleOutline" />
+        </MudTh>
+        <MudTh Style="text-align:center">
+            <MudIcon Icon="@Icons.Material.Outlined.RemoveCircleOutline" />
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Invite"><MudText>@GetInviteText(context)</MudText></MudTd>
+        <MudTd DataLabel="Accept" Style="text-align:center">
+            <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.AddCircleOutline
+                    StateCommand=@Service.CommandAsync
+                    CanChangeCallback=@ToDoListService.CanAcceptInvite(context)
+                    ExecuteCallback=@Service.AcceptInvite(context)
+                    ConfirmExecutionAsync=@(async () => await ConfirmInvite(true)) />
+        </MudTd>
+        <MudTd DataLabel="Reject" Style="text-align:center">
+            <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.RemoveCircleOutline
+                             StateCommand=@Service.CommandAsync
+                             CanChangeCallback=@ToDoListService.CanRejectInvite(context)
+                             ExecuteCallback=@Service.RejectInvite(context)
+                             ConfirmExecutionAsync=@(async () => await ConfirmInvite(false)) />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Inject]
+    public required DexieCloudService DBService { get; init; }
+
+    [Inject]
+    public required IDialogService DialogService { get; init; }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private string GetInviteText(Invite? invite)
+    {
+        ArgumentNullException.ThrowIfNull(invite);
+        ArgumentNullException.ThrowIfNull(invite.InvitedBy);
+
+        return $"{invite.Name} from {invite.InvitedBy.UserId}";
+    }
+
+    private async Task<bool> ConfirmInvite(bool accept)
+    {
+        var message = accept ? "Accept Invitation" : "Reject Invitation";
+        var button = accept ? "Accept" : "Reject";
+
+        var parameters = new DialogParameters
+            { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = accept };
+        var dialog = DialogService.Show<ConfirmDialog>("Invitation", parameters);
+
+        var res = await dialog.Result;
+
+        if (res.Canceled)
+        {
+            return false;
+        }
+
+        return true;
+    }
+}

@@ -2,19 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class FailedTransaction : DexieTest<TestDB>
+    internal class FailedTransaction(TestDB db) : DexieTest<TestDB>(db)
     {
-        public FailedTransaction(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "FailedTransaction";
 
         public bool AllKeys { get; set; } = false;
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Add(DataGenerator.GetPerson1());
             var count = await table.Count();
 
@@ -52,17 +48,17 @@ namespace DexieNETTest.TestBase.Test
             {
                 await DB.Transaction(async _ =>
                 {
-                    var personValues = await DB.Persons().BulkGet(personKeys);
+                    var personValues = await DB.Persons.BulkGet(personKeys);
 
                     if (!ignoreFail)
                     {
-                        await DB.Persons().Add(personValues.FirstOrDefault());
+                        await DB.Persons.Add(personValues.FirstOrDefault());
                     }
                     else
                     {
                         try
                         {
-                            await DB.Persons().Add(personValues.FirstOrDefault());
+                            await DB.Persons.Add(personValues.FirstOrDefault());
                         }
                         catch (Exception ex)
                         {

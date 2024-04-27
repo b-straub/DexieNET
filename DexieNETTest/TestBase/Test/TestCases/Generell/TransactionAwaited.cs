@@ -1,22 +1,16 @@
 ﻿using DexieNET;
-using System.Diagnostics;
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class TransactionAwaited : DexieTest<TestDB>
+    internal class TransactionAwaited(TestDB db, bool fail = false) : DexieTest<TestDB>(db)
     {
-        public TransactionAwaited(TestDB db, bool fail = false) : base(db)
-        {
-            Fail = fail;
-        }
-
         public override string Name => Fail ? "TransactionAwaitedFail" : "TransactionAwaited";
 
-        public bool Fail { get; private set; }
+        public bool Fail { get; private set; } = fail;
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             bool exThrown = false;
@@ -75,7 +69,7 @@ namespace DexieNETTest.TestBase.Test
             var count = await table.Count();
 
             if (Fail)
-            {   
+            {
                 if (!exThrown || await table.Count() != 0)
                 {
                     throw new InvalidOperationException("Failed Transaction with WaitFor failed.");

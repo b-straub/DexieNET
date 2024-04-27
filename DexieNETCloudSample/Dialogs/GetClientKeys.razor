@@ -1,0 +1,60 @@
+﻿<MudDialog>
+    <DialogContent>
+        <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Immediate="true" Placeholder=@Item.PlaceholderClientId Label="ClientId" @bind-Value=@Item.ClientId For=@(() => Item.ClientId) />
+                </MudCardContent>
+                <MudCardContent>
+                    <MudTextField Immediate="true" Placeholder=@Item.PlaceholderClientSecret Label="ClientSecret" @bind-Value=@Item.ClientSecret For=@(() => Item.ClientSecret) InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ClientSecretToggle" AdornmentAriaLabel="Show Client Secret" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Submit</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; init; }
+
+    [Parameter, EditorRequired]
+    public required CloudKeyData Item { get; init; }
+
+    void Cancel() => MudDialog?.Cancel();
+
+    bool showSecret;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    protected override void OnInitialized()
+    {
+        MudDialog.Options.CloseButton = true;
+        MudDialog.SetOptions(MudDialog.Options);
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        MudDialog.Close(DialogResult.Ok(Item));
+    }
+
+    void ClientSecretToggle()
+    {
+        if (showSecret)
+        {
+            showSecret = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            showSecret = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+}

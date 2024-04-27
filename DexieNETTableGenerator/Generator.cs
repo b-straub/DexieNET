@@ -72,10 +72,16 @@ namespace DNTGenerator
                 return;
             }
 
-            bool error = false;
+            var error = false;
+            var forCloud =  false;
 
             foreach (var dbRecord in dbRecordsToUse)
             {
+                if (!forCloud && dbRecord.SchemaDescriptor.HasCloudSync)
+                {
+                    forCloud = true;
+                }
+
                 var diagnostics = dbRecord.Verify(compilationWithRecords.compilation);
                 foreach (var diagnostic in diagnostics)
                 {
@@ -115,10 +121,10 @@ namespace DNTGenerator
             foreach (string? ns in nameSpaces)
             {
                 var usedNS = ns == "<global namespace>" ? "GlobalNamspace" : ns;
-         
+
                 try
                 {
-                    source = dbRecordsToUse.DumpNamespace(usedNS);
+                    source = dbRecordsToUse.DumpNamespace(usedNS, forCloud);
                 }
                 catch (Exception ex)
                 {
@@ -142,32 +148,6 @@ namespace DNTGenerator
                 context.ReportDiagnostic(Diagnostic.Create(GeneratorDiagnostic.Success, Location.None, compilationWithRecords.compilation.AssemblyName));
             }
 #endif
-        }
-
-
-        /// <summary>
-        /// Created on demand before each generation pass
-        /// </summary>
-        private class SyntaxReceiver : ISyntaxReceiver
-        {
-            private readonly List<TypeDeclarationSyntax> _typeList = new();
-
-            public IEnumerable<TypeDeclarationSyntax> TypeList => _typeList;
-
-            public SyntaxReceiver()
-            {
-            }
-
-            /// <summary>
-            /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
-            /// </summary>
-            public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-            {
-                if (syntaxNode is TypeDeclarationSyntax typeDeclaration)
-                {
-                    _typeList.Add(typeDeclaration);
-                }
-            }
         }
     }
 }

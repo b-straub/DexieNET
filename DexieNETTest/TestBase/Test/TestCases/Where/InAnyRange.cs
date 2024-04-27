@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class InAnyRange : DexieTest<TestDB>
+    internal class InAnyRange(TestDB db) : DexieTest<TestDB>(db)
     {
-        public InAnyRange(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "InAnyRange";
 
 
@@ -15,7 +11,7 @@ namespace DexieNETTest.TestBase.Test
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -57,9 +53,9 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var whereClause = await table.Where(p => p.Age);
-                var collection = await whereClause.InAnyRange(ranges);
-                var collectionWithUpper = await whereClause.InAnyRange(ranges, true, true);
+                var whereClause = table.Where(p => p.Age);
+                var collection = whereClause.InAnyRange(ranges);
+                var collectionWithUpper = whereClause.InAnyRange(ranges, true, true);
                 youngOldPersons = await collection.ToArray();
                 youngOldPersonsWithUppper = await collectionWithUpper.ToArray();
             });

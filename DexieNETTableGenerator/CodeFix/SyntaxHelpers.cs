@@ -21,7 +21,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
-using System.Xml.Linq;
 
 namespace DNTGenerator.CodeFix
 {
@@ -128,7 +127,12 @@ namespace DNTGenerator.CodeFix
             arguments = arguments.Any() ? newArgument + ", " + arguments : newArgument;
 
             arguments = $"({arguments})";
-            var argumentList = SyntaxFactory.ParseAttributeArgumentList(arguments) ?? throw new InvalidOperationException("ArgumentList can not be null!");
+            var argumentList = SyntaxFactory.ParseAttributeArgumentList(arguments);
+
+            if (argumentList is null)
+            {
+                throw new ArgumentNullException(nameof(argumentList), nameof(argumentList));
+            }
             var newArgumentListDeclaration = argumentListDeclaration.WithArguments(argumentList.Arguments);
 
             return document.WithSyntaxRoot(root.ReplaceNode(argumentListDeclaration, newArgumentListDeclaration));
@@ -152,12 +156,12 @@ namespace DNTGenerator.CodeFix
             switch (syntaxNode.Kind())
             {
                 case SyntaxKind.Parameter:
-                    var parameter = ((ParameterSyntax)syntaxNode ?? throw new InvalidCastException("Failed to cast to ParameterSyntax!")) ?? throw new ArgumentNullException(syntaxNode.ToString());
+                    var parameter = (ParameterSyntax)syntaxNode ?? throw new ArgumentNullException(syntaxNode?.ToString());
                     newNameToken = SyntaxFactory.Identifier(name).WithTriviaFrom(parameter.Identifier);
                     newSyntaxNode = parameter.WithIdentifier((SyntaxToken)newNameToken);
                     break;
                 case SyntaxKind.PropertyDeclaration:
-                    var property = (PropertyDeclarationSyntax)syntaxNode ?? throw new InvalidCastException("Failed to cast to PropertyDeclarationSyntax!");
+                    var property = (PropertyDeclarationSyntax)syntaxNode ?? throw new ArgumentNullException(syntaxNode?.ToString());
                     newNameToken = SyntaxFactory.Identifier(name).WithTriviaFrom(property.Identifier);
                     newSyntaxNode = property.WithIdentifier((SyntaxToken)newNameToken);
                     break;
@@ -194,6 +198,12 @@ namespace DNTGenerator.CodeFix
         public static Document MakeULong(this Document document, SyntaxNode root, SyntaxNode syntaxNode)
         {
             var syntaxToken = SyntaxFactory.Token(SyntaxKind.ULongKeyword);
+            return MakeNullableType(document, root, syntaxToken, syntaxNode);
+        }
+
+        public static Document MakeString(this Document document, SyntaxNode root, SyntaxNode syntaxNode)
+        {
+            var syntaxToken = SyntaxFactory.Token(SyntaxKind.StringKeyword);
             return MakeNullableType(document, root, syntaxToken, syntaxNode);
         }
 

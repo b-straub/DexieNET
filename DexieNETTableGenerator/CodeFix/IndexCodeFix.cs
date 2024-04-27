@@ -38,7 +38,7 @@ namespace DNTGenerator.CodeFix
             get
             {
                 return ImmutableArray.Create(GeneratorDiagnostic.AutoIncrementNotNullable.Id,
-                    GeneratorDiagnostic.AutoIncrementNotNumeric.Id,
+                    GeneratorDiagnostic.AutoIncrementNotAllowedType.Id,
                     GeneratorDiagnostic.MultiEntryNotIEnumerable.Id,
                     GeneratorDiagnostic.NonMultiEntryNotArray.Id,
                     GeneratorDiagnostic.DuplicatePrimaryKeyMember.Id,
@@ -154,11 +154,11 @@ namespace DNTGenerator.CodeFix
                             diagnostic);
 
                         break;
-                    case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.AutoIncrementNotNumeric):
+                    case var _ when diagnostic.Descriptor.EqualsId(GeneratorDiagnostic.AutoIncrementNotAllowedType):
 
                         var codeFixMessages = diagnostic.Descriptor.CodeFixMessages(name);
 
-                        if (codeFixMessages.Count() != 4)
+                        if (codeFixMessages.Count() != 5)
                         {
                             throw new ArgumentException("No titles for: " + diagnostic.Descriptor.Id);
                         }
@@ -174,7 +174,11 @@ namespace DNTGenerator.CodeFix
                                 CodeAction.Create(
                                 title: codeFixMessages.ElementAt(3),
                                 createChangedDocument: _ => Task.FromResult(context.Document.MakeULong(root, node)),
-                                equivalenceKey: codeFixMessages.ElementAt(3)));
+                                equivalenceKey: codeFixMessages.ElementAt(3)),
+                                CodeAction.Create(
+                                title: codeFixMessages.ElementAt(4),
+                                createChangedDocument: _ => Task.FromResult(context.Document.MakeString(root, node)),
+                                equivalenceKey: codeFixMessages.ElementAt(4)));
 
                         context.RegisterCodeFix(
                             CodeAction.Create(

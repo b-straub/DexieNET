@@ -49,7 +49,7 @@ namespace DexieNET
 
         public IDictionary<string, object?> Convert(IDictionary<string, object?> keyObject)
         {
-            var dictC = keyObject.ToDictionary(k => k.Key.ToLowerInvariant(), k => Convert(k.Value));
+            var dictC = keyObject.ToDictionary(k => k.Key.ToCamelCase(), k => Convert(k.Value));
             return dictC;
         }
 

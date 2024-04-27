@@ -3,14 +3,9 @@ using System.Diagnostics;
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Benchmark : DexieTest<TestDB>
+    internal class Benchmark(TestDB db, CancellationToken cancellationToken) : DexieTest<TestDB>(db)
     {
-        private readonly CancellationToken _cancellationToken;
-
-        public Benchmark(TestDB db, CancellationToken cancellationToken) : base(db)
-        {
-            _cancellationToken = cancellationToken;
-        }
+        private readonly CancellationToken _cancellationToken = cancellationToken;
 
         public override string Name => "Benchmark";
 
@@ -21,7 +16,7 @@ namespace DexieNETTest.TestBase.Test
 
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             var persons = DataGenerator.GetPersonsRandom(20000);
 
             /*await table.Clear();
@@ -66,13 +61,13 @@ namespace DexieNETTest.TestBase.Test
                     addTime = sw.ElapsedMilliseconds;
 
                     sw.Restart();
-                    var whereClauseName = await table.Where(p => p.Name);
+                    var whereClauseName = table.Where(p => p.Name);
 
-                    var collectionName = await whereClauseName.StartsWith("A");
+                    var collectionName = whereClauseName.StartsWith("A");
                     count = await collectionName.Count();
-                    var collectionNameCloned = await collectionName.Clone();
-                    await collectionNameCloned.Offset(count > 10 ? count - 10 : 0);
-                    await collectionNameCloned.Limit(5);
+                    var collectionNameCloned = collectionName.Clone();
+                    collectionNameCloned.Offset(count > 10 ? count - 10 : 0);
+                    collectionNameCloned.Limit(5);
                     names = await collectionNameCloned.ToArray();
                 });
             }

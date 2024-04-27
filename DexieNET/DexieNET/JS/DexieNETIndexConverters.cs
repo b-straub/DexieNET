@@ -119,7 +119,7 @@ namespace DexieNET
 
         public override IEnumerable<byte[]> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var values = JsonSerializer.Deserialize< IEnumerable<string>>(ref reader, options);
+            var values = JsonSerializer.Deserialize<IEnumerable<string>>(ref reader, options);
             ArgumentNullException.ThrowIfNull(values);
 
             var valuesC = values.Select(v => System.Convert.FromBase64String(v));

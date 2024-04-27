@@ -2,19 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Between : DexieTest<TestDB>
+    internal class Between(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Between(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Between";
 
         public override async ValueTask<string?> RunTest()
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -57,14 +53,14 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var whereClause = await table.Where(p => p.Age);
-                var collection = await whereClause.Between(60, 75);
-                var collectionWithUpper = await whereClause.Between(60, 75, true, true);
+                var whereClause = table.Where(p => p.Age);
+                var collection = whereClause.Between(60, 75);
+                var collectionWithUpper = whereClause.Between(60, 75, true, true);
                 youngOldPersons = await collection.ToArray();
                 youngOldPersonsWithUppper = await collectionWithUpper.ToArray();
 
-                var whereClauseNameAge = await table.Where(p => p.Name, p => p.Age);
-                var collectionNameAge = await whereClauseNameAge.Between(keyLow, keyHigh);
+                var whereClauseNameAge = table.Where(p => p.Name, p => p.Age);
+                var collectionNameAge = whereClauseNameAge.Between(keyLow, keyHigh);
                 person7NameAge = await collectionNameAge.ToArray();
             });
 

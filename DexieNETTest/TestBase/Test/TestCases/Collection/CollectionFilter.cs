@@ -2,17 +2,13 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionFilter : DexieTest<TestDB>
+    internal class CollectionFilter(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionFilter(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionFilter";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -20,7 +16,7 @@ namespace DexieNETTest.TestBase.Test
 
             var oldBuddysData = persons.Where(p => p.Tags.Contains("Buddy") && p.Age > 30);
 
-            var col = await table.ToCollection().Filter(p => p.Tags.Contains("Buddy")).Filter(p => p.Age > 30);
+            var col = table.ToCollection().Filter(p => p.Tags.Contains("Buddy")).Filter(p => p.Age > 30);
             var oldBuddys = await col.ToArray();
             var oldBuddysCount = await col.Count();
 
@@ -38,9 +34,9 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var collection = await table.ToCollection();
-                await collection.Filter(p => p.Tags.Contains("Buddy"));
-                await collection.Filter(p => p.Age > 30);
+                var collection = table.ToCollection();
+                collection.Filter(p => p.Tags.Contains("Buddy"));
+                collection.Filter(p => p.Age > 30);
                 oldBuddysData = await collection.ToArray();
                 oldBuddysCount = await collection.Count();
             });

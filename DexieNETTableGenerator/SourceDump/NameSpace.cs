@@ -18,25 +18,23 @@ limitations under the License.
 
 using DNTGenerator.Verifier;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Reflection;
 using System.Text;
 
 namespace DNTGenerator.SourceDump
 {
     internal static class NameSpace
     {
-        public static string DumpNamespace(this IEnumerable<DBRecord> records, string usedNamespace)
+        public static string DumpNamespace(this IEnumerable<DBRecord> records, string usedNamespace, bool forCloud)
         {
             StringBuilder sb = new();
 
-            var usings = DefaultUsings();
+            var usings = DefaultUsings(forCloud);
 
             IEnumerable<DBRecord> usedRecords = records.Where(r => r.Namespace == usedNamespace);
 
             var recordGroups = usedRecords.GroupBy(r => r.DBName);
 
-            _ = sb.Append(DumpNamespaceFirst(usedNamespace, usings));
+            _ = sb.Append(DumpNamespaceFirst(usedNamespace, usings, forCloud));
 
             foreach (var recordGroup in recordGroups)
             {
@@ -47,7 +45,7 @@ namespace DNTGenerator.SourceDump
             return sb.ToString();
         }
 
-        public static string DumpNamespaceFirst(string namespaceName, IEnumerable<string> usings)
+        public static string DumpNamespaceFirst(string namespaceName, IEnumerable<string> usings, bool forCloud)
         {
             StringBuilder sb = new();
 
@@ -77,76 +75,43 @@ namespace {namespaceName}
 
         private static string DumpRecords(this IEnumerable<DBRecord> records, string dbName)
         {
-            var name = Assembly.GetExecutingAssembly().GetName().Name;
-            var version = Assembly.GetExecutingAssembly().GetName().Version;
-
-            var attribute = @$"[GeneratedCode(""{name}"", ""{version}"")]";
-
             StringBuilder sb = new();
 
             _ = sb.Append(records.MakeDBBuilder(dbName));
 
             foreach (DBRecord record in records)
             {
-                if (record.HasGeneratedPrimaryKey() || record.HasGuidPrimaryKey())
+                if (record.HasGeneratedPrimaryKey() || record.HasNonCloudGuidPrimaryKey() || record.SchemaDescriptor.HasCloudSync)
                 {
-                    var primaryIndexName = record.GetPrimaryIndexName(false) ?? throw new InvalidOperationException($"No primaryIndexName for {record.Symbol.Name}.");
-                    if (record.HasGuidPrimaryKey())
+                    if (record.HasNonCloudGuidPrimaryKey())
                     {
-                        if (record.Type is DBRecord.RecordType.Record || record.Type is DBRecord.RecordType.RecordStruct || record.Type is DBRecord.RecordType.Struct)
-                        {
-                            _ = sb.Append($@"
-    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore<{record.Symbol.Name}>
-    {{");
-                            if (record.HasGeneratedGuidPrimaryKey())
-                            {
-                                _ = sb.Append($@"
-        {attribute}
-        public Guid? {primaryIndexName} {{ get; init; }}
-");
-                            }
-                            _ = sb.Append($@"
-        public {record.Symbol.Name} AssignPrimaryKey()
-        {{
-            if ({primaryIndexName} is null)
-            {{
-                return this with {{ {primaryIndexName} = Guid.NewGuid() }};
-            }}
-            return this;
-        }}
-    }}                      
-");
-                        }
-                        else
-                        {
-                            _ = sb.Append($@"
-    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore<{record.Symbol.Name}>
+                        _ = sb.Append($@"
+    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IGuidStore <{record.Symbol.Name}>
     {{
-        {attribute}
-        public Guid? {primaryIndexName} {{ get; set; }}
-        
-        public {record.Symbol.Name} AssignPrimaryKey()
-        {{
-            if ({primaryIndexName} is null)
-            {{
-                {primaryIndexName} = Guid.NewGuid();
-            }}
-            return this;
-        }}
-    }}                      
 ");
-                        }
+                    }
+                    else if (record.SchemaDescriptor.HasCloudSync)
+                    {
+                        _ = sb.Append($@"
+    {record.AccessToString} partial {record.TypeName} {record.Symbol.Name} : IDBCloudEntity
+    {{
+");
                     }
                     else
                     {
                         _ = sb.Append($@"
     {record.AccessToString} partial {record.TypeName} {record.Symbol.Name}
     {{
-        {attribute}
-        public ulong? {primaryIndexName} {{ get; init; }}
-    }}
 ");
                     }
+
+                    _ = sb.Append(record.DumpProperties());
+                    _ = sb.Append(record.DumpMethods());
+
+
+                    _ = sb.Append($@"
+    }}
+");
                 }
             }
 
@@ -169,7 +134,7 @@ namespace {namespaceName}
             return sb.ToString();
         }
 
-        private static IEnumerable<string> DefaultUsings()
+        private static IEnumerable<string> DefaultUsings(bool forCloud)
         {
             List<string> usings = new();
             UsingSortComparer comparer = new();
@@ -177,6 +142,10 @@ namespace {namespaceName}
             usings.Add("Microsoft.JSInterop");
             usings.Add("System.CodeDom.Compiler");
             usings.Add("DexieNET");
+            if (forCloud)
+            {
+                usings.Add("DexieCloudNET");
+            }
 
             return usings.OrderBy(u => u, comparer);
         }

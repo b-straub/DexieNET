@@ -1,0 +1,88 @@
+﻿@inherits RxBLServiceSubscriber<DexieCloudService>
+
+<MudStack Row=@true>
+    <MudIcon Icon=@GetStatusIcon(Service.SyncState) />
+    <MudIcon Icon=@GetPhaseIcon(Service.SyncState) />
+</MudStack>
+<MudSpacer />
+<HandleLicense />
+<MudSpacer />
+<HandleLogin />
+<MudSpacer />
+
+@code {
+    [Inject]
+    public required IDialogService DialogService { get; init; }
+
+    [Inject]
+    public required IConfiguration Configuration { get; init; }
+
+    protected override async Task OnServiceStateHasChangedAsync(ServiceChangeReason cr)
+    {
+        switch (cr.ID)
+        {
+            case var value when value == Service.UIInteraction.ID:
+                if (Service.DB is not null && Service.UIInteraction.HasValue())
+                {
+                    bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction.Value, DialogService);
+                    if (Service.UIInteraction.Value.Type is UIInteraction.InteractionType.LOGOUT_CONFIRMATION && res)
+                    {
+                        await Service.DB.Logout(true);
+                    }
+                }
+                break;
+        }
+
+        if (Service.State.Value is DBState.Closed)
+        {
+            await OpenDB();
+        }
+    }
+
+    private async Task OpenDB()
+    {
+        await Service.OpenDB();
+        ArgumentNullException.ThrowIfNull(Service.DB);
+
+        Service.ConfigureCloud(Configuration.GetDBUrl());
+    }
+
+    private string GetPhaseIcon(IState<SyncState?> state)
+    {
+        if (!state.HasValue())
+        {
+            return Icons.Material.Outlined.QuestionMark;
+        }
+
+        return state.Value.Phase switch
+        {
+            SyncState.SyncStatePhase.INITIAL => Icons.Material.Outlined.QuestionMark,
+            SyncState.SyncStatePhase.OFFLINE => Icons.Material.Outlined.CloudOff,
+            SyncState.SyncStatePhase.NOT_IN_SYNC => Icons.Material.Outlined.CloudOff,
+            SyncState.SyncStatePhase.IN_SYNC => Icons.Material.Outlined.CloudDone,
+            SyncState.SyncStatePhase.PULLING => Icons.Material.Outlined.CloudDownload,
+            SyncState.SyncStatePhase.PUSHING => Icons.Material.Outlined.CloudUpload,
+            SyncState.SyncStatePhase.ERROR => Icons.Material.Outlined.CloudOff,
+            _ => throw new ArgumentOutOfRangeException(nameof(state.Value.Phase))
+        };
+    }
+
+    private string GetStatusIcon(IState<SyncState?> state)
+    {
+        if (!state.HasValue())
+        {
+            return Icons.Material.Filled.QuestionMark;
+        }
+
+        return state.Value.Status switch
+        {
+            SyncState.SyncStatus.NOT_STARTED => Icons.Material.Filled.QuestionMark,
+            SyncState.SyncStatus.CONNECTING => Icons.Material.Filled.SignalWifi0Bar,
+            SyncState.SyncStatus.CONNECTED => Icons.Material.Outlined.SignalWifi4Bar,
+            SyncState.SyncStatus.DISCONNECTED => Icons.Material.Filled.SignalWifiStatusbarConnectedNoInternet4,
+            SyncState.SyncStatus.ERROR => Icons.Material.Filled.SignalWifiOff,
+            SyncState.SyncStatus.OFFLINE => Icons.Material.Filled.SignalWifiOff,
+            _ => throw new ArgumentOutOfRangeException(nameof(state.Value.Status))
+        };
+    }
+}

@@ -1,0 +1,75 @@
+﻿@using DexieNET
+@inherits RxBLServiceSubscriber<ToDoListMemberService>
+
+<MudTable Class="mt-2" T="string" Items=@(Service.Users)>
+    <ColGroup>
+        <col />
+        <col style="width:50px;" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Invite User</MudTh>
+        <MudTh Style="text-align:center">
+            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" />
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Invite User"><MudText>@context</MudText></MudTd>
+        <MudTd DataLabel="Invite" Style="text-align:center">
+            <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd StateCommand=@Service.CommandAsync
+                CanChangeCallback=@Service.CanAddMember ExecuteAsyncCallback=@AddMember(context) />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Inject]
+    public required DexieCloudService DBService { get; init; }
+
+    [Inject]
+    public required IDialogService DialogService { get; init; }
+
+    private IEnumerable<string> users = Enumerable.Empty<string>();
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private Func<IStateCommandAsync, Task> AddMember(string user) => async _ =>
+    {
+        if (user == Service.Users.Last())
+        {
+            ArgumentNullException.ThrowIfNull(DialogService);
+
+            EmailData data = new("email@mydomain.com");
+
+            var parameters = new DialogParameters { ["Item"] = data };
+            var dialog = DialogService.Show<AuthenticateEMail>("Email for Invite", parameters);
+
+            var result = await dialog.Result;
+            if (result.Canceled)
+            {
+                return;
+            }
+            else
+            {
+                user = data.Email;
+            }
+        }
+        else
+        {
+            var parameters = new DialogParameters
+                { ["Message"] = $"Invite {user}", ["ConfirmButton"] = "Invite", ["SuccessOnConfirm"] = true };
+            var dialog = DialogService.Show<ConfirmDialog>("Invite USER", parameters);
+
+            var res = await dialog.Result;
+
+            if (res.Canceled)
+            {
+                return;
+            }
+        }
+
+        await Service.AddMember(user);
+    };
+}

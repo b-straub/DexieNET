@@ -2,12 +2,8 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class LimitOffset : DexieTest<TestDB>
+    internal class LimitOffset(TestDB db) : DexieTest<TestDB>(db)
     {
-        public LimitOffset(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "LimitOffset";
 
         public override async ValueTask<string?> RunTest()
@@ -16,7 +12,7 @@ namespace DexieNETTest.TestBase.Test
 
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersonsRandom(limit * 10);
@@ -43,10 +39,10 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var collection = await table.Limit(limit);
+                var collection = table.Limit(limit);
                 limited = await collection.ToArray();
 
-                collection = await table.Offset(limit * 9);
+                collection = table.Offset(limit * 9);
                 offseted = await collection.ToArray();
             });
 

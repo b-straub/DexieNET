@@ -1,0 +1,22 @@
+﻿@inherits RxBLServiceSubscriber<ToDoListMemberService>
+
+<MudTable T="Member" Items=@(Service.Members)>
+    <ColGroup>
+        <col />
+        <col style="width:150px;" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Member</MudTh>
+        <MudTh>Role</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <RxBLStateScope TScope=@ToDoListMemberService.MemberRowScope TService=@ToDoListMemberService ScopeFactory=@Service.CreateRowScope>
+            <MemberRow List=@List Member=@context />
+        </RxBLStateScope>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToDoDBList List { get; set; }
+}

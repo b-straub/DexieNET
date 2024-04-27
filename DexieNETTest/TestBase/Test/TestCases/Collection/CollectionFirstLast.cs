@@ -1,21 +1,16 @@
 ﻿using DexieNET;
-using System.Reflection.Metadata.Ecma335;
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class CollectionFirstLast : DexieTest<TestDB>
+    internal class CollectionFirstLast(TestDB db) : DexieTest<TestDB>(db)
     {
-        public CollectionFirstLast(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "CollectionFirstLast";
 
         public override async ValueTask<string?> RunTest()
         {
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var first = await table.ToCollection().First();
@@ -51,7 +46,7 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
 
-                var collection = await table.ToCollection();
+                var collection = table.ToCollection();
 
                 first = await collection.First();
                 last = await collection.Last();
@@ -59,7 +54,7 @@ namespace DexieNETTest.TestBase.Test
                 await table.BulkAdd(persons);
                 personsData = await table.ToArray();
 
-                collection = await table.ToCollection();
+                collection = table.ToCollection();
                 first = await collection.First();
                 last = await collection.Last();
             });

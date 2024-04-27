@@ -3,13 +3,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DexieNET.Component
 {
-    public class DexieNET<T> : ComponentBase where T : DBBase, IDBBase
+    public class DexieNET<T>() : ComponentBase where T : DBBase, IDBBase
     {
         [Inject]
         protected IDexieNETService<T>? DexieNETService { get; set; }
 
         [NotNull] // OnInitializedAsync will throw
         public T? Dexie { get; private set; }
+
 
         protected async override Task OnInitializedAsync()
         {

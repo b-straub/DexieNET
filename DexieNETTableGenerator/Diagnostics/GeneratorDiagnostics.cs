@@ -18,15 +18,13 @@ limitations under the License.
 
 using Microsoft.CodeAnalysis;
 
-#pragma warning disable IDE0090 // Use 'new DiagnosticDescriptor(...)' doesn't work with target typed new
-
 namespace DNTGenerator.Diagnostics
 {
     internal partial class GeneratorDiagnostic
     {
         #region General
         public static DiagnosticDescriptor Internal =
-            new DiagnosticDescriptor(
+            new(
                 "DNTGG000",
                 "Internal error",
                 "Internal error '{0}'",
@@ -35,16 +33,16 @@ namespace DNTGenerator.Diagnostics
                 isEnabledByDefault: true);
 
         public static DiagnosticDescriptor Success =
-            new DiagnosticDescriptor(
+            new(
                 "DNTGG001",
                 "Generator success",
-                "'{0}': successfully created 'DexieNetTables'",
+                "'{0}': successfully created 'DexieNetTables' using Cloud: {1}",
                 "DNTGenerator",
                 DiagnosticSeverity.Info,
                 isEnabledByDefault: true);
 
         public static DiagnosticDescriptor SyntaxReceiver =
-           new DiagnosticDescriptor(
+           new(
                 "DNTGG002",
                 "SyntaxReceiver error",
                 "SyntaxReceiver creation failed",
@@ -53,7 +51,7 @@ namespace DNTGenerator.Diagnostics
                 isEnabledByDefault: true);
 
         public static DiagnosticDescriptor Error =
-            new DiagnosticDescriptor(
+            new(
                 "DNTGG003",
                 "Generator error",
                 "'{0}': failed to create 'DexieNetTables' check build and analyzer errors",
@@ -64,7 +62,7 @@ namespace DNTGenerator.Diagnostics
 
         #region DBRecord
         public static DiagnosticDescriptor NotPartial =
-           new DiagnosticDescriptor(
+           new(
                "DNTGG100",
                "Store error",
                "'{0}' is not partial but store without primary key or outbound index attribute must be partial",
@@ -76,7 +74,7 @@ namespace DNTGenerator.Diagnostics
                "Add partial modifier to '{0}'");
 
         public static DiagnosticDescriptor NotPartialAutoGuid =
-          new DiagnosticDescriptor(
+          new(
               "DNTGG101",
               "Store error",
               "'{0}' is not partial but store with Guid auto primary key must be partial",
@@ -86,11 +84,32 @@ namespace DNTGenerator.Diagnostics
               "Store with Guid auto primary key must be partial.",
               null,
               "Add partial modifier to '{0}'");
+        public static DiagnosticDescriptor NotPartialCloud =
+         new(
+             "DNTGG102",
+             "Store error",
+             "'{0}' is not partial but store with 'CloudSync' be partial",
+             "DNTGenerator",
+             DiagnosticSeverity.Error,
+             isEnabledByDefault: true,
+             "Store with Guid auto primary key must be partial.",
+             null,
+             "Add partial modifier to '{0}'");
+
+        public static DiagnosticDescriptor ReservedStoreName =
+         new(
+             "DNTGG110",
+             "Store error",
+             "'{0}' is reserved for 'CloudSync'",
+             "DNTGenerator",
+             DiagnosticSeverity.Error,
+             isEnabledByDefault: true,
+             "Store name is is reserved for 'CloudSync'.");
         #endregion
 
         #region DBIndex
         public static DiagnosticDescriptor AutoIncrementNotNullable =
-            new DiagnosticDescriptor(
+            new(
                 "DNTGG200",
                 "Index error",
                 "Autoincrement '{0}' is not nullable",
@@ -101,24 +120,25 @@ namespace DNTGenerator.Diagnostics
                 null,
                 "Make '{0}' nullable");
 
-        public static DiagnosticDescriptor AutoIncrementNotNumeric =
-            new DiagnosticDescriptor(
+        public static DiagnosticDescriptor AutoIncrementNotAllowedType =
+            new(
                 "DNTGG201",
                 "Index error",
-                "Autoincrement '{0}' is not numeric",
+                "Autoincrement '{0}' is not numeric or string",
                 "DNTGenerator",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                "Autoincrement index type is not numeric.",
+                "Autoincrement index type is not numeric or string.",
                 null,
                 new[] {
                     "Change '{0}'",
                     "Change '{0}' to 'ushort?'",
                     "Change '{0}' to 'uint?'",
-                    "Change '{0}' to 'ulong?'"});
+                    "Change '{0}' to 'ulong?'",
+                    "Change '{0}' to 'string?'"});
 
         public static DiagnosticDescriptor MultiEntryNotIEnumerable =
-            new DiagnosticDescriptor(
+            new(
                 "DNTGG202",
                 "Index error",
                 "MultiEntry '{0}' is not IEnumerable",
@@ -130,7 +150,7 @@ namespace DNTGenerator.Diagnostics
                 "Change '{0}' to {1}");
 
         public static DiagnosticDescriptor NonMultiEntryNotArray =
-           new DiagnosticDescriptor(
+           new(
                "DNTGG203",
                "Index error",
                "Non MultiEntry '{0}' is IEnumerable",
@@ -142,7 +162,7 @@ namespace DNTGenerator.Diagnostics
                "Change '{0}' to {1}");
 
         public static DiagnosticDescriptor DuplicatePrimaryKeyMember =
-            new DiagnosticDescriptor(
+            new(
                 "DNTGG210",
                 "Primary key error",
                 "'{0}' name identical to Schema 'PrimaryKeyName'",
@@ -154,7 +174,7 @@ namespace DNTGenerator.Diagnostics
                 "Remove '{0}'");
 
         public static DiagnosticDescriptor DuplicatePrimaryKeySchemaArgument =
-            new DiagnosticDescriptor(
+            new(
                 "DNTGG211",
                 "Primary key error",
                 "'{0}' is 'PrimaryKeyName' with same name as another parameter or property",
@@ -166,7 +186,7 @@ namespace DNTGenerator.Diagnostics
                 "Remove '{0}'");
 
         public static DiagnosticDescriptor MultiplePrimaryKeysArgument =
-           new DiagnosticDescriptor(
+           new(
                "DNTGG220",
                "Primary key error",
                "'{0}' is 'IsPrimary', multiple 'Primary Keys' exist for same store",
@@ -178,7 +198,7 @@ namespace DNTGenerator.Diagnostics
                "Remove '{0}'");
 
         public static DiagnosticDescriptor ReservedGeneratedPKNameSchemaArgument =
-          new DiagnosticDescriptor(
+          new(
               "DNTGG221",
               "Primary key error",
               "'{0}' has 'PrimaryKeyName' but 'IsPrimary' is already specified elsewhere",
@@ -190,7 +210,7 @@ namespace DNTGenerator.Diagnostics
               "Remove '{0}'");
 
         public static DiagnosticDescriptor ReservedGeneratedPKGuidSchemaArgument =
-          new DiagnosticDescriptor(
+          new(
               "DNTGG222",
               "Primary key error",
               "'{0}' has 'PrimaryKeyGuid' but 'IsPrimary' is already specified elsewhere",
@@ -202,7 +222,7 @@ namespace DNTGenerator.Diagnostics
               "Remove '{0}'");
 
         public static DiagnosticDescriptor AutoWithoutPrimaryKeyArgument =
-          new DiagnosticDescriptor(
+          new(
               "DNTGG223",
               "Primary key error",
               "'{0}' is 'IsAuto' but not 'IsPrimary'",
@@ -214,10 +234,10 @@ namespace DNTGenerator.Diagnostics
               "Add 'IsPrimary'");
 
         public static DiagnosticDescriptor ReservedPrimaryKeyNameMember =
-          new DiagnosticDescriptor(
+          new(
               "DNTGG230",
               "Primary key error",
-              "'ID' is a reserved name for auto-generated primary key",
+              "'Id' is a reserved name for auto-generated primary key",
               "DNTGenerator",
               DiagnosticSeverity.Error,
               isEnabledByDefault: true,
@@ -226,10 +246,10 @@ namespace DNTGenerator.Diagnostics
               "Change name to '{0}'");
 
         public static DiagnosticDescriptor ReservedPrimaryKeyNameSchemaArgument =
-          new DiagnosticDescriptor(
+          new(
               "DNTGG231",
               "Primary key error",
-              "'ID' is a reserved name for auto-generated primary key",
+              "'Id' is a reserved name for auto-generated primary key",
               "DNTGenerator",
               DiagnosticSeverity.Error,
               isEnabledByDefault: true,
@@ -238,7 +258,7 @@ namespace DNTGenerator.Diagnostics
               "Change name to '{0}'");
 
         public static DiagnosticDescriptor CompoundIndexNotFound =
-           new DiagnosticDescriptor(
+           new(
                "DNTGG240",
                "CompoundIndex error",
                "CompoundIndexAttribute references properties that are not present in '{0}'",
@@ -249,7 +269,7 @@ namespace DNTGenerator.Diagnostics
                null);
 
         public static DiagnosticDescriptor MissingIndexConverter =
-           new DiagnosticDescriptor(
+           new(
                "DNTGG300",
                "JSON Converter error",
                "Type for '{0}' needs a special converter, change to '{1}'",
@@ -261,5 +281,4 @@ namespace DNTGenerator.Diagnostics
                "Change to '{0}'");
         #endregion
     }
-#pragma warning restore IDE0090 // Use 'new DiagnosticDescriptor(...)'
 }

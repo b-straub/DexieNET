@@ -1,0 +1,37 @@
+﻿<MudDialog>
+    <DialogContent>
+        <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField AutoFocus="true" Immediate="true" InputType=@InputType.Email Placeholder=@Item.Placeholder Label="EMail" @bind-Value=@Item.Email For=@(() => Item.Email) />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Submit</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; init; }
+
+    [Parameter, EditorRequired]
+    public required EmailData Item { get; init; }
+
+    void Cancel() => MudDialog?.Cancel();
+
+    protected override void OnInitialized()
+    {
+        MudDialog.Options.CloseButton = true;
+        MudDialog.SetOptions(MudDialog.Options);
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        MudDialog.Close(DialogResult.Ok(Item));
+    }
+}

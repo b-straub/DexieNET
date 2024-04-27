@@ -2,34 +2,32 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Put : DexieTest<TestDB>
+    internal class Put(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Put(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Put";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Persons();
+
+            var table = DB.Persons;
             await table.Clear();
 
             var person = DataGenerator.GetPerson1();
 
-            var res = await table.Add(person);
-            person = person with { ID = res };
+            var res = await table.Put(person);
 
             var personAdded = (await table.ToArray()).FirstOrDefault();
 
-            PersonComparer comparer = new();
+            PersonComparer comparerNoID = new(true);
 
-            if (!comparer.Equals(person, personAdded))
+            if (!comparerNoID.Equals(person, personAdded))
             {
                 throw new InvalidOperationException("Item not identical.");
             }
 
-            person = person with { Name = "Updated" };
+            PersonComparer comparer = new();
+
+            person = personAdded with { Name = "Updated" };
             res = await table.Put(person);
 
             personAdded = (await table.ToArray()).FirstOrDefault();

@@ -51,7 +51,7 @@ namespace DNTGenerator.Verifier
             }
         }
 
-        public record struct SchemaDescriptor(string StoreName, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, Location PKNameLocation, bool? PrimaryKeyGuid, Location PKGuidLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, Location Location);
+        public record struct SchemaDescriptor(string StoreName, Location? StoreNameLocation, INamedTypeSymbol? UpdateStore, string? PrimaryKeyName, Location PKNameLocation, bool? PrimaryKeyGuid, Location PKGuidLocation, bool HasOutboundPrimaryKey, bool HasExplicitStoreName, bool HasCloudSync, Location Location);
 
         public static SchemaDescriptor GetSchemaDescriptor(this INamedTypeSymbol symbol, bool isInterface, Compilation compilation, CancellationToken cancellationToken)
         {
@@ -61,13 +61,15 @@ namespace DNTGenerator.Verifier
 
             if (attr is null)
             {
-                return new(storeName, null, null, Location.None, null, Location.None, false, false, Location.None);
+                return new(storeName, null, null, null, Location.None, null, Location.None, false, false, false, Location.None);
             }
 
             var node = (attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken)) ?? throw new InvalidOperationException($"Invalid Schema name for: {nameof(symbol)}");
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
             var storeAttributeName = (string?)attr.NamedArguments.Where(na => na.Key == "StoreName").FirstOrDefault().Value.Value;
+            var storeNameLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "StoreName").FirstOrDefault()?.GetLocation();
+
             var updateStore = (INamedTypeSymbol?)attr.NamedArguments.Where(na => na.Key == "UpdateStore").FirstOrDefault().Value.Value;
 
             string? primaryKeyName = null;
@@ -88,9 +90,10 @@ namespace DNTGenerator.Verifier
             }
 
             var outboundPrimaryKey = ((bool?)attr.NamedArguments.Where(na => na.Key == "OutboundPrimaryKey").FirstOrDefault().Value.Value).True();
+            var cloudSync = ((bool?)attr.NamedArguments.Where(na => na.Key == "CloudSync").FirstOrDefault().Value.Value).True();
 
             var location = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
-            return new(storeAttributeName ?? storeName, updateStore, primaryKeyName, pkNameLocation ?? Location.None, primaryKeyGuid, pkGuidLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, location);
+            return new(storeAttributeName ?? storeName, storeNameLocation, updateStore, primaryKeyName, pkNameLocation ?? Location.None, primaryKeyGuid, pkGuidLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, cloudSync, location);
         }
 
         public static IEnumerable<(IEnumerable<(string Name, Location Location)> Keys, bool IsPrimary, Location PKLocation)> GetCompoundKeys(this INamedTypeSymbol symbol, Compilation compilation, CancellationToken cancellationToken)
@@ -125,7 +128,7 @@ namespace DNTGenerator.Verifier
                 }
 
                 IEnumerable<(string Name, Location Location)> keyNames = names.Where(n => n.Name is not null)
-                        .Select(n => (n.Name!.ToLowerInvariant(), n.Location));
+                        .Select(n => (n.Name!.ToCamelCase(), n.Location));
 
                 keys.Add((keyNames, primaryKey, pkLocation ?? Location.None));
             }
@@ -145,15 +148,35 @@ namespace DNTGenerator.Verifier
             return record.HasGeneratedPrimaryKey() && !record.SchemaDescriptor.PrimaryKeyGuid.False();
         }
 
-        public static bool HasGuidPrimaryKey(this DBRecord record)
+        public static bool HasNonCloudGuidPrimaryKey(this DBRecord record)
         {
-            return record.HasGeneratedGuidPrimaryKey() || record.Properties.Where(p => p.IsAutoGuidPrimary).Any();
+            return !record.SchemaDescriptor.HasCloudSync &&
+               (record.HasGeneratedGuidPrimaryKey() || record.Properties.Where(p => p.IsAutoGuidPrimary).Any());
         }
 
         public static bool HasGeneratedPrimaryKeys(this IEnumerable<DBRecord> records)
         {
             return records
                 .Where(r => r.HasGeneratedPrimaryKey()).Any();
+        }
+
+        public static bool HasCloudSync(this IEnumerable<DBRecord> records)
+        {
+            return records.Any(r => r.SchemaDescriptor.HasCloudSync);
+        }
+
+        public static string? PrimaryIndexTypeName(this DBRecord record)
+        {
+            var typeName = record.HasGeneratedPrimaryKey() ?
+                (record.HasGeneratedGuidPrimaryKey() || record.HasNonCloudGuidPrimaryKey()) ? "string" : "ulong"
+                : record.GetPrimaryIndexTypeName();
+
+            if (typeName is null && !record.SchemaDescriptor.HasOutboundPrimaryKey)
+            {
+                throw new InvalidOperationException("For tables with inbound Primary index type name can not be 'null'");
+            }
+
+            return typeName;
         }
 
         public static string? GetPrimaryIndexTypeName(this DBRecord record)
@@ -172,7 +195,7 @@ namespace DNTGenerator.Verifier
                 if (keyNames.Any())
                 {
                     var typeNames = keyNames.SelectMany(k =>
-                        record.Properties.Where(p => p.Name.ToLowerInvariant() == k.Name)).Select(i => i.TypeName);
+                        record.Properties.Where(p => p.Name.ToCamelCase() == k.Name)).Select(i => i.TypeName);
 
                     primaryIndexTypeName = typeNames.Aggregate("(", (current, next) => current + $"{next}, ");
                     primaryIndexTypeName = primaryIndexTypeName.TrimEnd(new[] { ',', ' ' });
@@ -198,18 +221,18 @@ namespace DNTGenerator.Verifier
                 {
                     if (record.SchemaDescriptor.PrimaryKeyName is null)
                     {
-                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid.True() ? "++ID" 
-                            : "ID";
+                        primaryIndexName ??= forSchema && !record.HasNonCloudGuidPrimaryKey() ? (record.HasGeneratedGuidPrimaryKey() ? "@id" : "++id") : "Id";
                     }
                     else
                     {
-                        primaryIndexName ??= forSchema && !record.SchemaDescriptor.PrimaryKeyGuid.True() ? $"++{record.SchemaDescriptor.PrimaryKeyName}"
+                        primaryIndexName ??= forSchema && !record.HasNonCloudGuidPrimaryKey() ? (record.HasGeneratedGuidPrimaryKey() ?
+                            $"@{record.SchemaDescriptor.PrimaryKeyName}" : $"++{record.SchemaDescriptor.PrimaryKeyName}")
                             : record.SchemaDescriptor.PrimaryKeyName;
                     }
                 }
             }
 
-            return forSchema ? primaryIndexName?.ToLowerInvariant() : primaryIndexName;
+            return forSchema ? primaryIndexName?.ToCamelCase() : primaryIndexName;
         }
 
         public static (string StoreBaseName, string Schema, bool Update) GetSchema(this DBRecord record, IEnumerable<DBRecord> records)
@@ -221,14 +244,22 @@ namespace DNTGenerator.Verifier
 
             var keyNames = keys.Select(i =>
             {
-                var name = i.Name.ToLowerInvariant();
+                var name = i.Name.ToCamelCase();
 
-                if (i.IsAuto && !i.IsAutoGuidPrimary)
+
+                if (i.IsAuto)
                 {
-                    return "++" + name;
+                    if (record.SchemaDescriptor.HasCloudSync)
+                    {
+                        return '@' + name;
+                    }
+                    else if (!record.HasNonCloudGuidPrimaryKey())
+                    {
+                        return "++" + name;
+                    }
                 }
 
-                if (i.IsUniqe)
+                if (i.IsUniqe && !i.IsPrimary)
                 {
                     return "&" + name;
                 }
@@ -266,11 +297,11 @@ namespace DNTGenerator.Verifier
         {
             if (record.SchemaDescriptor.UpdateStore is null)
             {
-                return record.SchemaDescriptor.StoreName.ToLowerInvariant();
+                return record.SchemaDescriptor.StoreName.ToCamelCase();
             }
 
             var baseStore = records.Where(r => r.Symbol.Equals(record.SchemaDescriptor.UpdateStore, SymbolEqualityComparer.Default)).FirstOrDefault() ?? throw new InvalidOperationException($"Invalid UpdateStore for: {nameof(record.Symbol.Name)}");
-            return baseStore.SchemaDescriptor.StoreName.ToLowerInvariant();
+            return baseStore.SchemaDescriptor.StoreName.ToCamelCase();
         }
 
         public static string Keys(this DBRecord record, bool multiEntryOnly)
@@ -280,11 +311,11 @@ namespace DNTGenerator.Verifier
             var keys = multiEntryOnly ?
                 record.Properties.Where(i => i.IsIndex && i.IsMultiEntry)
                     .OrderBy(static i => i, comparer)
-                    .Select(i => i.Name.ToLowerInvariant()).ToList()
+                    .Select(i => i.Name.ToCamelCase()).ToList()
                 :
                 record.Properties.Where(i => i.IsIndex)
                     .OrderBy(static i => i, comparer)
-                    .Select(i => i.Name.ToLowerInvariant()).ToList();
+                    .Select(i => i.Name.ToCamelCase()).ToList();
 
             if (!multiEntryOnly)
             {
@@ -299,7 +330,7 @@ namespace DNTGenerator.Verifier
             {
                 if (!record.SchemaDescriptor.HasOutboundPrimaryKey)
                 {
-                    keyNames = @$"""{record.GetPrimaryIndexName(false)?.ToLowerInvariant()}""" + ", " + keyNames;
+                    keyNames = @$"""{record.GetPrimaryIndexName(false)?.ToCamelCase()}""" + ", " + keyNames;
                 }
             }
 
@@ -364,7 +395,7 @@ namespace DNTGenerator.Verifier
             pkLocation ??= arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsAuto").FirstOrDefault()?.GetLocation();
 
             var isAutoGuidPrimary = (isPrimary && isAuto && symbol.IsGuidType());
-         
+
             var isUnique = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsUnique").FirstOrDefault().Value.Value).True();
             var isMultiEntry = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsMultiEntry").FirstOrDefault().Value.Value).True();
             var indexConverter = symbol.GetIndexConverter(compilation);

@@ -2,24 +2,20 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class VersionUpdate : DexieTest<TestDB>
+    internal class VersionUpdate(TestDB db) : DexieTest<TestDB>(db)
     {
-        public VersionUpdate(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "VersionUpdate";
 
         public override async ValueTask<string?> RunTest()
         {
-            var table = await DB.Friends();
+            var table = DB.Friends;
             await table.Clear();
             await table.BulkAdd(DataGenerator.GetFriend());
             var fs = await table.ToArray();
 
             try
             {
-                await table.OrderBy(f => f.ShoeSize);
+                table.OrderBy(f => f.ShoeSize);
             }
             catch (Exception ex)
             {
@@ -29,27 +25,27 @@ namespace DexieNETTest.TestBase.Test
                 }
             }
 
-            await DB.Close();
-            await DB.Version(1.5).Stores<Friend2>();
+            DB.Close();
+            DB.Version(1.5).Stores<Friend2>();
             await DB.Open();
 
-            var version = await DB.Version();
+            var version = DB.Version();
             if (version != 1.5)
             {
                 throw new InvalidOperationException("Version not upgraded");
             }
 
-            var table2 = await DB.Friends2();
+            var table2 = DB.Friends2;
 
             var f2s = await table2.ToArray();
-            var col = await table2.Where(f => f.ShoeSize).Above(41);
+            var col = table2.Where(f => f.ShoeSize).Above(41);
             var friends2S = await col.ToArray();
             var friends2 = await table2.OrderBy(f => f.ShoeSize).ToArray();
 
-            await DB.Close();
-            await DB.Version(3).Stores<Friend3>().Upgrade(async tx =>
+            DB.Close();
+            DB.Version(3).Stores<Friend3>().Upgrade(async tx =>
             {
-                var table = await tx.Friends();
+                var table = tx.Friends();
 
                 await table.ToCollection().Modify(f =>
                 {
@@ -62,7 +58,7 @@ namespace DexieNETTest.TestBase.Test
             });
             await DB.Open();
 
-            var table3 = await DB.Friends3();
+            var table3 = DB.Friends3;
             var friends3 = await table3.ToArray();
 
             friends3 = await table3.OrderBy(f => f.LastName).Reverse().ToArray();

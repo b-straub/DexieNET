@@ -2,19 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Above : DexieTest<TestDB>
+    internal class Above(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Above(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Above";
 
         public override async ValueTask<string?> RunTest()
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -46,9 +42,9 @@ namespace DexieNETTest.TestBase.Test
             {
                 await table.Clear();
                 await table.BulkAdd(persons);
-                var whereClause = await table.Where(p => p.Age);
-                var collectionOld = await whereClause.Above(65);
-                var collectionOlder = await whereClause.AboveOrEqual(65);
+                var whereClause = table.Where(p => p.Age);
+                var collectionOld = whereClause.Above(65);
+                var collectionOlder = whereClause.AboveOrEqual(65);
 
                 oldPersons = await collectionOld.ToArray();
                 olderPersons = await collectionOlder.ToArray();

@@ -2,19 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class NoneOf : DexieTest<TestDB>
+    internal class NoneOf(TestDB db) : DexieTest<TestDB>(db)
     {
-        public NoneOf(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "NoneOf";
 
         public override async ValueTask<string?> RunTest()
         {
             var comparer = new PersonComparer(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -33,8 +29,8 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var whereClauseAge = await table.Where(p => p.Age);
-                var collectionAge = await whereClauseAge.NoneOf(11, 75);
+                var whereClauseAge = table.Where(p => p.Age);
+                var collectionAge = whereClauseAge.NoneOf(11, 75);
                 personsAge = await collectionAge.ToArray();
             });
 

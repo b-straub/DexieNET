@@ -1,0 +1,58 @@
+﻿<MudDialog>
+    <DialogContent>
+
+        <EditForm Model=@Item OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard>
+                @if (Item.Alerts.Any())
+                {
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            @foreach (var alert in Item.Alerts.OrderByDescending(a => a.Type))
+                            {
+                                Color color = alert.Type switch
+                                {
+                                    UIAlert.AlertType.INFO => Color.Info,
+                                    UIAlert.AlertType.WARNING => Color.Warning,
+                                    UIAlert.AlertType.ERROR => Color.Error,
+                                    _ => throw new ArgumentOutOfRangeException(alert.Type.ToString())
+                                };
+
+                                <MudText Color=@color Typo="Typo.h6">@alert.GetMessage()</MudText>
+                            }
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                }
+
+                <MudCardContent>
+                    <MudTextField AutoFocus="true" Immediate="true" Label="OTP" @bind-Value=@Item.OTP For=@(() => Item.OTP) />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Disabled=@(!context.Validate()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Submit</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; init; }
+
+    [Parameter, EditorRequired]
+    public required OTPData Item { get; init; }
+
+    void Cancel() => MudDialog?.Cancel();
+
+    protected override void OnInitialized()
+    {
+        MudDialog.Options.CloseButton = true;
+        MudDialog.SetOptions(MudDialog.Options);
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        MudDialog.Close(DialogResult.Ok(Item));
+    }
+}

@@ -2,19 +2,15 @@
 
 namespace DexieNETTest.TestBase.Test
 {
-    internal class Distinct : DexieTest<TestDB>
+    internal class Distinct(TestDB db) : DexieTest<TestDB>(db)
     {
-        public Distinct(TestDB db) : base(db)
-        {
-        }
-
         public override string Name => "Distinct";
 
         public override async ValueTask<string?> RunTest()
         {
             PersonComparer comparer = new(true);
 
-            var table = await DB.Persons();
+            var table = DB.Persons;
             await table.Clear();
 
             var persons = DataGenerator.GetPersons();
@@ -51,13 +47,13 @@ namespace DexieNETTest.TestBase.Test
                 await table.Clear();
                 await table.BulkAdd(persons);
 
-                var where = await table.Where(p => p.Tags);
+                var where = table.Where(p => p.Tags);
 
-                var collection = await where.AnyOf(query);
+                var collection = where.AnyOf(query);
                 noDistinct = await collection.ToArray();
 
-                var collectionD = await where.AnyOf(query);
-                await collectionD.Distinct();
+                var collectionD = where.AnyOf(query);
+                collectionD.Distinct();
                 distinct = await collectionD.ToArray();
             });
 

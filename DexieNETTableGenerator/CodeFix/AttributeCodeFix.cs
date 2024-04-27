@@ -26,7 +26,6 @@ using System;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace DNTGenerator.CodeFix
 {

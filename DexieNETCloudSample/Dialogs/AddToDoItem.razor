@@ -1,0 +1,48 @@
+﻿@inherits RxBLServiceSubscriber<ToDoItemService>
+
+<MudDialog ContentStyle="width: 400px; height: 400px">
+    <DialogContent>
+        <EditForm Model=@_scope OnValidSubmit="OnValidSubmit">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextFieldRx State=@_scope.Text Validation=@ToDoItemService.ToDoItemItemInput.ValidateText CanChangeCallback=@_scope.CanUpdateText AutoFocus="true" Immediate="true" Label="ToDo" />
+                    <MudDatePickerRx State=@_scope.DueDateDate Validation=@ToDoItemService.ToDoItemItemInput.ValidateDueDate CanChangeCallback=@_scope.CanUpdateDueDate Label="Due Date" Editable="true" />
+                    <MudTimePickerRx PickerVariant=@PickerVariant.Dialog State=@_scope.DueDateTime Validation=@_scope.ValidateDueDateTime CanChangeCallback=@_scope.CanUpdateTime />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Disabled=@(!_scope.CanSubmit()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color=@Color.Success Class="ml-auto">Save</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; init; }
+
+    [Parameter]
+    public required ToDoDBItem? Item { get; init; }
+
+    void Cancel() => MudDialog?.Cancel();
+
+    [NotNull]
+    private ToDoItemService.ToDoItemItemInput? _scope { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _scope = Service.CreateItemInput(Item);
+        ArgumentNullException.ThrowIfNull(_scope);
+
+        MudDialog.Options.CloseButton = true;
+        MudDialog.SetOptions(MudDialog.Options);
+
+        base.OnInitialized();
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        MudDialog.Close(_scope);
+    }
+}
