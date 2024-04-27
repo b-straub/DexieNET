@@ -30,3 +30,4 @@ DexieCloudNET/yarn/node_modules
 DexieCloudNET/yarn/src/**/*.js
 DexieCloudNET/wwwroot/
 DexieCloudNET/yarn/src/DexieNET
+.nuget

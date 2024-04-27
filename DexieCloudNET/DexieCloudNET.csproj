@@ -18,7 +18,7 @@
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageTags>Dexie, Dexie Cloud, IndexedDB</PackageTags>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageOutputPath>..\Nuget</PackageOutputPath>
+		<PackageOutputPath>..\.nuget</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>

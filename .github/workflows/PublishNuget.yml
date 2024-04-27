@@ -5,7 +5,7 @@ on:
     types: [published]
 
 env:
-  NuGetDirectory: ${{ github.workspace}}/Nuget
+  NuGetDirectory: ${{ github.workspace}}/.nuget
 
 jobs:
   build:

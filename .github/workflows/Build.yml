@@ -9,29 +9,46 @@ on:
       - "**"
 
 jobs:
-  build:
+  job1:
+    name: Setup
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+  
+      - name: Setup .NET 7.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+  
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Setup .NET 7.0
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+  job2:
+    name: BuildDexieNET
+    runs-on: ubuntu-latest
+    needs: job1
 
-    - name: Setup .NET 8.0
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-
+    steps:
     - name: BuildDexieNET
       run: dotnet build DexieNET/DexieNET.csproj -c Release
 
-    - name: BuildDexieCloudNET
-      run: dotnet build DexieNET/DexieCloudNET.csproj -c Release
+  job3:
+    name: BuildDexieCloudNET
+    runs-on: ubuntu-latest
+    needs: [job1, job2]
 
-    - name: Build
-      run: dotnet build -c Release
-      
+    steps:
+    - name: BuildDexieCloudNET
+      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
+
+  job4:
+    name: BuildDexieNET
+    runs-on: ubuntu-latest
+    needs: [job1, job2, job3]
+
+    steps:
     - name: Test
       run: dotnet test -c Release
