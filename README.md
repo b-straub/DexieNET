@@ -1,14 +1,14 @@
 DexieNET
 ========
 
-DexieNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB see [Dexie](https://dexie.org)
+DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB see https://dexie.org with cloud support see https://dexie.org/cloud/ .
 
 *'DexieNET' used with permission of David Fahlander*
 
 ##  News
 
-- Coming soon [DexieCloud](https://dexie.org/cloud/)
-- Please register with **DexieCloud** and test the ToDoSample from the Cloud branch. The configuration script can be found here [configure-app.ps1](https://github.com/b-straub/DexieNET/blob/cloud/DexieNETCloudSample/Dexie/configure-app.ps1).
+- Preview released for [DexieCloud](https://dexie.org/cloud/)
+- Please register with **DexieCloud** and test the ToDoSample. The configuration script can be found here [configure-app.ps1](https://github.com/b-straub/DexieNET/blob/cloud/DexieNETCloudSample/Dexie/configure-app.ps1).
 
 
 - Published a new helper library [RxBlazorLight](https://github.com/b-straub/RxBlazorLight)  
@@ -17,7 +17,7 @@ DexieNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB see [De
 
 ##  Basic
 
-**DexieNET** aims to be a feature complete .NET wrapper for **Dexie.js** the famous Javascript IndexedDB wrapper from David Fahlander.
+**DexieNET** aims to be a feature complete .NET wrapper for **Dexie.js** the famous Javascript IndexedDB wrapper from David Fahlander including support for **cloud sync**.
 
 I consists of two parts, a source generator converting  a C# record, class, struct to a DB store and a set of wrappers around the well known Dexie.js API constructs such as *Table, WhereClause, Collection*, ...
 
