@@ -12,7 +12,6 @@ DexieNET/npm/node_modules
 DexieNET/wwwroot
 DexieNETTest/TableGeneratorTest/TestResults
 Publish
-Nugets
 GeneratorRunner
 payload.json
 DexieNETHelloWorld
@@ -30,4 +29,3 @@ DexieCloudNET/yarn/node_modules
 DexieCloudNET/yarn/src/**/*.js
 DexieCloudNET/wwwroot/
 DexieCloudNET/yarn/src/DexieNET
-.nuget
