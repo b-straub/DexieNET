@@ -10,45 +10,53 @@ on:
 
 jobs:
   job1:
-    name: Setup
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-  
-      - name: Setup .NET 7.0
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-  
-      - name: Setup .NET 8.0
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-
-  job2:
     name: BuildDexieNET
     runs-on: ubuntu-latest
-    needs: job1
 
     steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 7.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.
+
     - name: BuildDexieNET
       run: dotnet build DexieNET/DexieNET.csproj -c Release
 
-  job3:
+  job2:
     name: BuildDexieCloudNET
+    runs-on: ubuntu-latest
+    needs: [job1]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.
+
+    - name: BuildDexieCloudNET
+      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
+
+  job3:
+    name: TestDexieNET
     runs-on: ubuntu-latest
     needs: [job1, job2]
 
     steps:
-    - name: BuildDexieCloudNET
-      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
+    - uses: actions/checkout@v4
 
-  job4:
-    name: BuildDexieNET
-    runs-on: ubuntu-latest
-    needs: [job1, job2, job3]
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.
 
-    steps:
     - name: Test
       run: dotnet test -c Release
