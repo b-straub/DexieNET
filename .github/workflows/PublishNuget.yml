@@ -10,35 +10,24 @@ env:
 jobs:
   build:
 
-    env:
-      SOLUTION: 'DexieNET.sln'
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Setup .NET 7.0
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 7.0.x
 
     - name: Setup .NET 8.0
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
-    - name: BuildDexieNET
-      run: dotnet build DexieNET/DexieNET.csproj -c Release
+    - name: Build DexieNET normal and cloud
+      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
 
-    - name: BuildDexieCloudNET
-      run: dotnet build DexieNET/DexieCloudNET.csproj -c Release
+    - name: TestSG
+      run: dotnet test DexieNETTest/TableGeneratorTest/DexieNETTest.TableGeneratorTest.csproj -c Release
 
-    - name: Build
-      run: dotnet build --configuration Release
-
-    - name: Run tests
-      run: dotnet test --configuration Release --verbosity normal
+    - name: TestDB
+      run: dotnet test DexieNETTest/Tests/DexieNETTest.Tests.csproj -c Release
       
     - name: Publish
       run: dotnet nuget push ${{ env.NuGetDirectory }}/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
