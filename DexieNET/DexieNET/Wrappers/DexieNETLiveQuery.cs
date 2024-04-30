@@ -124,7 +124,9 @@ namespace DexieNET
         {
             _liveQuery = liveQuery;
 
-            _lqTrigger = Observable
+            _lqTrigger = observables.Length == 0 ? 
+            Observable.Return(Unit.Default) :
+            Observable
                 .Merge(observables)
                 .StartWith(Unit.Default)
                 .Finally(Dispose);
