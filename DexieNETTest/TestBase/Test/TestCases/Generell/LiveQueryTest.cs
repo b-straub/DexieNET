@@ -79,8 +79,6 @@ namespace DexieNETTest.TestBase.Test
 
             var observableP = DB.LiveQuery(async () =>
             {
-                await tablePersons.Count(); // First LiveQuery will not populate changed keys otherwise
-
                 var values = await tablePersons.Where(p => p.Age).AboveOrEqual(50).ToArray();
                 if (values.Any() && expectedCountP != values.Count())
                 {
@@ -212,7 +210,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException(firstError);
             }
 
-            if (executionCountP != 7)
+            if (executionCountP != 4)
             {
                 throw new InvalidOperationException($"executionCountP : {executionCountP}-> LiveQuery failed.");
             }
