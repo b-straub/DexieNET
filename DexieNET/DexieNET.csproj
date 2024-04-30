@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
@@ -19,11 +19,21 @@
 		<PackageTags>Dexie, IndexedDB</PackageTags>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageOutputPath>..\.nuget</PackageOutputPath>
-		<IncludeContentInPack>false</IncludeContentInPack>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="." />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="yarn\package.json" Pack="false" />
+		<None Include="yarn\tsconfig.json" Pack="false" />
+		<Content Include="yarn\src\*.js" Pack="false" />
+		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -44,16 +54,13 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddContentToOutput</TargetsForTfmSpecificContentInPackage>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
-	<Target Name="_AddContentToOutput">
+	<Target Name="_AddAnalyzersToOutput">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\DexieNETTableGenerator.dll" PackagePath="analyzers/dotnet/cs" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\Humanizer.dll" PackagePath="analyzers/dotnet/cs" />
-			<TfmSpecificPackageFile Include="README.md" PackagePath="." />
-			<TfmSpecificPackageFile Include="wwwroot\js\*.js" PackagePath="staticwebassets/js" />
-			<TfmSpecificPackageFile Include="wwwroot\js\*.map" PackagePath="staticwebassets/js" Condition="'$(Configuration)' == 'Debug'" />
 		</ItemGroup>
 	</Target>
 	
