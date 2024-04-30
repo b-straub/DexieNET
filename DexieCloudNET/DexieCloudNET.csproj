@@ -19,21 +19,11 @@
 		<PackageTags>Dexie, Dexie Cloud, IndexedDB</PackageTags>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageOutputPath>..\.nuget</PackageOutputPath>
+		<IncludeContentInPack>false</IncludeContentInPack>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<SupportedPlatform Include="browser" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="README.md" Pack="true" PackagePath="." />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="yarn\package.json" Pack="false" />
-		<None Include="yarn\tsconfig.json" Pack="false" />
-		<Content Include="yarn\src\*.js" Pack="false" />
-		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -57,6 +47,18 @@
 
 	<Target Name="DeleteJSFiles" BeforeTargets="BeforeBuild">
 		<Delete Files="wwwroot\js\*.*" />
+	</Target>
+
+	<PropertyGroup>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddContentToOutput</TargetsForTfmSpecificContentInPackage>
+	</PropertyGroup>
+
+	<Target Name="_AddContentToOutput">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="README.md" PackagePath="." />
+			<TfmSpecificPackageFile Include="wwwroot\js\*.js" PackagePath="staticwebassets/js" />
+			<TfmSpecificPackageFile Include="wwwroot\js\*.map" PackagePath="staticwebassets/js" Condition="'$(Configuration)' == 'Debug'" />
+		</ItemGroup>
 	</Target>
 
 	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
