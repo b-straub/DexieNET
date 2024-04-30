@@ -1,4 +1,4 @@
-﻿@inherits RxBLServiceSubscriber<ToDoItemService>
+﻿@inherits RxBLStateSubscriber<ToDoItemService>
 
 @if (AddMode)
 {
@@ -21,7 +21,7 @@ else
 
     private async Task ShowAddUpdateDialog(IStateCommandAsync _)
     {
-        var parameters = new DialogParameters { ["Item"] = Item };
+        var parameters = new DialogParameters { ["Item"] = Item, ["Service"] = Service };
         var dialog = DialogService.Show<AddToDoItem>(AddMode ? "Add ToDo" : "Edit ToDo", parameters);
         var result = await dialog.Result;
 

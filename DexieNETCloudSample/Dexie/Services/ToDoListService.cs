@@ -90,7 +90,7 @@ namespace DexieNETCloudSample.Dexie.Services
         {
             ArgumentNullException.ThrowIfNull(_db);
 
-            var oc = new ListOpenClose(false, false, listID);
+            var oc = new ListOpenClose(false, true, listID);
             await _db.ListOpenCloses.Put(oc);
         }
 

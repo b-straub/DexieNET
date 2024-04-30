@@ -22,16 +22,11 @@ namespace DexieNETCloudSample.Components
 
         private SortDirection _sortDirection = SortDirection.Ascending;
 
-        protected override Task OnParametersSetAsync()
+        protected override void OnInitialized()
         {
             ArgumentNullException.ThrowIfNull(List);
-
-            if (Service.CurrentList.Value != List)
-            {
-                Service.CurrentList.Value = List;
-            }
-
-            return base.OnParametersSetAsync();
+            Service.CurrentList.Value = List;
+            base.OnInitialized();
         }
 
         private async Task<bool> ConfirmDelete(DeleteType type)

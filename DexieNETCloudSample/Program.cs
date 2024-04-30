@@ -22,7 +22,7 @@ builder.Services.AddDexieCloudNET<ToDoDB>();
 
 builder.Services.AddSingleton(sp => new DexieCloudService(sp));
 builder.Services.AddSingleton(sp => new AdministrationService(sp));
-builder.Services.AddSingleton(sp => new ToDoItemService(sp));
+builder.Services.AddScoped(sp => new ToDoItemService(sp));
 builder.Services.AddSingleton(sp => new ToDoListService(sp));
 builder.Services.AddSingleton(sp => new ToDoListMemberService(sp));
 

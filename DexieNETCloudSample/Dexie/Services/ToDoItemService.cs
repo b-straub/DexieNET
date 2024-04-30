@@ -107,7 +107,7 @@ namespace DexieNETCloudSample.Dexie.Services
         {
             ArgumentNullException.ThrowIfNull(CurrentList.Value?.ID);
             _db = db;
-            return db.LiveQuery(async () => await GetTable().Where(i => i.ListID).Equal(CurrentList.Value.ID).ToArray());
+            return db.LiveQuery(async () => await GetTable().Where(i => i.ListID, CurrentList.Value.ID).ToArray());
         }
 
         public override bool CanAdd()

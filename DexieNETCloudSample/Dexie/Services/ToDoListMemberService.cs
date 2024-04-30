@@ -86,7 +86,7 @@ namespace DexieNETCloudSample.Dexie.Services
             var memberQuery = _dbService.DB.LiveQuery(async () =>
                 await _dbService.DB.Members.Where(m => m.RealmId).Equal(List.Value?.RealmId).ToArray());
 
-            var useMemberQuery = memberQuery.UseLiveQuery(this.Where(cr => cr.ID == List.ID).Select(_ => Unit.Default));
+            var useMemberQuery = memberQuery.UseLiveQuery(this.AsObservable(List));
 
             _dbDisposeBag.Add(useMemberQuery.Select(m =>
             {
@@ -239,12 +239,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return null;
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        private void Dispose(bool dispose)
+        protected override void Dispose(bool dispose)
         {
             _permissionsDisposeBag.Clear();
             _permissionsMember?.Dispose();

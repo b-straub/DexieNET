@@ -8,10 +8,15 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
+		<ProjectReference Include="..\DexieCloudNET\DexieCloudNET.csproj" Condition="'$(Configuration)' == 'Debug'" />
+		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" OutputItemType="Analyzer" Condition="'$(Configuration)' == 'Debug'" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.4" PrivateAssets="all" />
-		<PackageReference Include="RxMudBlazorLight" Version="0.8.5" />
-		<PackageReference Include="DexieCloudNET" Version="1.2.2-pre" />
+		<PackageReference Include="RxMudBlazorLight" Version="0.8.6" />
+		<PackageReference Include="DexieCloudNET" Version="1.2.3-pre" Condition="'$(Configuration)' == 'Release'" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -9,7 +9,7 @@ using System.Reactive.Linq;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
-    public abstract partial class CrudService<T> : RxBLService, IDisposable where T : IIDPrimaryIndex, IDBStore, IDBCloudEntity
+    public abstract partial class CrudService<T> : RxBLService where T : IIDPrimaryIndex, IDBStore, IDBCloudEntity
     {
         public IState<IEnumerable<T>> ItemsState { get; }
         public bool IsDBOpen => DbService.DB is not null;
@@ -53,13 +53,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return entity is not null && (Permissions?.CanUpdate(entity, query)).True();
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             DBDisposeBag.Clear();
             Permissions?.Dispose();
