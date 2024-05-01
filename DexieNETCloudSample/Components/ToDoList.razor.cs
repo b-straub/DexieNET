@@ -36,7 +36,14 @@ namespace DexieNETCloudSample.Components
                     ToDoListService.CreateList(data.Title) :
                     ToDoListService.CreateList(data.Title, item);
 
-                await commandAsync.ExecuteAsync(Service.AddItem(list));
+                if (item is null)
+                {
+                    await commandAsync.ExecuteAsync(Service.AddItem(list));
+                }
+                else
+                {
+                    await commandAsync.ExecuteAsync(Service.UpdateItem(list));
+                }
             }
         };
 
