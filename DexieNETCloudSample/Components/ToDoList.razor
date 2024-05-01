@@ -64,23 +64,38 @@
                     </MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="ToggleItemOpenClose" Style="text-align:center">
-                        <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
-                                              StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@Service.ToggleListItemsOpenClose(context) />
-                    </MudTd>
-                    <MudTd DataLabel="ToDoList"><MudText>@context.Title</MudText></MudTd>
-                    <MudTd DataLabel="Share" Style="text-align:center">
-                        <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListShareOpen(context) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share)
-                                              StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanToggleListShareOpenClose(context) ExecuteAsyncCallback=@Service.ToggleListShareOpenClose(context) />
-                    </MudTd>
-                    <MudTd DataLabel="Edit" Style="text-align:center">
-                        <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit
-                                              StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanUpdateItem(context) ExecuteAsyncCallback=@AddOrUpdate(context) />
-                    </MudTd>
-                    <MudTd DataLabel="DeleteItem" Style="text-align:center">
-                        <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteItem(context)
-                                              ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.One)) ExecuteAsyncCallback=@Service.DeleteItem(context) />
-                    </MudTd>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <MudTd DataLabel="ShowList" Style="text-align:center">
+                            <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
+                                                StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@Service.ToggleListItemsOpenClose(context) />
+                        </MudTd>
+                        <MudTd DataLabel="ToDoList"><MudText>@context.Title</MudText></MudTd>
+                        <MudTd DataLabel="Share" Style="text-align:center">
+                            <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListShareOpen(context) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share)
+                                                StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanToggleListShareOpenClose(context) ExecuteAsyncCallback=@Service.ToggleListShareOpenClose(context) />
+                        </MudTd>
+                        <MudTd DataLabel="Edit" Style="text-align:center">
+                            <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit
+                                                StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanUpdateItem(context) ExecuteAsyncCallback=@AddOrUpdate(context) />
+                        </MudTd>
+                        <MudTd DataLabel="DeleteItem" Style="text-align:center">
+                            <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteItem(context)
+                                                ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.One)) ExecuteAsyncCallback=@Service.DeleteItem(context) />
+                        </MudTd>
+                    </MudHidden>
+                    <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                         <MudStack Row=@true AlignItems=@AlignItems.Center>
+                            <MudText Class="ml-4">@context.Title</MudText>
+                            <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
+                                                StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@Service.ToggleListItemsOpenClose(context) />
+                            <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListShareOpen(context) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share)
+                                                StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanToggleListShareOpenClose(context) ExecuteAsyncCallback=@Service.ToggleListShareOpenClose(context) />
+                            <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.Edit
+                                                StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanUpdateItem(context) ExecuteAsyncCallback=@AddOrUpdate(context) />
+                            <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteItem(context)
+                                                ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.One)) ExecuteAsyncCallback=@Service.DeleteItem(context) />
+                        </MudStack>
+                    </MudHidden>
                 </RowTemplate>
                 <ChildRowContent>
                     @if (Service.IsListItemsOpen(context))
