@@ -1,0 +1,11 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "StopKestrel",
+            "type": "shell",
+            "problemMatcher": [],
+            "command": "lsof -ti:5223 | xargs --no-run-if-empty kill -9"
+        }
+    ]
+}
