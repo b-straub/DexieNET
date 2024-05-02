@@ -1,6 +1,6 @@
 ﻿@inherits RxBLServiceSubscriber<ToDoListService>
 
-<MudCard Class="mt-16">
+<MudCard Class="mt-6 mx-n14">
     <MudCardHeader>
         <CardHeaderAvatar>
             <MudAvatar Color="Color.Primary">
@@ -18,7 +18,7 @@
             @if (Service.IsDBOpen)
             {
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                    <MudFabAsyncRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(null) />
+                    <MudFabAsyncRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" HasProgress=@false StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(null) />
                     <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
                                    StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@Service.ClearItems />
                 </MudHidden>
@@ -35,7 +35,7 @@
 
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 <MudContainer Class="ml-n3 mb-8">
-                    <MudFabAsyncRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(null) />
+                    <MudFabAsyncRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" HasProgress=@false StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(null) />
                     <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
                                    StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@Service.ClearItems />
                 </MudContainer>
@@ -84,7 +84,7 @@
                         </MudTd>
                     </MudHidden>
                     <MudHidden Breakpoint="Breakpoint.SmAndUp">
-                         <MudStack Row=@true AlignItems=@AlignItems.Center>
+                         <MudStack Class="mt-2 mb-1" Row=@true AlignItems=@AlignItems.Center>
                             <MudText Class="ml-4">@context.Title</MudText>
                             <MudIconButtonAsyncRx Color="Color.Info" Icon=@(Service.IsListItemsOpen(context) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)
                                                 StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@Service.ToggleListItemsOpenClose(context) />

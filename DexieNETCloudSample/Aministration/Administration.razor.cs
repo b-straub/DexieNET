@@ -2,7 +2,6 @@
 using MudBlazor;
 using DexieNETCloudSample.Dialogs;
 using RxBlazorLightCore;
-using DexieNET;
 
 namespace DexieNETCloudSample.Aministration
 {

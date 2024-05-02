@@ -1,6 +1,6 @@
 ﻿@inherits RxBLServiceSubscriber<AdministrationService>
 
-<MudCard Class="mt-16">
+<MudCard Class="mt-6 mx-n14">
     <MudCardHeader>
         <CardHeaderAvatar>
             <MudAvatar Color="Color.Primary">
@@ -15,14 +15,27 @@
             }
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudButtonAsyncRx Color="Color.Primary" Variant="Variant.Filled" StateCommand=@Service.CancellableCommandAsync 
-                ExecuteAsyncCallback=@GetUsers DeferredNotification=@true CancelText="Cancel Get Users">
-                Get Users
-            </MudButtonAsyncRx>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudButtonAsyncRx Color="Color.Primary" Variant="Variant.Filled"
+                    StateCommand=@Service.CancellableCommandAsync ExecuteAsyncCallback=@GetUsers
+                    DeferredNotification=@true CancelText="Cancel Get Users">
+                    Get Users
+                </MudButtonAsyncRx>
+            </MudHidden>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
-        <MudTable Items=@Service.Users Hover="true" Breakpoint="Breakpoint.Sm" Loading=@Service.CancellableCommandAsync.Changing() LoadingProgressColor="Color.Info">
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <MudContainer Class="ml-n3 mb-8">
+                <MudButtonAsyncRx Color="Color.Primary" Variant="Variant.Filled"
+                    StateCommand=@Service.CancellableCommandAsync ExecuteAsyncCallback=@GetUsers
+                    DeferredNotification=@true CancelText="Cancel Get Users">
+                    Get Users
+                </MudButtonAsyncRx>
+            </MudContainer>
+        </MudHidden>
+        <MudTable Items=@Service.Users Hover="true" Breakpoint="Breakpoint.Sm"
+            Loading=@Service.CancellableCommandAsync.Changing() LoadingProgressColor="Color.Info">
             <HeaderContent>
                 <MudTh>UserId</MudTh>
                 <MudTh>LastLogin</MudTh>

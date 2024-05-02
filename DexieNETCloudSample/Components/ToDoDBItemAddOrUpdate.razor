@@ -2,7 +2,7 @@
 
 @if (AddMode)
 {
-    <MudFabAsyncRx StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanAdd Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" ExecuteAsyncCallback=@ShowAddUpdateDialog />
+    <MudFabAsyncRx StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanAdd Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" HasProgress=@false ExecuteAsyncCallback=@ShowAddUpdateDialog />
 }
 else
 {

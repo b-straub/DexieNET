@@ -1,6 +1,6 @@
 ﻿@inherits RxBLScopedServiceSubscriber<ToDoItemService>
 
-<MudCard Class="ma-8" Elevation="0" Outlined="true">
+<MudCard Class="ma-1" Elevation="0" Outlined="true">
     <MudCardHeader>
         <CardHeaderAvatar>
             <MudAvatar Color="Color.Primary">
@@ -35,13 +35,6 @@
             </MudContainer>
         </MudHidden>
         <MudTable T="ToDoDBItem" Items=@(Service.ToDoItems) Dense="true">
-            <ColGroup>
-                <col style="width:55%;" />
-                <col style="width:30%;" />
-                <col style="width:5%;" />
-                <col style="width:5%;" />
-                <col style="width:5%;" />
-            </ColGroup>
             <HeaderContent>
                 <MudTh>ToDo</MudTh>
                 <MudTh>
