@@ -1,6 +1,6 @@
 ﻿@inherits RxBLServiceSubscriber<ToDoListService>
 
-<MudCard Class="mt-6 mx-n14">
+<MudCard Class="mt-2 mx-n14">
     <MudCardHeader>
         <CardHeaderAvatar>
             <MudAvatar Color="Color.Primary">
@@ -34,7 +34,7 @@
             }
 
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudContainer Class="ml-n3 mb-8">
+                <MudContainer Class="ml-n3 mb-3">
                     <MudFabAsyncRx Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" HasProgress=@false StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@AddOrUpdate(null) />
                     <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
                                    StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@Service.ClearItems />

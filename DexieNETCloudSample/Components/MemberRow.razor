@@ -8,7 +8,7 @@
         CanChangeCallback=@(Scope.CanChangeMemberRole(Member)) ChangingAsyncCallback=@Scope.MemberRoleChangingAsync(Member)
         HideDisabled=@true Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" />
 </MudTd>
-<MudTd>
+<MudTd DataLabel="Actions">
     <MudFabAsyncRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
         StartIcon=@GetMemberActionIcon() Size="Size.Small" StateCommand=@Service.CommandAsync 
         CanChangeCallback=@Service.CanChangeMemberState(Member)

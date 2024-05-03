@@ -1,10 +1,6 @@
 ﻿@inherits RxBLServiceSubscriber<ToDoListMemberService>
 
 <MudTable T="Member" Items=@(Service.Members)>
-    <ColGroup>
-        <col />
-        <col style="width:150px;" />
-    </ColGroup>
     <HeaderContent>
         <MudTh>Member</MudTh>
         <MudTh>Role</MudTh>

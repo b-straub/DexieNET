@@ -62,7 +62,7 @@
                 <MudTd DataLabel="Edit" Style="text-align:center">
                     <ToDoDBItemAddOrUpdate Service=@Service AddMode=@false Item=@context />
                 </MudTd>
-                <MudTd DataLabel="DeleteItem" Style="text-align:center">
+                <MudTd DataLabel="Delete" Style="text-align:center">
                     <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteItem(context)
                                           ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.One)) ExecuteAsyncCallback=@Service.DeleteItem(context) />
                 </MudTd>
