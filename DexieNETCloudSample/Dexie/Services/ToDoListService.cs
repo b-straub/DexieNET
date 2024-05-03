@@ -80,6 +80,17 @@ namespace DexieNETCloudSample.Dexie.Services
             return db.LiveQuery(async () => await GetTable().ToArray());
         }
 
+        public Func<IStateCommandAsync, Task> DeleteMember(string? memberID) => async _ =>
+        {
+            ArgumentNullException.ThrowIfNull(_db);
+            var currentUserId = _db.CurrentUserId();
+
+            if (memberID is not null)
+            {
+                await _db.Members.Delete(memberID);
+            }
+        };
+
         private async ValueTask<IEnumerable<ListOpenClose>> GetListOpenCloseDo()
         {
             ArgumentNullException.ThrowIfNull(_db);

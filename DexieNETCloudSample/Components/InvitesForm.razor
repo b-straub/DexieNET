@@ -1,7 +1,7 @@
 ﻿@using DexieNET
 @inherits RxBLServiceSubscriber<ToDoListService>
 
-<MudTable Class="mt-2" T="Invite" Items=@(DBService.Invites.Value)>
+<MudTable Class="my-2" T="Invite" Items=@(DBService.Invites.Value)>
     <ColGroup>
         <col />
         <col style="width:50px;" />
@@ -17,20 +17,30 @@
         </MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Invite"><MudText>@GetInviteText(context)</MudText></MudTd>
+        <MudTd DataLabel="Invite">
+            <MudText>@GetInviteText(context)</MudText>
+        </MudTd>
         <MudTd DataLabel="Accept" Style="text-align:center">
             <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.AddCircleOutline
-                    StateCommand=@Service.CommandAsync
-                    CanChangeCallback=@ToDoListService.CanAcceptInvite(context)
-                    ExecuteCallback=@Service.AcceptInvite(context)
-                    ConfirmExecutionAsync=@(async () => await ConfirmInvite(true)) />
+                StateCommand=@Service.CommandAsync CanChangeCallback=@ToDoListService.CanAcceptInvite(context)
+                ExecuteCallback=@Service.AcceptInvite(context) ConfirmExecutionAsync=@(async () => await
+                ConfirmInvite(true)) />
         </MudTd>
         <MudTd DataLabel="Reject" Style="text-align:center">
-            <MudIconButtonRx Color="Color.Success" Icon=@Icons.Material.Outlined.RemoveCircleOutline
-                             StateCommand=@Service.CommandAsync
-                             CanChangeCallback=@ToDoListService.CanRejectInvite(context)
-                             ExecuteCallback=@Service.RejectInvite(context)
-                             ConfirmExecutionAsync=@(async () => await ConfirmInvite(false)) />
+            @if (ToDoListService.CanRejectInvite(context)())
+            {
+                <MudIconButtonRx Color="Color.Error" Icon=@Icons.Material.Outlined.RemoveCircleOutline
+                    StateCommand=@Service.CommandAsync
+                    ExecuteCallback=@Service.RejectInvite(context) ConfirmExecutionAsync=@(async () => await
+                    ConfirmInvite(false)) />
+            }
+            else
+            {
+                <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Outlined.ExitToApp
+                    StateCommand=@Service.CommandAsync
+                    ExecuteAsyncCallback=@Service.DeleteMember(context.Id) ConfirmExecutionAsync=@(async () => await
+                    ConfirmInvite(false, true)) />
+            }
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -52,13 +62,13 @@
         ArgumentNullException.ThrowIfNull(invite);
         ArgumentNullException.ThrowIfNull(invite.InvitedBy);
 
-        return $"{invite.Name} from {invite.InvitedBy.UserId}";
+        return $"'{invite.Name}' from '{invite.InvitedBy.UserId}' for '{invite.Realm.Name}'";
     }
 
-    private async Task<bool> ConfirmInvite(bool accept)
+    private async Task<bool> ConfirmInvite(bool accept, bool delete = false)
     {
-        var message = accept ? "Accept Invitation" : "Reject Invitation";
-        var button = accept ? "Accept" : "Reject";
+        var message = accept ? "Accept Invitation" : delete ? "Delete Invitation" : "Reject Invitation";
+        var button = accept ? "Accept" : delete ? "Delete" : "Reject";
 
         var parameters = new DialogParameters
             { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = accept };
