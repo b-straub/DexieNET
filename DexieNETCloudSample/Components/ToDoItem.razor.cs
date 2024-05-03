@@ -20,8 +20,6 @@ namespace DexieNETCloudSample.Components
             One
         }
 
-        private SortDirection _sortDirection = SortDirection.Ascending;
-
         protected override void OnInitialized()
         {
             ArgumentNullException.ThrowIfNull(List);
@@ -61,21 +59,6 @@ namespace DexieNETCloudSample.Components
         {
             return item.DueDate == new DateTime(item.DueDate.Year, item.DueDate.Month, item.DueDate.Day) ?
                 item.DueDate.ToShortDateString() : item.DueDate.ToShortDateString() + " - " + item.DueDate.ToShortTimeString();
-        }
-
-        private Func<ToDoDBItem, object> Sort()
-        {
-            return new Func<ToDoDBItem, object>(x =>
-            {
-                var completed = x.Completed;
-
-                if (_sortDirection is SortDirection.Descending)
-                {
-                    completed = !completed;
-                }
-
-                return x.Completed ? x.DueDate.Ticks : -(long.MaxValue - x.DueDate.Ticks);
-            });
         }
     }
 }

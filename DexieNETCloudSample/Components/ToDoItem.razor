@@ -36,9 +36,13 @@
         </MudHidden>
         <MudTable T="ToDoDBItem" Items=@(Service.ToDoItems) Dense="true">
             <HeaderContent>
-                <MudTh>ToDo</MudTh>
                 <MudTh>
-                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy=@Sort() SortDirectionChanged=@(d => _sortDirection = d)>
+                    <MudTableSortLabel SortBy=@(new Func<ToDoDBItem, object>(x => x.Text))>
+                        ToDo
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy=@(new Func<ToDoDBItem, object>(x => x.DueDate))>
                         DueDate
                     </MudTableSortLabel>
                 </MudTh>
