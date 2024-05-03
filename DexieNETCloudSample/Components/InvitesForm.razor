@@ -61,6 +61,7 @@
     {
         ArgumentNullException.ThrowIfNull(invite);
         ArgumentNullException.ThrowIfNull(invite.InvitedBy);
+        ArgumentNullException.ThrowIfNull(invite.Realm);
 
         return $"'{invite.Name}' from '{invite.InvitedBy.UserId}' for '{invite.Realm.Name}'";
     }
