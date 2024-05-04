@@ -77,7 +77,7 @@
 
 	<Target Name="YarnCommandsRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
 		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
-		<Exec Command="yarn yarn run buildRelease" WorkingDirectory="yarn" />
+		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
 	</Target>
 
 </Project>
