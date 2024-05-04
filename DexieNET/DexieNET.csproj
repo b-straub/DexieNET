@@ -17,7 +17,6 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageTags>Dexie, IndexedDB</PackageTags>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageOutputPath>..\.nuget</PackageOutputPath>
 	</PropertyGroup>
 

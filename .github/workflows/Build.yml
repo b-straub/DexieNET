@@ -22,8 +22,11 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Build DexieNET normal and cloud
-      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
+    - name: Pack DexieNET
+      run: dotnet pack DexieCloudNET/DexieNET.csproj -c Release
+
+    - name: Pack DexieCloudNET
+      run: dotnet pack DexieCloudNET/DexieCloudNET.csproj -c Release
 
     - name: UploadNuget
       uses: actions/upload-artifact@v4
