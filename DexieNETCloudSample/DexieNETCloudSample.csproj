@@ -16,7 +16,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.4" PrivateAssets="all" />
 		<PackageReference Include="RxMudBlazorLight" Version="0.8.7" />
-		<PackageReference Include="DexieCloudNET" Version="1.2.6-pre" Condition="'$(Configuration)' == 'Release'" />
+		<PackageReference Include="DexieCloudNET" Version="1.2.7-pre" Condition="'$(Configuration)' == 'Release'" />
 	</ItemGroup>
 
 	<ItemGroup>

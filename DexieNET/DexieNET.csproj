@@ -30,6 +30,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="yarn\package.json" Pack="false" />
+		<None Include="yarn\tsconfig.json" Pack="false" />
+		<Content Include="yarn\src\*.js" Pack="false" />
+		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
 	
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
@@ -80,21 +87,4 @@
 		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
 	</Target>
 
-	<Target Name="RemoveContentFilesFromPackage" AfterTargets="YarnCommandsDebug" Condition="'$(Configuration)' == 'Debug'">
-		<ItemGroup>
-			<Content Remove="yarn\package.json" />
-			<Content Remove="yarn\tsconfig.json" />
-			<Content Remove="yarn\src\*.js" />
-			<Content Remove="yarn\src\*.map" />
-		</ItemGroup>
-	</Target>
-
-	<Target Name="RemoveContentFilesFromPackage" AfterTargets="YarnCommandsRelease" Condition="'$(Configuration)' == 'Release'">
-		<ItemGroup>
-			<Content Remove="yarn\package.json" />
-			<Content Remove="yarn\tsconfig.json" />
-			<Content Remove="yarn\src\*.js" />
-			<Content Remove="yarn\src\*.map" />
-		</ItemGroup>
-	</Target>
 </Project>
