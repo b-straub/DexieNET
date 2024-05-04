@@ -30,22 +30,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="yarn\package.json" Pack="false" />
-		<None Include="yarn\tsconfig.json" Pack="false" />
 		<Content Include="yarn\src\*.js" Pack="false" />
 		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
-	
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
-
-		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.4.4">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	
 		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
 	</ItemGroup>
 

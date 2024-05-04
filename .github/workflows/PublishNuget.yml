@@ -20,7 +20,10 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Build DexieNET normal and cloud
+    - name: Build DexieNET
+      run: dotnet build DexieCloudNET/DexieNET.csproj -c Release
+
+    - name: Build DexieCloudNET
       run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
 
     - name: TestSG
