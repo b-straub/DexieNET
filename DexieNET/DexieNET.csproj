@@ -57,7 +57,7 @@
 	
 	<PropertyGroup>
 		<!-- File with mtime of last successful npm install -->
-		<YarnInstallStampFile>npm/node_modules/.install-stamp</YarnInstallStampFile>
+		<YarnInstallStampFile>yarn/node_modules/.install-stamp</YarnInstallStampFile>
 		<Authors>Bernhard Straub</Authors>
 	</PropertyGroup>
 
@@ -67,15 +67,17 @@
 
 	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
 		<Exec Command="yarn install" WorkingDirectory="yarn" />
-		<Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
+		<Touch Files="$(YarnInstallStampFile)" AlwaysCreate="true" />
 	</Target>
 
 	<Target Name="YarnCommandsDebug" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
 		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn" />
 	</Target>
 
 	<Target Name="YarnCommandsRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
+		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
+		<Exec Command="yarn yarn run buildRelease" WorkingDirectory="yarn" />
 	</Target>
 
 </Project>
