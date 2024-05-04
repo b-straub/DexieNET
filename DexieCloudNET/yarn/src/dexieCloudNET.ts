@@ -6,16 +6,16 @@ export * from "./dexieCloudNETBase";
 export * from "./dexieCloudNETCloud";
 export * from "./dexieCloudNETObservables";
 
-import "../../../DexieNET/yarn/src/dexieNETBase";
-import "../../../DexieNET/yarn/src/dexieNETLiveQuery";
-import "../../../DexieNET/yarn/src/dexieNETTable";
-import "../../../DexieNET/yarn/src/dexieNETTransactions";
-import "../../../DexieNET/yarn/src/dexieNETCollection";
-import "../../../DexieNET/yarn/src/dexieNETPersistence";
+import "./DexieNET/dexieNETBase";
+import "./DexieNET/dexieNETLiveQuery";
+import "./DexieNET/dexieNETTable";
+import "./DexieNET/dexieNETTransactions";
+import "./DexieNET/dexieNETCollection";
+import "./DexieNET/dexieNETPersistence";
 
-export * from "../../../DexieNET/yarn/src/dexieNETBase";
-export * from "../../../DexieNET/yarn/src/dexieNETLiveQuery";
-export * from "../../../DexieNET/yarn/src/dexieNETTable";
-export * from "../../../DexieNET/yarn/src/dexieNETTransactions";
-export * from "../../../DexieNET/yarn/src/dexieNETCollection";
-export * from "../../../DexieNET/yarn/src/dexieNETPersistence";
+export * from "./DexieNET/dexieNETBase";
+export * from "./DexieNET/dexieNETLiveQuery";
+export * from "./DexieNET/dexieNETTable";
+export * from "./DexieNET/dexieNETTransactions";
+export * from "./DexieNET/dexieNETCollection";
+export * from "./DexieNET/dexieNETPersistence";
