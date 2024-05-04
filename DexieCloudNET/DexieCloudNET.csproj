@@ -36,7 +36,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
-		<ProjectReference Include="..\DexieNET\DexieNET.csproj" >
+		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
 	</ItemGroup>
 
 	<PropertyGroup>
