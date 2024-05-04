@@ -36,12 +36,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
-		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
-		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" Pack="false">
-			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-			<OutputItemType>Content</OutputItemType>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</ProjectReference>
+		<ProjectReference Include="..\DexieNET\DexieNET.csproj" >
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -50,8 +45,6 @@
 
 	<Target Name="_AddFilesToOutput">
 		<ItemGroup>
-			<TfmSpecificPackageFile Include="$(OutputPath)\DexieNETTableGenerator.dll" PackagePath="analyzers/dotnet/cs" />
-			<TfmSpecificPackageFile Include="$(OutputPath)\Humanizer.dll" PackagePath="analyzers/dotnet/cs" />
 			<TfmSpecificPackageFile Include="wwwroot\js\dexieCloudNET.js" PackagePath="staticwebassets/js" />
 		</ItemGroup>
 	</Target>

@@ -44,10 +44,10 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddFilesToOutput</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
-	<Target Name="_AddAnalyzersToOutput">
+	<Target Name="_AddFilesToOutput">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\DexieNETTableGenerator.dll" PackagePath="analyzers/dotnet/cs" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\Humanizer.dll" PackagePath="analyzers/dotnet/cs" />
