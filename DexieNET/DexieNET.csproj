@@ -51,6 +51,7 @@
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\DexieNETTableGenerator.dll" PackagePath="analyzers/dotnet/cs" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\Humanizer.dll" PackagePath="analyzers/dotnet/cs" />
+			<TfmSpecificPackageFile Include="wwwroot\js\dexieNET.js" PackagePath="staticwebassets/js" />
 		</ItemGroup>
 	</Target>
 	
