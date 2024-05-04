@@ -16,7 +16,7 @@
             "request": "launch",
             "url": "http://localhost:5223",
             "cwd": "${workspaceFolder}/DexieNETCloudSample",
-            "preLaunchTask": "StopKestrel"
+            "preLaunchTask": "KillDotnet"
         }
     ]
 }
