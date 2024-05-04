@@ -25,6 +25,13 @@ jobs:
     - name: Build DexieNET normal and cloud
       run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
 
+    - name: UploadNuget
+      uses: actions/upload-artifact@v4
+      with:
+        name: Nugets
+        path: .nuget/
+        retention-days: 2
+
     - name: TestSG
       run: dotnet test DexieNETTest/TableGeneratorTest/DexieNETTest.TableGeneratorTest.csproj -c Release
 
