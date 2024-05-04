@@ -61,10 +61,6 @@
 		<Authors>Bernhard Straub</Authors>
 	</PropertyGroup>
 
-	<Target Name="DeleteJSFiles" BeforeTargets="BeforeBuild">
-		<Delete Files="wwwroot\js\*.*" />
-	</Target>
-
 	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
 		<Exec Command="yarn install" WorkingDirectory="yarn" />
 		<Touch Files="$(YarnInstallStampFile)" AlwaysCreate="true" />
