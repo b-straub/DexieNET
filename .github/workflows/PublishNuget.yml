@@ -20,11 +20,14 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Build DexieNET
-      run: dotnet build DexieCloudNET/DexieNET.csproj -c Release
-
-    - name: Build DexieCloudNET
+    - name: Build DexieNET and DexieCloudNET
       run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
+
+    - name: Pack DexieNET
+      run: dotnet pack DexieNET/DexieNET.csproj -c Release
+
+    - name: Pack DexieCloudNET
+      run: dotnet pack DexieCloudNET/DexieCloudNET.csproj -c Release
 
     - name: TestSG
       run: dotnet test DexieNETTest/TableGeneratorTest/DexieNETTest.TableGeneratorTest.csproj -c Release
