@@ -8,7 +8,7 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 ##  News
 
 - Preview released for [DexieCloud](https://dexie.org/cloud/)
-- Please register with **DexieCloud** and test the ToDoSample. The configuration script can be found here [configure-app.ps1](https://github.com/b-straub/DexieNET/blob/cloud/DexieNETCloudSample/Dexie/configure-app.ps1).
+- Please register with **DexieCloud** and test the ToDoSample. The configuration script can be found here [configure-app.ps1](https://github.com/b-straub/DexieNET/blob/cloud/DexieNETCloudSample/Dexie/configure-app.ps1) (Windows) or here (https://github.com/b-straub/DexieNET/blob/cloud/DexieNETCloudSample/Dexie/configure-app.sh) (Nix - jq required).
 
 
 - Published a new helper library [RxBlazorLight](https://github.com/b-straub/RxBlazorLight)  
