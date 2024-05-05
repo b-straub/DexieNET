@@ -48,17 +48,14 @@
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</TypeScriptCompile>
 	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
 	
-		<PackageReference Include="System.Reactive" Version="6.0.0" />
-
+	<ItemGroup>
 		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.4.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-	
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
+		<PackageReference Include="System.Reactive" Version="6.0.0" />
 		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" Pack="false">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 			<OutputItemType>Content</OutputItemType>
@@ -67,10 +64,10 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddFilesToOutput</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
-	<Target Name="_AddAnalyzersToOutput">
+	<Target Name="_AddFilesToOutput">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\DexieNETTableGenerator.dll" PackagePath="analyzers/dotnet/cs" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\Humanizer.dll" PackagePath="analyzers/dotnet/cs" />
@@ -85,14 +82,14 @@
 
 	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
 		<Exec Command="yarn install" WorkingDirectory="yarn" />
-		<Touch Files="$(YarnInstall)" AlwaysCreate="true" />
+		<Touch Files="$(YarnInstallStampFile)" AlwaysCreate="true" />
 	</Target>
 
-	<Target Name="YarnCommandsDebug" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Debug'">
+	<Target Name="YarnCommandsDebug" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
 		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn" />
 	</Target>
 
-	<Target Name="YarnCommandsRelease" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Release'">
+	<Target Name="YarnCommandsRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
 		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
 	</Target>
 
