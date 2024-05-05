@@ -15,8 +15,8 @@ npx dexie-cloud import dexie-cloud.json
 
 URLS=$(jq -r '.profiles.https.applicationUrl' ../Properties/launchSettings.json)
 
-IFS=';' read -ra ADDR <<< $URLS 
-for i in "${ADDR[@]}"; do
+IFS='; ' read -ra URLA <<< $URLS 
+for i in "${URLA[@]}"; do
   echo "Whitelisting origin: $i"
   npx dexie-cloud whitelist $i
 done
