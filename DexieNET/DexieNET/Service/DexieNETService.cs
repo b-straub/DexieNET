@@ -25,7 +25,7 @@ namespace DexieNET
 {
     public interface IDexieNETFactory<T>
     {
-        public ValueTask<T> Create(bool cloudSync = false);
+        public ValueTask<T> Create();
         public ValueTask Delete();
     }
 

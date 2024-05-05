@@ -18,7 +18,7 @@ namespace DexieCloudNET.Component
             {
                 DexieCloudOptions cloudOptions = new(cloudURL);
 
-                Dexie = await DexieNETService.DexieNETFactory.Create(true);
+                Dexie = await DexieNETService.DexieNETFactory.Create();
 
                 if (Dexie is null)
                 {

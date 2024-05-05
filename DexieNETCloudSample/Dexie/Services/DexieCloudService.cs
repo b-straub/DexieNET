@@ -101,7 +101,6 @@ namespace DexieNETCloudSample.Logic
 
         public string? CloudURL { get; private set; }
 
-        private readonly IServiceProvider _serviceProvider;
         private readonly IDexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
 
@@ -109,7 +108,6 @@ namespace DexieNETCloudSample.Logic
         {
             var dexieService = serviceProvider.GetRequiredService<IDexieNETService<ToDoDB>>();
             _dexieFactory = dexieService.DexieNETFactory;
-            _serviceProvider = serviceProvider;
 
             State = this.CreateState(DBState.Closed);
             SyncState = this.CreateState((SyncState?)null);
@@ -127,7 +125,7 @@ namespace DexieNETCloudSample.Logic
                 Console.WriteLine("OpenDB");
 #endif
                 await _dexieFactory.Delete();
-                DB = await _dexieFactory.Create(true);
+                DB = await _dexieFactory.Create();
                 DB.Version(1).Stores();
 
                 ArgumentNullException.ThrowIfNull(DB);

@@ -1,5 +1,6 @@
 ﻿const path = require('path')
 const TerserPlugin = require('terser-webpack-plugin');
+const RemovePlugin = require('remove-files-webpack-plugin');
 
 module.exports = {
     mode: 'production',
@@ -18,10 +19,20 @@ module.exports = {
         },
         path: path.resolve(__dirname, '../wwwroot/js'),
         filename: 'dexieCloudNET.js',
-        publicPath: '_content/DexieCloudNET/js/'
+        publicPath: '_content/DexieCloudNET/js/*.*'
     },
     optimization: {
         minimize: true,
         minimizer: [new TerserPlugin()],
     },
+    plugins: [
+        new RemovePlugin({
+            before: {
+                allowRootAndOutside: true,
+                include: [
+                    path.resolve(__dirname, '../wwwroot/js')
+                ]
+            }
+        })
+    ]
 }

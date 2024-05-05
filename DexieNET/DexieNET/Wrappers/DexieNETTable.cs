@@ -65,7 +65,7 @@ namespace DexieNET
                 throw new InvalidOperationException($"{typeof(I).Name} can not be used as primary index.");
             }
 
-            if (cloudSync && !db.CloudSync)
+            if (cloudSync && !db.HasCloud())
             {
                 throw new InvalidOperationException($"Table {name} has CloudSync schema but DB is not cloud based.");
             }

@@ -30,24 +30,37 @@
 
 	<ItemGroup>
 		<Content Include="yarn\src\*.js" Pack="false" />
-		<Content Include="yarn\src\*.map" Pack="false" Condition="'$(Configuration)' == 'Debug'" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Remove="yarn/package.json" />
+		<Content Remove="yarn/tsconfig.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="yarn/package.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<TypeScriptCompile Include="yarn/tsconfig.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</TypeScriptCompile>
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
+	
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
+
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.4.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	
 		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
 	</ItemGroup>
-
-	<PropertyGroup>
-		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddFilesToOutput</TargetsForTfmSpecificContentInPackage>
-	</PropertyGroup>
-
-	<Target Name="_AddFilesToOutput">
-		<ItemGroup>
-			<TfmSpecificPackageFile Include="wwwroot\js\dexieCloudNET.js" PackagePath="staticwebassets/js" />
-		</ItemGroup>
-	</Target>
 
 	<PropertyGroup>
 		<!-- File with mtime of last successful npm install -->
@@ -60,13 +73,11 @@
 		<Touch Files="$(YarnInstallStampFile)" AlwaysCreate="true" />
 	</Target>
 
-	<Target Name="YarnCommandsDebug" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
+	<Target Name="YarnCommandsDebug" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Debug'">
 		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn" />
 	</Target>
 
-	<Target Name="YarnCommandsRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
+	<Target Name="YarnCommandsRelease" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Release'">
 		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
 	</Target>
 

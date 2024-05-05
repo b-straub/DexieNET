@@ -1,5 +1,6 @@
 ﻿const path = require('path')
 const TerserPlugin = require('terser-webpack-plugin');
+const RemovePlugin = require('remove-files-webpack-plugin');
 
 module.exports = {
     mode: 'production',
@@ -24,4 +25,14 @@ module.exports = {
         minimize: true,
         minimizer: [new TerserPlugin()],
     },
+    plugins: [
+        new RemovePlugin({
+            before: {
+                allowRootAndOutside: true,
+                include: [
+                    path.resolve(__dirname, '../wwwroot/js')
+                ]
+            }
+        })
+    ]
 }

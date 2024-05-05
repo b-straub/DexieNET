@@ -149,7 +149,7 @@ namespace DexieCloudNET
     {
         public string? EntityKey { get; private set; }
 
-        internal DexieJSObject PermissionCheckerJS { get; }
+        internal DexieJSObject? Cloud { get; }
 
         private readonly JSObservableKey<double>? _jSObservable;
 
@@ -163,7 +163,7 @@ namespace DexieCloudNET
         {
             _errorMode = false;
             EntityKey = entityKey;
-            PermissionCheckerJS = new(table.TableJS.Module, null);
+            Cloud = table.DB.Cloud;
             _jSObservable = jSObservable;
 
             _jsDisposable = _jSObservable
@@ -199,6 +199,11 @@ namespace DexieCloudNET
 
         public bool CanAdd(params string[] tableNames)
         {
+            if (Cloud is null)
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
             if (_errorMode)
             {
                 return true;
@@ -209,11 +214,16 @@ namespace DexieCloudNET
                 return false;
             }
 
-            return PermissionCheckerJS.Module.Invoke<bool>("PermissionCheckerAdd", _jSObservable.Value, tableNames);
+            return Cloud.Module.Invoke<bool>("PermissionCheckerAdd", _jSObservable.Value, tableNames);
         }
 
         public bool CanUpdate<Q>(Expression<Func<T, Q>> query)
         {
+            if (Cloud is null)
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
             if (_errorMode)
             {
                 return true;
@@ -224,11 +234,16 @@ namespace DexieCloudNET
                 return false;
             }
 
-            return PermissionCheckerJS.Module.Invoke<bool>("PermissionCheckerUpdate", _jSObservable.Value, query.GetKey());
+            return Cloud.Module.Invoke<bool>("PermissionCheckerUpdate", _jSObservable.Value, query.GetKey());
         }
 
         public bool CanDelete()
         {
+            if (Cloud is null)
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
             if (_errorMode)
             {
                 return true;
@@ -239,7 +254,7 @@ namespace DexieCloudNET
                 return false;
             }
 
-            return PermissionCheckerJS.Module.Invoke<bool>("PermissionCheckerDelete", _jSObservable.Value);
+            return Cloud.Module.Invoke<bool>("PermissionCheckerDelete", _jSObservable.Value);
         }
 
         public IDisposable Subscribe(IObserver<PermissionChecker<T, I>> observer)

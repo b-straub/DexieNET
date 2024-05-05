@@ -69,7 +69,7 @@ namespace DexieCloudNET
     {
         public static void ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions)
         {
-            if (!dexie.CloudSync)
+            if (!dexie.HasCloud())
             {
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
@@ -89,9 +89,7 @@ namespace DexieCloudNET
                 cloudOptions = cloudOptions.WithFetchTokens(null);
             }
 
-            //var jsi = cloudOptions.FromObject();    
-
-            var err = dexie.DBBaseJS.Module.Invoke<string?>("ConfigureCloud", dexie.DBBaseJS.Reference, cloudOptions, dotnetRef);
+            var err = dexie.Cloud.Module.Invoke<string?>("ConfigureCloud", dexie.Cloud.Reference, cloudOptions, dotnetRef);
 
             if (err is not null)
             {
@@ -102,85 +100,119 @@ namespace DexieCloudNET
         #region Sharing
         public static string GetTiedRealmID(this DBBase dexie, string id)
         {
-            if (!dexie.CloudSync)
+            if (!dexie.HasCloud())
             {
                 throw new InvalidOperationException("Can not call GetTiedRealmID for non cloud database.");
             }
 
-            return dexie.DBBaseJS.Module.Invoke<string>("GetTiedRealmID", id);
+            return dexie.Cloud.Module.Invoke<string>("GetTiedRealmID", id);
         }
         #endregion
 
         #region UIInteraction
         public static IObservable<UIInteraction> UserInteractionObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
             var jso = new JSObservable<UIInteraction>(dexie, "SubscribeUserInteraction", "ClearUserInteraction");
             return jso;
         }
 
         public static void SubmitUserInteraction(this DBBase dexie, UIInteraction interaction, UIParam param)
         {
-            dexie.TestCloudSync();
-            dexie.DBBaseJS.Module.InvokeVoid("OnSubmitUserInteraction", interaction.Key, param.AsDictionary());
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            dexie.Cloud.Module.InvokeVoid("OnSubmitUserInteraction", interaction.Key, param.AsDictionary());
         }
 
         public static void SubmitUserInteraction(this DBBase dexie, UIInteraction interaction, Dictionary<string, string> param)
         {
-            dexie.TestCloudSync();
-            dexie.DBBaseJS.Module.InvokeVoid("OnSubmitUserInteraction", interaction.Key, param);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            dexie.Cloud.Module.InvokeVoid("OnSubmitUserInteraction", interaction.Key, param);
         }
 
         public static void CancelUserInteraction(this DBBase dexie, UIInteraction interaction)
         {
-            dexie.TestCloudSync();
-            dexie.DBBaseJS.Module.InvokeVoid("OnCancelUserInteraction", interaction.Key);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            dexie.Cloud.Module.InvokeVoid("OnCancelUserInteraction", interaction.Key);
         }
         #endregion
 
         #region Invites
         public static IObservable<IEnumerable<Invite>> InvitesObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
             var jso = new JSObservable<IEnumerable<Invite>>(dexie, "SubscribeInvites", "ClearInvites");
             return jso;
         }
 
         public static void AcceptInvite(this DBBase dexie, Invite invite)
         {
-            dexie.TestCloudSync();
-            dexie.DBBaseJS.Module.InvokeVoid("AcceptInvite", invite.Id);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            dexie.Cloud.Module.InvokeVoid("AcceptInvite", invite.Id);
         }
 
         public static async ValueTask AcceptInvite(this DBBase dexie, Member member)
         {
-            dexie.TestCloudSync();
-            await dexie.DBBaseJS.Module.InvokeVoidAsync("AcceptInviteMember", dexie.DBBaseJS.Reference, member.Id);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            await dexie.Cloud.Module.InvokeVoidAsync("AcceptInviteMember", dexie.Cloud.Reference, member.Id);
         }
 
         public static void RejectInvite(this DBBase dexie, Invite invite)
         {
-            dexie.TestCloudSync();
-            dexie.DBBaseJS.Module.InvokeVoid("RejectInvite", invite.Id);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            dexie.Cloud.Module.InvokeVoid("RejectInvite", invite.Id);
         }
 
         public static async ValueTask RejectInvite(this DBBase dexie, Member member)
         {
-            dexie.TestCloudSync();
-            await dexie.DBBaseJS.Module.InvokeVoidAsync("RejectInviteMember", dexie.DBBaseJS.Reference, member.Id);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            await dexie.Cloud.Module.InvokeVoidAsync("RejectInviteMember", dexie.Cloud.Reference, member.Id);
         }
 
         public static async ValueTask ClearInvite(this DBBase dexie, Member member)
         {
-            dexie.TestCloudSync();
-            await dexie.DBBaseJS.Module.InvokeVoidAsync("ClearInviteMember", dexie.DBBaseJS.Reference, member.Id);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            await dexie.Cloud.Module.InvokeVoidAsync("ClearInviteMember", dexie.Cloud.Reference, member.Id);
         }
         #endregion
 
         #region Roles
         public static IObservable<Dictionary<string, Role>> RoleObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
             return new JSObservable<Dictionary<string, Role>>(dexie, "SubscribeRoles");
         }
         #endregion
@@ -188,25 +220,36 @@ namespace DexieCloudNET
         #region SyncState
         public static IObservable<SyncState> SyncStateObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
             return new JSObservable<SyncState>(dexie, "SubscribeSyncState");
         }
 
         public static IObservable<PersistedSyncState> PersistedSyncStateStateObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
             return new JSObservable<PersistedSyncState>(dexie, "SubscribePersistedSyncState");
         }
 
         public static async ValueTask Sync(this DBBase dexie, SyncOptions syncOptions)
         {
-            dexie.TestCloudSync();
-            await dexie.DBBaseJS.Module.InvokeVoidAsync("Sync", dexie.DBBaseJS.Reference, syncOptions);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            await dexie.Cloud.Module.InvokeVoidAsync("Sync", dexie.Cloud.Reference, syncOptions);
         }
 
         public static IObservable<bool> SyncCompleteObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
             return new JSObservable<bool>(dexie, "SubscribeSyncComplete");
         }
         #endregion
@@ -214,7 +257,6 @@ namespace DexieCloudNET
         #region WebSocketStatus
         public static IObservable<string> WebSocketStatusObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
             return new JSObservable<string>(dexie, "SubscribeWebSocketStatus");
         }
         #endregion
@@ -222,43 +264,66 @@ namespace DexieCloudNET
         #region UserLogin
         public static IObservable<UserLogin> UserLoginObservable(this DBBase dexie)
         {
-            dexie.TestCloudSync();
             return new JSObservable<UserLogin>(dexie, "SubscribeUserLogin");
         }
 
         public static string CurrentUserId(this DBBase dexie)
         {
-            dexie.TestCloudSync();
-            return dexie.DBBaseJS.Module.Invoke<string>("CurrentUserId", dexie.DBBaseJS.Reference);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            return dexie.Cloud.Module.Invoke<string>("CurrentUserId", dexie.Cloud.Reference);
         }
 
         public static string AddOnVersion(this DBBase dexie)
         {
-            dexie.TestCloudSync();
-            return dexie.DBBaseJS.Module.Invoke<string>("AddOnVersion", dexie.DBBaseJS.Reference);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            return dexie.Cloud.Module.Invoke<string>("AddOnVersion", dexie.Cloud.Reference);
         }
 
         public static DexieCloudOptions Options(this DBBase dexie)
         {
-            dexie.TestCloudSync();
-            return dexie.DBBaseJS.Module.Invoke<DexieCloudOptions>("Options", dexie.DBBaseJS.Reference);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            return dexie.Cloud.Module.Invoke<DexieCloudOptions>("Options", dexie.Cloud.Reference);
         }
 
         public static Dictionary<string, DexieCloudSchema>? Schema(this DBBase dexie)
         {
-            dexie.TestCloudSync();
-            return dexie.DBBaseJS.Module.Invoke<Dictionary<string, DexieCloudSchema>?>("Schema", dexie.DBBaseJS.Reference);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            return dexie.Cloud.Module.Invoke<Dictionary<string, DexieCloudSchema>?>("Schema", dexie.Cloud.Reference);
         }
 
         public static bool? UsingServiceWorker(this DBBase dexie)
         {
-            dexie.TestCloudSync();
-            return dexie.DBBaseJS.Module.Invoke<bool?>("UsingServiceWorker", dexie.DBBaseJS.Reference);
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            return dexie.Cloud.Module.Invoke<bool?>("UsingServiceWorker", dexie.Cloud.Reference);
         }
 
         public static async ValueTask<string?> UserLogin(this DBBase dexie, LoginInformation userLogin)
         {
-            dexie.TestCloudSync();
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
             var grantType = userLogin.GrantType switch
             {
                 GrantType.DEMO => "demo",
@@ -266,23 +331,18 @@ namespace DexieCloudNET
                 _ => throw new InvalidOperationException("GrantType: Invalid type!")
             };
 
-            return await dexie.DBBaseJS.Module.InvokeAsync<string?>("UserLogin", dexie.DBBaseJS.Reference, userLogin.EMail,
+            return await dexie.Cloud.Module.InvokeAsync<string?>("UserLogin", dexie.Cloud.Reference, userLogin.EMail,
                 grantType, userLogin.UserId);
         }
 
         public static async Task Logout(this DBBase dexie, bool force = false)
         {
-            await dexie.DBBaseJS.Module.InvokeVoidAsync("Logout", dexie.DBBaseJS.Reference, force);
-        }
-        #endregion
-
-        #region Internal
-        private static void TestCloudSync(this DBBase dexie)
-        {
-            if (!dexie.CloudSync)
+            if (!dexie.HasCloud())
             {
-                throw new InvalidOperationException("Cloud Sync not enabled, call 'Create' with DexieCloudOptions.");
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
+
+            await dexie.Cloud.Module.InvokeVoidAsync("Logout", dexie.Cloud.Reference, force);
         }
         #endregion
 

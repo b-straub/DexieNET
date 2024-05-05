@@ -18,6 +18,7 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.JSInterop;
 using JSException = Microsoft.JSInterop.JSException;
 
@@ -29,7 +30,7 @@ namespace DexieNET
 
     public interface IDBBase
     {
-        public static abstract IDBBase Create(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, bool cloudSync);
+        public static abstract IDBBase Create(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, IJSInProcessObjectReference? cloud = null);
         public static abstract string Name { get; }
     }
 
@@ -64,9 +65,9 @@ namespace DexieNET
     public abstract class DBBase
     {
         public abstract Version Version(double versionNumber);
-        public bool CloudSync { get; }
+        public DexieJSObject? Cloud { get; }
         public abstract string[] UnsyncedTables { get; }
-        public DexieJSObject DBBaseJS { get; }
+        internal DexieJSObject DBBaseJS { get; }
 
         internal bool LiveQueryRunning { get; set; } = false;
         internal Transaction? CurrentTransaction { get; set; }
@@ -77,18 +78,28 @@ namespace DexieNET
 
         internal TAState TransactionState { get; set; } = TAState.Collecting;
 
-        protected DBBase(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, bool cloudSync)
+        protected DBBase(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, IJSInProcessObjectReference? cloud = null)
         {
             DBBaseJS = new(module, reference);
             TransactionCollectStack = new();
             TransactionDict = [];
             TransactionTasks = new();
-            CloudSync = cloudSync;
+
+            if (cloud is not null)
+            {
+                Cloud = new(cloud, reference);
+            }
         }
 
         public Persistance Persistance()
         {
             return new Persistance(DBBaseJS.Module, null);
+        }
+
+        [MemberNotNullWhen(true, nameof(Cloud))]
+        public bool HasCloud()
+        {
+            return Cloud is not null;
         }
     }
 
@@ -105,12 +116,12 @@ namespace DexieNET
                "import", @"./_content/DexieNET/js/dexieNET.js").AsTask());
         }
 
-        public async ValueTask<T> Create(bool cloudSync = false)
+        public async ValueTask<T> Create()
         {
             var module = await _moduleTask.Value;
             var reference = await module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name);
 
-            return (T)T.Create(module, reference, cloudSync);
+            return (T)T.Create(module, reference, null);
         }
 
         public async ValueTask Delete()
@@ -296,7 +307,7 @@ namespace DexieNET
         public static async ValueTask<T> Open<T>(this T dexie) where T : DBBase, IDBBase
         {
             var reference = await dexie.DBBaseJS.InvokeAsync<IJSInProcessObjectReference>("open");
-            return (T)T.Create(dexie.DBBaseJS.Module, reference, dexie.CloudSync);
+            return (T)T.Create(dexie.DBBaseJS.Module, reference, dexie.Cloud);
         }
 
         public static bool IsOpen(this DBBase dexie)

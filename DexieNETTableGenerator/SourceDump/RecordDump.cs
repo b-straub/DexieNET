@@ -243,14 +243,14 @@ namespace DNTGenerator.SourceDump
 
         private readonly DexieJSObject _jso;
 
-        private {dbName}(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, bool cloudSync) : base(module, reference, cloudSync)
+        private {dbName}(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, IJSInProcessObjectReference? cloud = null) : base(module, reference, cloud)
         {{
             _jso = new(module, reference);
         }}
        
-        public static IDBBase Create(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, bool cloudSync)
+        public static IDBBase Create(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, IJSInProcessObjectReference? cloud = null)
         {{
-            return new {dbName}(module, reference, cloudSync);
+            return new {dbName}(module, reference, cloud);
         }}
 
         {records.DumpTables()}

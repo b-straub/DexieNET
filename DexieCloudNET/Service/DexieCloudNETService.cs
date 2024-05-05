@@ -27,22 +27,29 @@ namespace DexieCloudNET
       public sealed class DexieCloudNETFactory<T> : IDexieNETFactory<T>, IAsyncDisposable where T : IDBBase
     {
         private readonly Lazy<Task<IJSInProcessObjectReference>> _moduleTask;
+        private readonly Lazy<Task<IJSInProcessObjectReference>> _cloudTask;
         public DexieCloudNETFactory(IJSRuntime jsRuntime)
         {
             if (!OperatingSystem.IsBrowser())
             {
                 throw new InvalidOperationException("This IndexedDB wrapper is only designed for Webassembly usage!");
             }
+
             _moduleTask = new(() => jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
+               "import", @"./_content/DexieNET/js/dexieNET.js").AsTask());
+
+            _cloudTask = new(() => jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
                "import", @"./_content/DexieCloudNET/js/dexieCloudNET.js").AsTask());
         }
 
-        public async ValueTask<T> Create(bool _)
+        public async ValueTask<T> Create()
         {
             var module = await _moduleTask.Value;
-            var reference = await module.InvokeAsync<IJSInProcessObjectReference>("CreateCloud", T.Name);
+            var cloud = await _cloudTask.Value;
 
-            return (T)T.Create(module, reference, true);
+            var reference = await cloud.InvokeAsync<IJSInProcessObjectReference>("CreateCloud", T.Name);
+
+            return (T)T.Create(module, reference, cloud);
         }
 
         public async ValueTask Delete()

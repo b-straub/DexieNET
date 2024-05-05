@@ -22,9 +22,12 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Build DexieCloudNET
+      run: dotnet build DexieCloudNET/DexieCloudNET.csproj -c Release
+
     - name: Pack DexieNET
       run: dotnet pack DexieNET/DexieNET.csproj -c Release
-
+    
     - name: Pack DexieCloudNET
       run: dotnet pack DexieCloudNET/DexieCloudNET.csproj -c Release
 
