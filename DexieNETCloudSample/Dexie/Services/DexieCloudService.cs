@@ -80,6 +80,21 @@ namespace DexieNETCloudSample.Logic
         }
     }
 
+    [Schema(CloudSync = true)]
+    public partial record Settings
+    (
+        bool DarkMode,
+        [property: Index(IsPrimary = true)] string ID
+    ) : IToDoDBItem
+    {
+        public const string Key = "#userSettings";
+
+        public static Settings Create(bool darkMode)
+        {
+            return new(darkMode, Key);
+        }
+    }
+
     public enum DBState
     {
         Closed,
@@ -98,12 +113,13 @@ namespace DexieNETCloudSample.Logic
         public IState<UIInteraction?> UIInteraction { get; }
         public IState<IEnumerable<Invite>?> Invites { get; }
         public IState<Dictionary<string, Role>?> Roles { get; }
+        public IState<bool> DarkMode { get; }
 
         public string? CloudURL { get; private set; }
 
         private readonly IDexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
-
+  
         public DexieCloudService(IServiceProvider serviceProvider)
         {
             var dexieService = serviceProvider.GetRequiredService<IDexieNETService<ToDoDB>>();
@@ -115,6 +131,7 @@ namespace DexieNETCloudSample.Logic
             UIInteraction = this.CreateState((UIInteraction?)null);
             Invites = this.CreateState((IEnumerable<Invite>?)null);
             Roles = this.CreateState((Dictionary<string, Role>?)null);
+            DarkMode = this.CreateState(false);
         }
 
         public async ValueTask OpenDB()
@@ -126,7 +143,7 @@ namespace DexieNETCloudSample.Logic
 #endif
                 await _dexieFactory.Delete();
                 DB = await _dexieFactory.Create();
-                DB.Version(1).Stores();
+                DB.Version(2).Stores();
 
                 ArgumentNullException.ThrowIfNull(DB);
                 State.Value = DBState.Opened;
@@ -182,6 +199,31 @@ namespace DexieNETCloudSample.Logic
             {
                 Console.WriteLine("SyncComplete");
             }));
+
+            var settingsQuery = DB.LiveQuery(async () => await DB.Settings.Where(s => s.ID, Settings.Key).ToArray());
+            
+            _DBServicesDisposeBag.Add(settingsQuery.Subscribe(s =>
+            {
+                if (s.Any())
+                {
+                    if (DarkMode.Value != s.First().DarkMode)
+                    {
+                        DarkMode.Value = s.First().DarkMode;
+                    }
+                }
+                else if (DarkMode.Value)
+                {
+                    DarkMode.Value = false;
+                }
+            }));
+
+            _DBServicesDisposeBag.Add(this.AsChangedObservable(DarkMode)
+                .Select(async dm =>
+                { 
+                    var settings = Settings.Create(dm);
+                    await DB.Settings.Put(settings);
+                })
+                .Subscribe());
 
             _DBServicesDisposeBag.Add(DB.UserLoginObservable().Subscribe(ul =>
             {

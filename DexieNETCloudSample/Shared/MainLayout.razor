@@ -1,5 +1,6 @@
-﻿@inherits LayoutComponentBase
-<MudThemeProvider />
+﻿@inherits RxBLLayoutSubscriber<DexieCloudService>
+
+<MudThemeProvider @bind-IsDarkMode=@(Service.DarkMode.Value) Theme="_theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -8,6 +9,8 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
         <DBContainer />
+        <MudToggleIconButtonRx State=@Service.DarkMode Icon="@Icons.Material.Filled.LightMode" Color="@Color.Warning" Title="Light Mode"
+              ToggledIcon="@Icons.Material.Filled.DarkMode" ToggledTitle="Dark Mode" />
         <MudIconButton Icon="@Icons.Material.Outlined.Info" Color="Color.Inherit" OnClick="@OpenAboutDialog" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
@@ -25,9 +28,10 @@
 
 @code {
     [Inject]
-    IDialogService? DialogService { get; set; }
+    public IDialogService? DialogService { get; set; }
 
-    bool _drawerOpen = true;
+    private bool _drawerOpen = true;
+    private MudTheme _theme = new();
 
     void DrawerToggle()
     {
