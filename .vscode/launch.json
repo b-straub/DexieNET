@@ -12,11 +12,11 @@
         },
         {
             "type": "blazorwasm",
+            "browser": "chrome",
             "name": "DexieNETCloudSample",
             "request": "launch",
             "url": "http://localhost:5223",
-            "cwd": "${workspaceFolder}/DexieNETCloudSample",
-            "preLaunchTask": "KillDotnet"
+            "cwd": "${workspaceFolder}/DexieNETCloudSample"
         }
     ]
 }
