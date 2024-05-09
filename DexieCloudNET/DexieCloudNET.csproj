@@ -50,10 +50,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.4.4">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
 		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
@@ -71,11 +67,14 @@
 	</Target>
 
 	<Target Name="YarnCommandsDebug" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Debug'">
+		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
 		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn" />
 	</Target>
 
 	<Target Name="YarnCommandsRelease" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Release'">
+		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
 		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
+		<Exec Command="yarn run buildSW" WorkingDirectory="yarn" />
 	</Target>
 
 </Project>
