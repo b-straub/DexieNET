@@ -32,3 +32,5 @@ DexieNETCloudSample/wwwroot/dexie-cloud.json
 DexieNETCloudSample/wwwroot/importfile.json
 
 DexieNET/yarn/.eslintrc.js
+DexieNETCloudSample/Properties/Settings.xml
+DexieNETCloudSample/wwwroot/.htaccess

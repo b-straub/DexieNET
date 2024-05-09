@@ -169,7 +169,13 @@ namespace DexieNETCloudSample.Logic
 
             var options = new DexieCloudOptions(CloudURL)
                 .WithCustomLoginGui(true)
+                .WithRequireAuth(false)
+#if DEBUG
                 .WithRequireAuth(false);
+#else
+                .WithRequireAuth(false)
+                .WithTryUseServiceWorker(true);
+#endif
                 //.WithFetchTokens(FetchTokens);
 
             // call before configure cloud to have login UI ready when needed
