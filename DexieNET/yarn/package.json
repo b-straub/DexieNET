@@ -9,8 +9,8 @@
     "buildRelease": "webpack --config webpackREL.config.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Bernhard Straub",
+  "license": "Apache-2.0",
   "dependencies": {
     "@microsoft/dotnet-js-interop": "^8.0.0",
     "dexie": "4.0.4"
