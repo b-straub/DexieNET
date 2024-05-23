@@ -5,6 +5,9 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 
 *'DexieNET' used with permission of David Fahlander*
 
+*and made with*
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/Rider.png" alt="Rider logo." style="width:100px;"> [*Support for Open-Source Projects*](https://www.jetbrains.com/community/opensource/#support) !
+
 ##  News
 
 - Preview released for [DexieCloud](https://dexie.org/cloud/)
