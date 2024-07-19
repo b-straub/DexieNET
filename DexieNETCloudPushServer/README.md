@@ -23,7 +23,7 @@ Setting up the app's secrets is a two-step process:
 ],
   "VapidKeys": {
     "publicKey": "Your Vapid public key",
-    "privateKey": "your vapid private key"
+    "privateKey": "your Vapid private key"
   } 
 }
 ```
@@ -32,7 +32,7 @@ Setting up the app's secrets is a two-step process:
 {
    "serviceUrl": "https://dexie.cloud",
    "dbUrl": "your dexie cloud database url",
-   "applicationServerKey": "your invalid public key"
+   "applicationServerKey": "your Vapid public key"
 }
 ```
 In any case, the vapid public key must be added when configuring the cloud database.
