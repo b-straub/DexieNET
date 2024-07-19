@@ -6,7 +6,7 @@ WebPush messages in a DexieCloudNET based solution.
 
 The PushServer will use the [Dexie Cloud REST API](https://dexie.org/cloud/docs/rest-api) to communicate with any database in a solution agnostic way.
 The best way to set up your own PushServer is with Docker.
-Create a Docker image using the [buildPushServer.sh](https://github.com/b-straub/DexieNET/blob/0f5ba97c205babb36bd49a882f8cd1b9d20249bf/buildPushServer.sh) script.
+Create a Docker image using the [buildPushServer.sh](../buildPushServer.sh) script.
 Make sure *--platform* matches your desired architecture.
 
 Setting up the app's secrets is a two-step process:
@@ -41,8 +41,8 @@ public static async Task ConfigureCloud(this DBBase dexie, DexieCloudOptions clo
 string? applicationServerKey = null)
 ```
 
-See the [DexieNETCloudSample](https://github.com/b-straub/DexieNET/tree/0f5ba97c205babb36bd49a882f8cd1b9d20249bf/DexieNETCloudSample) for more information.
+See the [DexieNETCloudSample](../DexieNETCloudSample) for more information.
 
 To enable push support, do the following:
-* add the [DBAddPushSupport](https://github.com/b-straub/DexieNET/blob/0f5ba97c205babb36bd49a882f8cd1b9d20249bf/DexieNETCloudSample/Dexie/Services/DexieCloudService.cs#L15) attribute to your *IDBStore
-* Store push information in your database like this [AddPushNotification](https://github.com/b-straub/DexieNET/blob/0f5ba97c205babb36bd49a882f8cd1b9d20249bf/DexieNETCloudSample/Dexie/Services/ToDoItemService.cs#L187)
+* add the [DBAddPushSupport](https://github.com/b-straub/DexieNET/blob/9e0915b38995bce0660229c2b77cc86bc7b6a058/DexieNETCloudSample/Dexie/Services/DexieCloudService.cs#L15) attribute to your *IDBStore
+* Store push information in your database like this [AddPushNotification](https://github.com/b-straub/DexieNET/blob/9e0915b38995bce0660229c2b77cc86bc7b6a058/DexieNETCloudSample/Dexie/Services/ToDoItemService.cs#L187)
