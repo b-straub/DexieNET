@@ -11,9 +11,5 @@
     "moduleResolution": "node",
     "inlineSourceMap": true,
     "inlineSources": true
-  },
-  "include": ["**/*.ts"],
-  "exclude": [
-    "node_modules"
-  ]
+  }
 }

@@ -25,7 +25,7 @@ using Microsoft.JSInterop;
 
 namespace DexieCloudNET;
 
-public class JSObservableKey<T>(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction, params object?[] args) : JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction, args)
+public class JSObservableKey<T>(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction, params object?[] args) : JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction, null, args)
 {
     protected override void PostUnsubscribe()
     {
@@ -43,6 +43,8 @@ public class JSObservableKey<T>(DBBase db, string jsSubscribeFunction, string js
 
 public class JSObservable<T> : IObservable<T>, IDisposable
 {
+    public record TimeOut(TimeSpan TimeSpan, T Value);
+    
     public T? Value => _subject.Value;
     protected DBBase DB { get; }
     protected string? JsPostUnsubscribeFunction { get; }
@@ -55,7 +57,22 @@ public class JSObservable<T> : IObservable<T>, IDisposable
     private readonly IObservable<T> _observable;
     private readonly object?[] _args;
 
-    public JSObservable(DBBase db, string jsSubscribeFunction, string? jsPostUnsubscribeFunction = null, params object?[] args)
+    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, TimeOut? timeout = null)
+    {
+        return new JSObservable<T>(db, jsSubscribeFunction, null, timeout);
+    }
+    
+    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction) 
+    {
+        return new JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction);
+    }
+    
+    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction, params object?[] args) 
+    {
+        return new JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction, null, args);
+    }
+    
+    protected JSObservable(DBBase db, string jsSubscribeFunction, string? jsPostUnsubscribeFunction = null, TimeOut? timeout = null, params object?[] args)
     {
         DB = db;
         _dotnetRef = DotNetObjectReference.Create(this);
@@ -71,6 +88,11 @@ public class JSObservable<T> : IObservable<T>, IDisposable
             .Finally(Unsubscribe)
             .Publish()
             .RefCount();
+
+        if (timeout is not null)
+        {
+            _observable = _observable.Timeout(timeout.TimeSpan, Observable.Return(timeout.Value));
+        }
     }
 
     public IDisposable Subscribe(IObserver<T> observer)

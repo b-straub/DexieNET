@@ -67,8 +67,7 @@ namespace DexieCloudNET
         public string? Id { get; init; } = null;
         public string? RealmId { get; init; }
         public string? Owner { get; init; } = null;
-
-
+        
         public Member()
         {
         }
@@ -121,7 +120,7 @@ namespace DexieCloudNET
         string? DisplayName = null,
         long? SortOrder = null
     ) : IDBStore;
-
+    
     public static class PermissionExtensions
     {
         public static Permission WithAdd<T, I>(this Permission permission, Table<T, I> table) where T : IDBStore

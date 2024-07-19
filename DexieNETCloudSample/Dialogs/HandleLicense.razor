@@ -1,5 +1,4 @@
-﻿@using DexieNET
-@inherits RxBLServiceSubscriber<AdministrationService, DexieCloudService>
+﻿@inherits RxBLServiceSubscriber<AdministrationService, DexieCloudService>
 
 <MudTooltip Text=@GetLicenseTooltip()>
     <MudIcon Icon=@GetLicenseIcon() />
@@ -16,11 +15,11 @@
         <ChildContent>
             @if (Service2.UserLogin.Value.License.Status is not LicenseStatus.OK)
             {
-                <MudMenuItem OnClick=@ConfirmDeleteUser OnTouch=@ConfirmDeleteUser>Delete account for: @Service2.UserLogin.Value.UserId</MudMenuItem>
+                <MudMenuItem OnClick=@ConfirmDeleteUser Disabled=@(!Service1.IsLoggedIn())>Delete account for: @Service2.UserLogin.Value.UserId</MudMenuItem>
             }
             @if (Service2.UserLogin.Value.License.Status is LicenseStatus.EXPIRED || Service2.UserLogin.Value.License.EvalDaysLeft < 7)
             {
-                <MudMenuItem OnClick=@BuyLicense OnTouch=@BuyLicense>Buy license for: @Service2.UserLogin.Value.UserId</MudMenuItem>
+                <MudMenuItem OnClick=@BuyLicense>Buy license for: @Service2.UserLogin.Value.UserId</MudMenuItem>
             }
         </ChildContent>
     </MudMenu>

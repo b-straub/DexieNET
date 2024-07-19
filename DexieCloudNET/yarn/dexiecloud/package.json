@@ -1,0 +1,32 @@
+{
+  "name": "dexiercloudnet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dexieCloudNET.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "buildDebug": "webpack --config webpackDEV.config.js",
+    "buildRelease": "webpack --config webpackREL.config.js"
+  },
+  "keywords": [],
+  "author": "Bernhard Straub",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@microsoft/dotnet-js-interop": "^8.0.0",
+    "dexie": "4.0.8",
+    "dexie-cloud-addon": "4.0.8",
+    "dexie-cloud-common": "1.0.34"
+  },
+  "devDependencies": {
+    "file-loader": "^6.2.0",
+    "js-md5": "^0.8.3",
+    "remove-files-webpack-plugin": "^1.5.0",
+    "source-map-loader": "^5.0.0",
+    "style-loader": "^3.3.2",
+    "terser": "^5.30.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "webpack": "^5.90.1",
+    "webpack-cli": "^5.1.4"
+  }
+}

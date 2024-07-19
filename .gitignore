@@ -1,4 +1,4 @@
-﻿*bin*
+*bin*
 *obj*
 *bat*
 *map*
@@ -34,3 +34,10 @@ DexieNETCloudSample/wwwroot/importfile.json
 DexieNET/yarn/.eslintrc.js
 DexieNETCloudSample/Properties/Settings.xml
 DexieNETCloudSample/wwwroot/.htaccess
+DexieNETCloudPushServer/database
+DexieCloudNET/yarn/dexiecloud/node_modules
+DexieCloudNET/yarn/serviceworker/node_modules
+docker-compose.yml
+*.tar
+DexieNET/npm
+Nuget

@@ -1,7 +1,8 @@
 ﻿@inherits RxBLLayoutSubscriber<DexieCloudService>
 
-<MudThemeProvider @bind-IsDarkMode=@(Service.DarkMode.Value) Theme="_theme" />
+<MudThemeProvider IsDarkMode=@(!Service.LightMode.Value) Theme="_theme" />
 <MudDialogProvider />
+<MudPopoverProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
@@ -9,8 +10,8 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
         <DBContainer />
-        <MudToggleIconButtonRx State=@Service.DarkMode Icon="@Icons.Material.Filled.LightMode" Color="@Color.Warning" Title="Light Mode"
-              ToggledIcon="@Icons.Material.Filled.DarkMode" ToggledTitle="Dark Mode" />
+        <MudIconButtonAsyncRx StateCommand=@Service.CommandAsync Icon=@GetColorThemeIcon() Color="@Color.Warning"
+              ExecuteAsyncCallback=@Service.ToggleDarkMode />
         <MudIconButton Icon="@Icons.Material.Outlined.Info" Color="Color.Inherit" OnClick="@OpenAboutDialog" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
@@ -31,7 +32,7 @@
     public IDialogService? DialogService { get; set; }
 
     private bool _drawerOpen = true;
-    private MudTheme _theme = new();
+    private readonly MudTheme _theme = new();
 
     void DrawerToggle()
     {
@@ -41,5 +42,10 @@
     private void OpenAboutDialog()
     {
         DialogService?.Show<AboutDialog>("About DexieNETCloudSample");
+    }
+
+    private string GetColorThemeIcon()
+    {
+        return Service.LightMode.Value ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode;
     }
 }

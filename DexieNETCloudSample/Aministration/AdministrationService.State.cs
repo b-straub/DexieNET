@@ -1,4 +1,5 @@
-﻿using RxBlazorLightCore;
+﻿using DexieCloudNET;
+using RxBlazorLightCore;
 using DexieNET;
 
 namespace DexieNETCloudSample.Aministration
@@ -15,9 +16,15 @@ namespace DexieNETCloudSample.Aministration
             await DoDeleteUser(c.CancellationToken);
         };
 
-        public bool CanDeleteUser()
+        public bool IsLoggedIn()
         {
-            return DBService.UserLogin.HasValue();
+            return DBService.UserLogin.Value?.AccessToken is not null;
+        }
+        
+        public async Task ExpireAllPushSubscriptions()
+        {
+            ArgumentNullException.ThrowIfNull(DBService.DB);
+            await DBService.DB.ExpireAllPushSubscriptions();
         }
     }
 }

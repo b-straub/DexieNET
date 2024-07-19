@@ -52,11 +52,11 @@ namespace DexieNETCloudSample.Dexie.Services
                 return Service.CanUpdateRole(member);
             };
 
-            public bool IsMemberRoleDisabled(Member member, int index)
+            public Func<int, bool> MemberRoleDisabledCallback(Member member) => index =>
             {
                 var role = _roleSelections[index].Role;
                 return !Service.CanChangeToRole(member, role);
-            }
+            };
         }
 
         public Func<bool> CanSetList(ToDoDBList? list) => () =>

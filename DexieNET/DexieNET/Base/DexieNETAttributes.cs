@@ -54,6 +54,14 @@ namespace DexieNET
     {
         public string Name { get; private set; } = name;
     }
+    
+    /// <summary>
+    /// Constructor to setup default values
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
+    public class DBAddPushSupportAttribute() : Attribute
+    {
+    }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public class IndexAttribute : Attribute, IIndexAttribute

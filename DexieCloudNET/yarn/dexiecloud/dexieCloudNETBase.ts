@@ -19,16 +19,21 @@ limitations under the License.
 */
 
 import DexieCloudDB from 'dexie';
+import {Dexie} from 'dexie';
 import DexieCloud from "dexie-cloud-addon";
 
+export let CurrentDB: CloudDB | undefined = undefined;
+
+
+Dexie.debug = 'dexie';
 // @ts-ignore
 export class CloudDB extends DexieCloudDB {
     constructor(name: string) {
-        super(name, { addons: [DexieCloud] });
+        super(name, {addons: [DexieCloud]});
     }
 }
 
 export function CreateCloud(name: string): CloudDB {
-    let db = new CloudDB(name);
-    return db;
+    CurrentDB = new CloudDB(name);
+    return CurrentDB;
 }

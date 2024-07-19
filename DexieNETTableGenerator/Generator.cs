@@ -62,7 +62,7 @@ namespace DNTGenerator
             {
                 if (dbRecord.Type is DBRecord.RecordType.Interface)
                 {
-                    dbRecords.SetDBNames(dbRecord, context.CancellationToken);
+                    dbRecords.SetDerivedProperties(dbRecord, context.CancellationToken);
                 }
             }
 

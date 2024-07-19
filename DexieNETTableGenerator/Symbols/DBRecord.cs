@@ -58,6 +58,8 @@ namespace DNTGenerator.Verifier
             DBName = dbName;
         }
 
+        public bool HasPushSupport { get; set; }
+        
         public string TypeName => Type switch
         {
             RecordType.Interface => throw new InvalidOperationException("Interface can not be used as name."),

@@ -15,14 +15,18 @@ namespace DexieNETCloudSample.Dexie.Services
         public Func<IStateCommandAsync, Task> ToggleListItemsOpenClose(ToDoDBList list) => async _ =>
         {
             ArgumentNullException.ThrowIfNull(_db);
-            ArgumentNullException.ThrowIfNull(list?.ID);
-
-            var oc = await _db.ListOpenCloses.Get(list.ID);
-            oc ??= new ListOpenClose(true, false, list.ID);
-
-            oc = oc with { IsItemsOpen = !oc.IsItemsOpen };
-
-            await _db.ListOpenCloses.Put(oc);
+            ArgumentNullException.ThrowIfNull(list.ID);
+            
+            await _db.Transaction(async t =>
+            {
+                var oc = await _db.ListOpenCloses.Get(list.ID);
+                if (!t.Collecting)
+                {
+                    oc ??= new ListOpenClose(false, false, list.ID);
+                    oc = oc with { IsItemsOpen = !oc.IsItemsOpen };
+                }
+                await _db.ListOpenCloses.Put(oc);
+            });
         };
 
         public Func<IStateCommandAsync, Task> ToggleListShareOpenClose(ToDoDBList list) => async _ =>
@@ -30,18 +34,19 @@ namespace DexieNETCloudSample.Dexie.Services
             ArgumentNullException.ThrowIfNull(_db);
             ArgumentNullException.ThrowIfNull(list?.ID);
 
-            var oc = await _db.ListOpenCloses.Get(list.ID);
-            ArgumentNullException.ThrowIfNull(oc);
-
-            oc = oc with { IsShareOpen = !oc.IsShareOpen };
-
-            await _db.ListOpenCloses.Put(oc);
+            await _db.Transaction(async t =>
+            {
+                var oc = await _db.ListOpenCloses.Get(list.ID);
+                if (!t.Collecting)
+                {
+                    ArgumentNullException.ThrowIfNull(oc);
+                    oc = oc with { IsShareOpen = !oc.IsShareOpen };
+                }
+                await _db.ListOpenCloses.Put(oc);
+            });
         };
 
-        public Func<bool> CanToggleListShareOpenClose(ToDoDBList? list) => () =>
-        {
-            return IsListItemsOpen(list);
-        };
+        public Func<bool> CanToggleListShareOpenClose(ToDoDBList? list) => () => { return IsListItemsOpen(list); };
 
         public Action AcceptInvite(Invite invite) => () =>
         {
@@ -51,10 +56,7 @@ namespace DexieNETCloudSample.Dexie.Services
             _db.AcceptInvite(invite);
         };
 
-        public static Func<bool> CanAcceptInvite(Invite? invite) => () =>
-        {
-            return invite?.Accepted is null;
-        };
+        public static Func<bool> CanAcceptInvite(Invite? invite) => () => { return invite?.Accepted is null; };
 
         public Action RejectInvite(Invite invite) => () =>
         {
@@ -64,9 +66,6 @@ namespace DexieNETCloudSample.Dexie.Services
             _db.RejectInvite(invite);
         };
 
-        public static Func<bool> CanRejectInvite(Invite? invite) => () =>
-        {
-            return invite?.Rejected is null;
-        };
+        public static Func<bool> CanRejectInvite(Invite? invite) => () => { return invite?.Rejected is null; };
     }
 }

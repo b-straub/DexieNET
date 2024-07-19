@@ -1,13 +1,18 @@
-﻿using DexieNET;
+﻿using System.Reactive;
+using DexieNET;
 using DexieCloudNET;
 //using DexieNETCloudSample.Aministration;
 using RxBlazorLightCore;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using DexieNETCloudSample.Dexie.Services;
+using DexieNETCloudSample.Extensions;
 
 namespace DexieNETCloudSample.Logic
 {
     [DBName("ToDoDB")]
+    [DBAddPushSupport]
     public interface IToDoDBItem : IDBStore
     {
     }
@@ -19,13 +24,14 @@ namespace DexieNETCloudSample.Logic
 
     [Schema(CloudSync = true)]
     [CompoundIndex("ListID", "RealmId")]
-    public partial record ToDoDBItem
-    (
+    [CompoundIndex("ListID", "Completed")]
+    public partial record ToDoDBItem(
         [property: Index] string Text,
         [property: Index] DateTime DueDate,
         [property: BoolIndex] bool Completed,
         [property: Index] string ListID,
-        [property: Index(IsPrimary = true, IsAuto = true)] string? ID
+        [property: Index(IsPrimary = true, IsAuto = true)]
+        string? ID
     ) : IToDoDBItem, IIDPrimaryIndex
     {
         public static ToDoDBItem Create(string text, DateTime dueDate, ToDoDBList list, ToDoDBItem? item)
@@ -48,10 +54,10 @@ namespace DexieNETCloudSample.Logic
     }
 
     [Schema(CloudSync = true)]
-    public partial record ToDoDBList
-    (
+    public partial record ToDoDBList(
         [property: Index] string Title,
-        [property: Index(IsPrimary = true, IsAuto = true)] string? ID
+        [property: Index(IsPrimary = true, IsAuto = true)]
+        string? ID
     ) : IToDoDBItem, IIDPrimaryIndex
     {
         public static ToDoDBList Create(string title, ToDoDBList? list = null)
@@ -67,8 +73,7 @@ namespace DexieNETCloudSample.Logic
         }
     }
 
-    public record ListOpenClose
-    (
+    public record ListOpenClose(
         bool IsShareOpen,
         bool IsItemsOpen,
         [property: Index(IsPrimary = true)] string? ListID
@@ -80,18 +85,36 @@ namespace DexieNETCloudSample.Logic
         }
     }
 
+    public record ColorTheme(bool Light);
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+    [JsonSerializable(typeof(ColorTheme))]
+    public partial class ColorThemeConfigContext : JsonSerializerContext
+    {
+    }
+    
     [Schema(CloudSync = true)]
-    public partial record Settings
-    (
-        bool DarkMode,
-        [property: Index(IsPrimary = true)] string ID
+    public partial record Settings(
+        [property: Index(IsPrimary = true)] string ID,
+        string ValueJson
     ) : IToDoDBItem
     {
-        public const string Key = "#userSettings";
+        public const string ColorThemeKey = "#colorTheme";
 
-        public static Settings Create(bool darkMode)
+        public static Settings CreateColorTheme(bool light)
         {
-            return new(darkMode, Key);
+            var theme = new ColorTheme(light);
+            var themeJson = JsonSerializer.Serialize(theme,
+                ColorThemeConfigContext.Default.ColorTheme);
+
+            return new Settings(ColorThemeKey, themeJson);
+        }
+        
+        public ColorTheme? GetColorTheme()
+        {
+            var theme = JsonSerializer.Deserialize(ValueJson,
+                ColorThemeConfigContext.Default.ColorTheme);
+
+            return theme;
         }
     }
 
@@ -102,154 +125,152 @@ namespace DexieNETCloudSample.Logic
         Cloud
     }
 
-    public sealed class DexieCloudService : RxBLService
+    public sealed partial class DexieCloudService : RxBLService
     {
         public ToDoDB? DB { get; private set; }
         public bool IsDBOpen => DB is not null;
 
         public IState<DBState> State { get; }
         public IState<SyncState?> SyncState { get; }
+        public IState<ServiceWorkerNotifications?> ServiceWorkerNotificationState { get; }
         public IState<UserLogin?> UserLogin { get; }
         public IState<UIInteraction?> UIInteraction { get; }
         public IState<IEnumerable<Invite>?> Invites { get; }
         public IState<Dictionary<string, Role>?> Roles { get; }
-        public IState<bool> DarkMode { get; }
-
+        public IState<bool> LightMode { get; }
+        public IState<NotificationState> NotificationsState { get; }
+        public IStateObserverAsync LogoutObserver { get; }
         public string? CloudURL { get; private set; }
+        public ILogger Logger { get; }
 
         private readonly IDexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
-  
+
         public DexieCloudService(IServiceProvider serviceProvider)
         {
+            Logger = serviceProvider.GetRequiredService<ILoggerFactory>()
+                .CreateLogger<DexieCloudService>();
+
             var dexieService = serviceProvider.GetRequiredService<IDexieNETService<ToDoDB>>();
             _dexieFactory = dexieService.DexieNETFactory;
 
             State = this.CreateState(DBState.Closed);
             SyncState = this.CreateState((SyncState?)null);
+            ServiceWorkerNotificationState = this.CreateState((ServiceWorkerNotifications?)null);
             UserLogin = this.CreateState((UserLogin?)null);
             UIInteraction = this.CreateState((UIInteraction?)null);
             Invites = this.CreateState((IEnumerable<Invite>?)null);
             Roles = this.CreateState((Dictionary<string, Role>?)null);
-            DarkMode = this.CreateState(false);
+            LightMode = this.CreateState(true);
+            NotificationsState = this.CreateState(NotificationState.None);
+            LogoutObserver = this.CreateStateObserverAsync();
         }
 
         public async ValueTask OpenDB()
         {
             if (DB is null)
             {
-#if DEBUG
-                Console.WriteLine("OpenDB");
-#endif
+                Logger.LogDebug("OpenDB");
+
                 await _dexieFactory.Delete();
                 DB = await _dexieFactory.Create();
-                DB.Version(2).Stores();
+                DB.Version(17).Stores();
 
                 ArgumentNullException.ThrowIfNull(DB);
                 State.Value = DBState.Opened;
             }
         }
 
-        public async Task Logout(bool force = false)
-        {
-            ArgumentNullException.ThrowIfNull(DB);
-            await DB.Logout(force);
-        }
-
-        public void ConfigureCloud(string cloudURL)
+        public async Task ConfigureCloud(string cloudURL, string? applicationServerKey = null)
         {
             if (CloudURL == cloudURL)
             {
                 return;
             }
 
+            Logger.LogDebug("ConfigureCloud with for {URL} and applicationServerKey {KEY}", cloudURL,
+                applicationServerKey);
+
             ArgumentNullException.ThrowIfNull(DB);
 
             CloudURL = cloudURL;
 
             var options = new DexieCloudOptions(CloudURL)
-                .WithCustomLoginGui(true)
-                .WithRequireAuth(false)
-#if DEBUG
-                .WithRequireAuth(false);
-#else
-                .WithRequireAuth(false)
-                .WithTryUseServiceWorker(true);
+                    .WithCustomLoginGui(true)
+                    .WithRequireAuth(false)
+#if !DEBUG
+                    .WithTryUseServiceWorker(true)
 #endif
-                //.WithFetchTokens(FetchTokens);
+            ;
+            //.WithFetchTokens(FetchTokens);
 
             // call before configure cloud to have login UI ready when needed
-            _DBServicesDisposeBag.Add(DB.UserInteractionObservable().Subscribe(ui =>
-            {
-                UIInteraction.Value = ui;
-            }));
+            _DBServicesDisposeBag.Add(DB.UserInteractionObservable().Subscribe(ui => { UIInteraction.Value = ui; }));
 
-            DB.ConfigureCloud(options);
+            await DB.ConfigureCloud(options, applicationServerKey);
 
-            _DBServicesDisposeBag.Add(DB.SyncStateObservable().Subscribe(ss =>
-            {
-                SyncState.Value = ss;
-            }));
+            _DBServicesDisposeBag.Add(DB.SyncStateObservable().Subscribe(ss => { SyncState.Value = ss; }));
 
             _DBServicesDisposeBag.Add(DB.PersistedSyncStateStateObservable().Subscribe(pss =>
             {
-                Console.WriteLine(pss);
+                Logger.LogDebug("PersistedSyncStateStateObservable {VALUE}", pss);
             }));
 
             _DBServicesDisposeBag.Add(DB.WebSocketStatusObservable().Subscribe(wss =>
             {
-                Console.WriteLine(wss);
+                Logger.LogDebug("WebSocketStatusObservable {VALUE}", wss);
             }));
 
-            _DBServicesDisposeBag.Add(DB.SyncCompleteObservable().Subscribe(pss =>
+            _DBServicesDisposeBag.Add(DB.SyncCompleteObservable().Subscribe(c =>
             {
-                Console.WriteLine("SyncComplete");
+                Logger.LogDebug("SyncCompleteObservable {VALUE}", c);
             }));
-
-            var settingsQuery = DB.LiveQuery(async () => await DB.Settings.Where(s => s.ID, Settings.Key).ToArray());
             
+            var colorThemeSettings = await DB.Settings.Get(Settings.ColorThemeKey);
+            if (colorThemeSettings is null)
+            {
+                var settings = Settings.CreateColorTheme(LightMode.Value);
+                await DB.Settings.Add(settings);
+            }
+            
+            var settingsQuery = DB.LiveQuery(async () =>
+            {
+                var settings = await DB.Settings.Where(s => s.ID, Settings.ColorThemeKey).ToArray();
+                return settings.FirstOrDefault();
+            });
+
             _DBServicesDisposeBag.Add(settingsQuery.Subscribe(s =>
             {
-                if (s.Any())
+                if (s is not null)
                 {
-                    if (DarkMode.Value != s.First().DarkMode)
-                    {
-                        DarkMode.Value = s.First().DarkMode;
-                    }
+                    var theme = s.GetColorTheme();
+                    LightMode.Value = (theme?.Light).True();
                 }
-                else if (DarkMode.Value)
+                else
                 {
-                    DarkMode.Value = false;
+                    LightMode.Value = true;
                 }
             }));
+            
+            _DBServicesDisposeBag.Add(DB.UserLoginObservable().Subscribe(ul => { UserLogin.Value = ul; }));
 
-            _DBServicesDisposeBag.Add(this.AsChangedObservable(DarkMode)
-                .Select(async dm =>
-                { 
-                    var settings = Settings.Create(dm);
-                    await DB.Settings.Put(settings);
-                })
-                .Subscribe());
+            _DBServicesDisposeBag.Add(DB.RoleObservable().Subscribe(r => { Roles.Value = r; }));
 
-            _DBServicesDisposeBag.Add(DB.UserLoginObservable().Subscribe(ul =>
-            {
-                UserLogin.Value = ul;
-            }));
+            _DBServicesDisposeBag.Add(DB.InvitesObservable().Subscribe(i => { Invites.Value = i; }));
 
-            _DBServicesDisposeBag.Add(DB.RoleObservable().Subscribe(r =>
-            {
-                Roles.Value = r;
-            }));
+            _DBServicesDisposeBag.Add(
+                DB.NotificationStateObservable().Subscribe(n => { NotificationsState.Value = n; }));
 
-            _DBServicesDisposeBag.Add(DB.InvitesObservable().Subscribe(i =>
-            {
-                Invites.Value = i;
-            }));
+            _DBServicesDisposeBag.Add(
+                DB.ServiceWorkerNotificationObservable().Subscribe(swn =>
+                {
+                    ServiceWorkerNotificationState.Value = swn;
+                }));
 
             State.Value = DBState.Cloud;
 
 #if DEBUG
-            Console.WriteLine($"We're using dexie-cloud-addon {DB.AddOnVersion()}");
+            Logger.LogDebug("We're using dexie-cloud-addon {VALUE}", DB.AddOnVersion());
             var cloudOptions = DB.Options();
             var schema = DB.Schema();
             var usingServiceWorker = DB.UsingServiceWorker();
@@ -259,7 +280,6 @@ namespace DexieNETCloudSample.Logic
         public async ValueTask<string?> Login(LoginInformation loginInformation)
         {
             ArgumentNullException.ThrowIfNull(DB);
-
             return await DB.UserLogin(loginInformation);
         }
 
@@ -273,7 +293,7 @@ namespace DexieNETCloudSample.Logic
         private async Task<TokenFinalResponse?> FetchTokens(TokenParams tokenParams)
         {
             var adminstrationService = _serviceProvider.GetRequiredService<AdministrationService>();
-    
+
             var cloudKeyData = new CloudKeyData
             {
                 ClientId = "xx",
@@ -283,5 +303,15 @@ namespace DexieNETCloudSample.Logic
             return tokenFinalResponse;
         }
         */
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && !_DBServicesDisposeBag.IsDisposed)
+            {
+                _DBServicesDisposeBag.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }

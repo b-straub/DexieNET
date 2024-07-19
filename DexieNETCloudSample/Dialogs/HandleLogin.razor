@@ -1,7 +1,6 @@
-﻿@using DexieNET
-@inherits RxBLServiceSubscriber<DexieCloudService>
+﻿@inherits RxBLServiceSubscriber<DexieCloudService>
 
-<MudMenu Disabled=@(users.Count() == 0)>
+<MudMenu Disabled=@(!_users.Any())>
     <ActivatorContent>
         <MudIconButton Icon="@Icons.Material.Outlined.People" Color="Color.Inherit">
             "Sign in or create your account"
@@ -10,49 +9,43 @@
     <ChildContent>
         @if (Service.UserLogin.HasValue() && Service.UserLogin.Value.IsLoggedIn)
         {
-            <MudMenuItem OnClick=@Logout OnTouch=@Logout>Sign Out: @Service.UserLogin.Value.UserId</MudMenuItem>
+            <MudMenuItem Disabled=@(Service.SyncState.Value?.Status is not SyncState.SyncStatus.CONNECTED)
+                         OnClick=@(() => LogoutDialog(Service.UserLogin.Value.UserId))>
+                Sign Out: @Service.UserLogin.Value.UserId
+            </MudMenuItem>
         }
         else
         {
-            foreach (var user in users)
+            foreach (var user in _users)
             {
-                <MudMenuItem OnClick=@(async () => await Login(user))
-                     OnTouch=@(async () => await Login(user))>
+                <MudMenuItemAsyncRx StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@Login(user)>
                     @user
-                </MudMenuItem>
+                </MudMenuItemAsyncRx>
             }
-            <MudMenuItem OnClick=@(async () => await Login())
-                     OnTouch=@(async () => await Login())>
+
+            <MudMenuItemAsyncRx StateCommand=@Service.CommandAsync ExecuteAsyncCallback=@Login()>
                 Sign in / sign up yourself
-            </MudMenuItem>
+            </MudMenuItemAsyncRx>
         }
     </ChildContent>
 </MudMenu>
 
 
 @code {
-    [Inject]
-    public required IDialogService DialogService { get; init; }
+    [Inject] public required IDialogService DialogService { get; init; }
 
-    [Inject]
-    public required ISnackbar Snackbar { get; init; }
+    [Inject] public required ISnackbar Snackbar { get; init; }
 
-    [Inject]
-    public required IConfiguration Configuration { get; init; }
+    [Inject] public required IConfiguration Configuration { get; init; }
 
-    private IEnumerable<string> users = Enumerable.Empty<string>();
+    private IEnumerable<string> _users = Enumerable.Empty<string>();
 
     protected override void OnInitialized()
     {
-        users = Configuration.GetUsers();
+        _users = Configuration.GetUsers();
     }
 
-    private async Task Logout()
-    {
-        await Service.Logout();
-    }
-
-    private async ValueTask Login(string? eMail = null)
+    private Func<IStateCommandAsync, Task> Login(string? eMail = null) => async _ =>
     {
         string? error = null;
 
@@ -66,13 +59,12 @@
             EmailData data = new("email@mydomain.com");
 
             var parameters = new DialogParameters { ["Item"] = data };
-            var dialog = DialogService.Show<AuthenticateEMail>("Email for Login", parameters);
+            var dialog = await DialogService.ShowAsync<AuthenticateEMail>("Email for Login", parameters);
 
             var result = await dialog.Result;
-            if (!result.Canceled)
+            if (result.TryGet<EmailData>(out var newData))
             {
-                data = (EmailData)result.Data;
-                LoginInformation li = new(data.Email, null, GrantType.OTP);
+                LoginInformation li = new(newData.Email, null, GrantType.OTP);
                 error = await Service.Login(li);
             }
         }
@@ -81,9 +73,15 @@
         {
             Snackbar.Add(error, Severity.Error);
         }
-        else
+        /*else
         {
             await Service.Sync(new SyncOptions(SyncOptions.SyncPurpose.PULL));
-        }
+        }*/
+    };
+
+    private async Task<bool> LogoutDialog(string userID)
+    {
+        return await DialogAsyncORx<DexieCloudService>.Show(DialogService, Service.LogoutObserver, Service.LogoutObservable,
+            $"Logout", $"Logout {userID}?", $"Logout", "Cancel", true, "Cancel Logout!", Color.Error);
     }
 }

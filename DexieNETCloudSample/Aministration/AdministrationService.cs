@@ -60,6 +60,7 @@ namespace DexieNETCloudSample.Aministration
         private async Task DoDeleteUser(CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(DBService.UserLogin.Value);
+            ArgumentNullException.ThrowIfNull(DBService.DB);
 
             using var request = new HttpRequestMessage(HttpMethod.Delete,
                 $"{DBService.CloudURL}/users/{DBService.UserLogin.Value.UserId}");
@@ -73,7 +74,7 @@ namespace DexieNETCloudSample.Aministration
             }
             else
             {
-                await DBService.Logout(true);
+                await DBService.DB.Logout(true);
             }
         }
 

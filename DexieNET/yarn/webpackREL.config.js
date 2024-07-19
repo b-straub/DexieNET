@@ -7,11 +7,20 @@ module.exports = {
     entry: ['./src/dexieNET.ts'],
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                use: ["ts-loader"],
+                exclude: /node_modules/
+            },
         ]
     },
     experiments: {
         outputModule: true
     },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
+    },
+    devtool: 'source-map',
     output: {
         module: true,
         library: {

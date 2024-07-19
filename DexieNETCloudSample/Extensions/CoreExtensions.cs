@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+﻿using System.Reactive;
+using System.Reactive.Linq;
+using DexieCloudNET;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace DexieNETCloudSample.Extensions
 {
@@ -51,6 +54,44 @@ namespace DexieNETCloudSample.Extensions
             var dbUrl = configuration.GetSection("dbUrl").Value;
             ArgumentNullException.ThrowIfNull(dbUrl);
             return dbUrl;
+        }
+        
+        public static string? GetApplicationServerKey(this IConfiguration? configuration)
+        {
+            ArgumentNullException.ThrowIfNull(configuration);
+            var applicationServerKey = configuration.GetSection("applicationServerKey").Value;
+            return applicationServerKey;
+        }
+        
+        public static IDisposable SubscribeAsyncSwitch<T>(this IObservable<T> source, Func<T, CancellationToken, Task> onNextAsync) =>
+            source
+                .Select(value => Observable.FromAsync(ct => onNextAsync(value, ct)))
+                .Switch()
+                .Subscribe();
+        
+        public static IDisposable SubscribeAsyncSwitch<T>(this IObservable<T> source, Func<T, Task> onNextAsync) =>
+            source
+                .Select(value => Observable.FromAsync(() => onNextAsync(value)))
+                .Switch()
+                .Subscribe();
+        
+        public static void SubscribeAsyncSwitch<T>(this IObservable<T> source, Func<T, Task> onNextAsync, CancellationToken cancellationToken) =>
+            source
+                .Select(value => Observable.FromAsync(() => onNextAsync(value)))
+                .Switch()
+                .Subscribe(cancellationToken);
+
+
+        public static IDisposable SubscribeAsyncConcat<T>(this IObservable<T> source, Func<T, Task> onNextAsync) =>
+            source
+                .Select(value => Observable.FromAsync(() => onNextAsync(value)))
+                .Concat()
+                .Subscribe();
+
+        public static bool ValidPhase(this SyncState? syncState)
+        {
+            return (syncState?.Phase is SyncState.SyncStatePhase.IN_SYNC or SyncState.SyncStatePhase.PULLING
+                or SyncState.SyncStatePhase.PUSHING);
         }
     }
 }

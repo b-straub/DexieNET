@@ -146,4 +146,21 @@ namespace DexieCloudNET
     public partial class UsersResponseContext : JsonSerializerContext
     {
     }
+    
+    public record SubscriptionKeys(string P256dh, string Auth);
+    public record Subscription(string Endpoint, double? ExpirationTime, SubscriptionKeys Keys);
+    
+    public record WebPushSubscription
+    (
+        Subscription Subscription,
+        string Owner,
+        string ID,
+        bool Expired = true
+    );
+    
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+    [JsonSerializable(typeof(WebPushSubscription[]))]
+    public partial class WebPushSubscriptionEntryContext : JsonSerializerContext
+    {
+    }
 }

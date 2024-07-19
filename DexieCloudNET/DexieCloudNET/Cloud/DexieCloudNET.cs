@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-'DexieNET' used with permission of David Fahlander 
+'DexieNET' used with permission of David Fahlander
 */
 
 using Microsoft.JSInterop;
@@ -23,24 +23,6 @@ using DexieNET;
 
 namespace DexieCloudNET
 {
-    public interface IDBCloudEntity
-    {
-        string? Owner { get; }
-        string? RealmId { get; }
-
-        public string? EntityKey => GetEntityKey();
-
-        private string? GetEntityKey()
-        {
-            if (Owner is null || RealmId is null)
-            {
-                return null;
-            }
-
-            return Owner + RealmId;
-        }
-    }
-
     public record DBCloudEntity(string Owner, string RealmId) : IDBCloudEntity
     {
         public string EntityKey => Owner + RealmId;
@@ -67,11 +49,24 @@ namespace DexieCloudNET
 
     public static partial class DBCloudExtensions
     {
-        public static void ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions)
+        public static async Task ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions,
+            string? applicationServerKey = null)
         {
             if (!dexie.HasCloud())
             {
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            if (dexie.HasPushSupport && applicationServerKey is null)
+            {
+                throw new InvalidOperationException(
+                    "Database has push support but not 'ApplicationServerKey' has been provided.");
+            }
+
+            if (!dexie.HasPushSupport && applicationServerKey is not null)
+            {
+                throw new InvalidOperationException(
+                    "Database has no push support but 'ApplicationServerKey' has been provided.");
             }
 
             if (cloudOptions.UnsyncedTables is null)
@@ -89,15 +84,17 @@ namespace DexieCloudNET
                 cloudOptions = cloudOptions.WithFetchTokens(null);
             }
 
-            var err = dexie.Cloud.Module.Invoke<string?>("ConfigureCloud", dexie.Cloud.Reference, cloudOptions, dotnetRef);
+            var err = await dexie.Cloud.Module.InvokeAsync<string?>("ConfigureCloud", dexie.Cloud.Reference, cloudOptions,
+                applicationServerKey, dotnetRef);
 
             if (err is not null)
             {
                 throw new InvalidOperationException(err);
             }
         }
-
+        
         #region Sharing
+
         public static string GetTiedRealmID(this DBBase dexie, string id)
         {
             if (!dexie.HasCloud())
@@ -107,12 +104,14 @@ namespace DexieCloudNET
 
             return dexie.Cloud.Module.Invoke<string>("GetTiedRealmID", id);
         }
+
         #endregion
 
         #region UIInteraction
+
         public static IObservable<UIInteraction> UserInteractionObservable(this DBBase dexie)
         {
-            var jso = new JSObservable<UIInteraction>(dexie, "SubscribeUserInteraction", "ClearUserInteraction");
+            var jso = JSObservable<UIInteraction>.Create(dexie, "SubscribeUserInteraction", "ClearUserInteraction");
             return jso;
         }
 
@@ -126,7 +125,8 @@ namespace DexieCloudNET
             dexie.Cloud.Module.InvokeVoid("OnSubmitUserInteraction", interaction.Key, param.AsDictionary());
         }
 
-        public static void SubmitUserInteraction(this DBBase dexie, UIInteraction interaction, Dictionary<string, string> param)
+        public static void SubmitUserInteraction(this DBBase dexie, UIInteraction interaction,
+            Dictionary<string, string> param)
         {
             if (!dexie.HasCloud())
             {
@@ -145,12 +145,14 @@ namespace DexieCloudNET
 
             dexie.Cloud.Module.InvokeVoid("OnCancelUserInteraction", interaction.Key);
         }
+
         #endregion
 
         #region Invites
+
         public static IObservable<IEnumerable<Invite>> InvitesObservable(this DBBase dexie)
         {
-            var jso = new JSObservable<IEnumerable<Invite>>(dexie, "SubscribeInvites", "ClearInvites");
+            var jso = JSObservable<IEnumerable<Invite>>.Create(dexie, "SubscribeInvites", "ClearInvites");
             return jso;
         }
 
@@ -203,9 +205,11 @@ namespace DexieCloudNET
 
             await dexie.Cloud.Module.InvokeVoidAsync("ClearInviteMember", dexie.Cloud.Reference, member.Id);
         }
+
         #endregion
 
         #region Roles
+
         public static IObservable<Dictionary<string, Role>> RoleObservable(this DBBase dexie)
         {
             if (!dexie.HasCloud())
@@ -213,11 +217,13 @@ namespace DexieCloudNET
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
 
-            return new JSObservable<Dictionary<string, Role>>(dexie, "SubscribeRoles");
+            return JSObservable<Dictionary<string, Role>>.Create(dexie, "SubscribeRoles");
         }
+
         #endregion
 
         #region SyncState
+
         public static IObservable<SyncState> SyncStateObservable(this DBBase dexie)
         {
             if (!dexie.HasCloud())
@@ -225,7 +231,7 @@ namespace DexieCloudNET
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
 
-            return new JSObservable<SyncState>(dexie, "SubscribeSyncState");
+            return JSObservable<SyncState>.Create(dexie, "SubscribeSyncState");
         }
 
         public static IObservable<PersistedSyncState> PersistedSyncStateStateObservable(this DBBase dexie)
@@ -235,10 +241,10 @@ namespace DexieCloudNET
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
 
-            return new JSObservable<PersistedSyncState>(dexie, "SubscribePersistedSyncState");
+            return JSObservable<PersistedSyncState>.Create(dexie, "SubscribePersistedSyncState");
         }
 
-        public static async ValueTask Sync(this DBBase dexie, SyncOptions syncOptions)
+        public static async ValueTask Sync(this DBBase dexie, SyncOptions? syncOptions = null)
         {
             if (!dexie.HasCloud())
             {
@@ -248,23 +254,28 @@ namespace DexieCloudNET
             await dexie.Cloud.Module.InvokeVoidAsync("Sync", dexie.Cloud.Reference, syncOptions);
         }
 
-        public static IObservable<bool> SyncCompleteObservable(this DBBase dexie)
+        public static IObservable<bool> SyncCompleteObservable(this DBBase dexie,
+            JSObservable<bool>.TimeOut? timeout = null)
         {
-            return new JSObservable<bool>(dexie, "SubscribeSyncComplete");
+            return JSObservable<bool>.Create(dexie, "SubscribeSyncComplete", timeout);
         }
+
         #endregion
 
         #region WebSocketStatus
+
         public static IObservable<string> WebSocketStatusObservable(this DBBase dexie)
         {
-            return new JSObservable<string>(dexie, "SubscribeWebSocketStatus");
+            return JSObservable<string>.Create(dexie, "SubscribeWebSocketStatus");
         }
+
         #endregion
 
         #region UserLogin
+
         public static IObservable<UserLogin> UserLoginObservable(this DBBase dexie)
         {
-            return new JSObservable<UserLogin>(dexie, "SubscribeUserLogin");
+            return JSObservable<UserLogin>.Create(dexie, "SubscribeUserLogin");
         }
 
         public static string CurrentUserId(this DBBase dexie)
@@ -317,6 +328,7 @@ namespace DexieCloudNET
             return dexie.Cloud.Module.Invoke<bool?>("UsingServiceWorker", dexie.Cloud.Reference);
         }
 
+        // returns http error if any
         public static async ValueTask<string?> UserLogin(this DBBase dexie, LoginInformation userLogin)
         {
             if (!dexie.HasCloud())
@@ -344,13 +356,27 @@ namespace DexieCloudNET
 
             await dexie.Cloud.Module.InvokeVoidAsync("Logout", dexie.Cloud.Reference, force);
         }
-        #endregion
 
+        public static async Task<long> NumUnsyncedChanges(this DBBase dexie)
+        {
+            if (!dexie.HasCloud())
+            {
+                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
+            }
+
+            return await dexie.Cloud.Module.InvokeAsync<long>("NumUnsyncedChanges", dexie.Cloud.Reference);
+        }
+
+        #endregion
+        
         #region Table
-        public static IUsePermissions<T> CreateUsePermissions<T, I>(this Table<T, I> table) where T : IDBStore, IDBCloudEntity
+
+        public static IUsePermissions<T> CreateUsePermissions<T, I>(this Table<T, I> table)
+            where T : IDBStore, IDBCloudEntity
         {
             return UsePermissions<T, I>.Create(table);
         }
+
         #endregion
     }
 }

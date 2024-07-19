@@ -46,15 +46,14 @@ namespace DexieNET
         public bool CloudSync { get; }
         public TableJS TableJS { get; }
         public DBBase DB { get; }
-        
+        public bool TransactionCollecting => (DB.CurrentTransaction is not null && DB.CurrentTransaction.Collecting);
+
         internal bool PKGuid { get; }
         internal string[] Keys { get; }
         internal string[] MultiEntry { get; }
         internal ITypeConverter TypeConverter { get; }
         internal I DefaultPrimaryKey { get; }
-
-        internal bool TransactionCollectMode => (DB.CurrentTransaction is not null && DB.CurrentTransaction.Collecting);
-
+        
         private readonly Dictionary<Type, object> _emptyCollection;
         private readonly Dictionary<Type, object> _emptyWhereClause;
 

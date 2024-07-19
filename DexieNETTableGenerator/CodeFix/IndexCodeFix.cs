@@ -214,9 +214,9 @@ namespace DNTGenerator.CodeFix
             }
             else
             {
-                var popertyOrParameter = (node.Ancestors()
-                    .Where(s => s.Kind() is SyntaxKind.PropertyDeclaration || s.Kind() is SyntaxKind.Parameter)
-                    .FirstOrDefault());
+                var popertyOrParameter = (node
+                    .Ancestors()
+                    .FirstOrDefault(s => s.Kind() is SyntaxKind.PropertyDeclaration || s.Kind() is SyntaxKind.Parameter));
 
                 if (popertyOrParameter is null)
                 {

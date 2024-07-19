@@ -58,7 +58,7 @@ namespace DNTGenerator.Query
                 var dbName = record.Symbol.Name.MakeDBOrTableName(true, true);
 
                 string? dbAttributeName = null;
-                var attr = record.Symbol.GetAttributes().Where(a => a.AttributeClass.MatchDBNameAttribute(compilation)).FirstOrDefault();
+                var attr = record.Symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.MatchDBNameAttribute(compilation));
 
                 if (attr is not null)
                 {
@@ -66,12 +66,18 @@ namespace DNTGenerator.Query
                 }
 
                 record.SetDBName(dbAttributeName ?? dbName);
+                
+                attr = record.Symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.MatchDBAddPushSupportAttribute(compilation));
+                if (attr is not null)
+                {
+                    record.HasPushSupport = true;
+                }
             }
 
             return record;
         }
 
-        public static void SetDBNames(this IList<DBRecord> records, DBRecord nameRecord, CancellationToken cancellationToken)
+        public static void SetDerivedProperties(this IList<DBRecord> records, DBRecord nameRecord, CancellationToken cancellationToken)
         {
             foreach (DBRecord record in records)
             {
@@ -80,12 +86,12 @@ namespace DNTGenerator.Query
                     break;
                 }
 
-                if (record.Type is not DBRecord.RecordType.Interface)
+                if (record.Type is DBRecord.RecordType.Interface) continue;
+                
+                if (record.Symbol.MatchDerivedDBItemInterface(nameRecord.Symbol))
                 {
-                    if (record.Symbol.MatchDerivedDBItemInterface(nameRecord.Symbol))
-                    {
-                        record.SetDBName(nameRecord.DBName);
-                    }
+                    record.SetDBName(nameRecord.DBName);
+                    record.HasPushSupport = nameRecord.HasPushSupport;
                 }
             }
         }

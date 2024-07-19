@@ -1,5 +1,6 @@
 ﻿using DexieNET;
 using DexieNETCloudSample.Extensions;
+using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 
 namespace DexieNETCloudSample.Dexie.Services
@@ -12,7 +13,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             return async _ =>
             {
-                await DbService.DB.Transaction(async _ =>
+                await DbService.DB.Transaction(async t =>
                 {
                     var id = await GetTable().Add(value);
                     await PostAddAction(id);
@@ -33,17 +34,18 @@ namespace DexieNETCloudSample.Dexie.Services
 
             return async _ =>
             {
-                await DbService.DB.Transaction(async _ =>
+                await DbService.DB.Transaction(async t =>
                 {
                     ArgumentNullException.ThrowIfNull(DbService.DB);
-                    await GetTable().Put(value);
+                    var id = await GetTable().Put(value);
+                    await PostUpdateAction(id);
                 });
             };
         }
 
         public Func<bool> CanUpdateItem(T value) => () => CanUpdate(value);
 
-        protected virtual bool CanUpdate(T? value)
+        protected virtual bool CanUpdate(T value)
         {
             return true;
         }
@@ -55,7 +57,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             return async _ =>
             {
-                await DbService.DB.Transaction(async _ =>
+                await DbService.DB.Transaction(async t =>
                 {
                     await PreDeleteAction(value.ID);
                     await GetTable().Delete(value.ID);
@@ -74,13 +76,13 @@ namespace DexieNETCloudSample.Dexie.Services
         public Func<IStateCommandAsync, Task> ClearItems => async _ =>
         {
             ArgumentNullException.ThrowIfNull(DbService.DB);
-            var itemsToClear = await GetTable().ToArray();
+            var itemsToClear = (await GetTable().ToArray()).ToArray();
 
             foreach (var item in itemsToClear)
             {
                 ArgumentNullException.ThrowIfNull(item.ID);
 
-                await DbService.DB.Transaction(async _ =>
+                await DbService.DB.Transaction(async t =>
                 {
                     await PreDeleteAction(item.ID);
                     await GetTable().Delete(item.ID);

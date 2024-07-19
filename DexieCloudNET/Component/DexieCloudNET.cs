@@ -25,7 +25,7 @@ namespace DexieCloudNET.Component
                     throw new InvalidOperationException("Can not create database.");
                 }
 
-                Dexie.ConfigureCloud(cloudOptions);
+                await Dexie.ConfigureCloud(cloudOptions);
             }
 
             await base.OnInitializedAsync();

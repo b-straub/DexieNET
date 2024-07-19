@@ -44,27 +44,25 @@
             EmailData data = new("email@mydomain.com");
 
             var parameters = new DialogParameters { ["Item"] = data };
-            var dialog = DialogService.Show<AuthenticateEMail>("Email for Invite", parameters);
+            var dialog = await DialogService.ShowAsync<AuthenticateEMail>("Email for Invite", parameters);
 
             var result = await dialog.Result;
-            if (result.Canceled)
+            if (!result.OK())
             {
                 return;
             }
-            else
-            {
-                user = data.Email;
-            }
+
+            user = data.Email;
         }
         else
         {
             var parameters = new DialogParameters
                 { ["Message"] = $"Invite {user}", ["ConfirmButton"] = "Invite", ["SuccessOnConfirm"] = true };
-            var dialog = DialogService.Show<ConfirmDialog>("Invite USER", parameters);
+            var dialog = await DialogService.ShowAsync<ConfirmDialog>("Invite USER", parameters);
 
             var res = await dialog.Result;
 
-            if (res.Canceled)
+            if (!res.OK())
             {
                 return;
             }

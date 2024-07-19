@@ -26,6 +26,11 @@ builder.Services.AddScoped(sp => new ToDoItemService(sp));
 builder.Services.AddSingleton(sp => new ToDoListService(sp));
 builder.Services.AddSingleton(sp => new ToDoListMemberService(sp));
 
+builder.Logging.ClearProviders();
+#if !DEBUG
+builder.Services.AddLogging(l => l.SetMinimumLevel(LogLevel.Warning));
+#endif
+
 await builder.LoadConfigurationAsync(); // also adds HttpClient
 
 await builder.Build().RunAsync();

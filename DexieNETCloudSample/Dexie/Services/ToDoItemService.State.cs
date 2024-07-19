@@ -1,4 +1,6 @@
-﻿using DexieNET;
+﻿using System.Text.Json;
+using DexieCloudNET;
+using DexieNET;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 
@@ -13,7 +15,18 @@ namespace DexieNETCloudSample.Dexie.Services
             ArgumentNullException.ThrowIfNull(item);
 
             var completedItem = item with { Completed = !item.Completed };
-            await _db.ToDoDBItems.Put(completedItem);
+            
+            await _db.Transaction(async t =>
+            {
+                var id = await _db.ToDoDBItems.Put(completedItem);
+                
+                if (_db.PushNotifications.TransactionCollecting)
+                {
+                    await _db.PushNotifications.Put(null);
+                    return;
+                }
+                await AddPushNotification(id, completedItem.Completed ? PnReason.COMPLETED : PnReason.REMINDER);
+            });
         };
 
         public Func<bool> CanToggledItemCompleted(ToDoDBItem? item) => () =>
@@ -21,35 +34,34 @@ namespace DexieNETCloudSample.Dexie.Services
             return CanUpdate(item, i => i.Completed);
         };
 
-        public Func<IStateCommandAsync, Task> DeleteCompletedItems => async _ =>
+        public Func<IStateCommandAsync, Task> DeleteItems(bool completed) => async _ =>
         {
             ArgumentNullException.ThrowIfNull(_db);
+            ArgumentNullException.ThrowIfNull(CurrentList.Value);
+            
+            var itemsToDelete = (completed ? await _db.ToDoDBItems
+                .Where(i => i.ListID, CurrentList.Value.ID, i => i.Completed, true)
+                .ToArray() : await _db.ToDoDBItems
+                .Where(i => i.ListID, CurrentList.Value.ID)
+                .ToArray()).ToArray();
+            
+            foreach (var item in itemsToDelete)
+            {
+                ArgumentNullException.ThrowIfNull(item.ID);
 
-            var itemsToDelete = (await _db.ToDoDBItems
-                .Where(i => i.Completed)
-                .Equal(true)
-                .ToArray())
-                .Select(i => i.ID!);
-
-            await _db.ToDoDBItems.BulkDelete(itemsToDelete);
+                await _db.Transaction(async t =>
+                {
+                    await PreDeleteAction(item.ID);
+                    await GetTable().Delete(item.ID);
+                    await PostDeleteAction(item.ID);
+                });
+            };
         };
 
         public Func<bool> CanDeleteCompletedItems => () =>
         {
             var item = ItemsState.Value.Where(i => i.Completed).FirstOrDefault();
             return CanDelete(item);
-        };
-
-
-        public Func<bool> CanProvide() => () =>
-        {
-            if (ItemsState is not null)
-            {
-                var item = ItemsState.Value.Where(i => i.Completed).FirstOrDefault();
-                return CanDelete(item);
-            }
-
-            return false;
         };
     }
 }

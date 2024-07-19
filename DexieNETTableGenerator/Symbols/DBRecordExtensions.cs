@@ -55,7 +55,7 @@ namespace DNTGenerator.Verifier
 
         public static SchemaDescriptor GetSchemaDescriptor(this INamedTypeSymbol symbol, bool isInterface, Compilation compilation, CancellationToken cancellationToken)
         {
-            var attr = symbol.GetAttributes().Where(a => a.AttributeClass.MatchSchemaAttribute(compilation)).FirstOrDefault();
+            var attr = symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.MatchSchemaAttribute(compilation));
             var storeName = symbol.Name.MakeDBOrTableName(false, isInterface);
             var storeBase = storeName;
 
@@ -67,10 +67,10 @@ namespace DNTGenerator.Verifier
             var node = (attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken)) ?? throw new InvalidOperationException($"Invalid Schema name for: {nameof(symbol)}");
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
-            var storeAttributeName = (string?)attr.NamedArguments.Where(na => na.Key == "StoreName").FirstOrDefault().Value.Value;
-            var storeNameLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "StoreName").FirstOrDefault()?.GetLocation();
+            var storeAttributeName = (string?)attr.NamedArguments.FirstOrDefault(na => na.Key == "StoreName").Value.Value;
+            var storeNameLocation = arguments.FirstOrDefault(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "StoreName")?.GetLocation();
 
-            var updateStore = (INamedTypeSymbol?)attr.NamedArguments.Where(na => na.Key == "UpdateStore").FirstOrDefault().Value.Value;
+            var updateStore = (INamedTypeSymbol?)attr.NamedArguments.FirstOrDefault(na => na.Key == "UpdateStore").Value.Value;
 
             string? primaryKeyName = null;
             Location? pkNameLocation = null;
@@ -79,18 +79,18 @@ namespace DNTGenerator.Verifier
 
             if (attr.NamedArguments.Where(na => na.Key == "PrimaryKeyName").Any())
             {
-                primaryKeyName = (string?)attr.NamedArguments.Where(na => na.Key == "PrimaryKeyName").FirstOrDefault().Value.Value;
-                pkNameLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "PrimaryKeyName").FirstOrDefault().GetLocation();
+                primaryKeyName = (string?)attr.NamedArguments.FirstOrDefault(na => na.Key == "PrimaryKeyName").Value.Value;
+                pkNameLocation = arguments.FirstOrDefault(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "PrimaryKeyName").GetLocation();
             }
 
             if (attr.NamedArguments.Where(na => na.Key == "PrimaryKeyGuid").Any())
             {
-                primaryKeyGuid = ((bool?)attr.NamedArguments.Where(na => na.Key == "PrimaryKeyGuid").FirstOrDefault().Value.Value);
-                pkGuidLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "PrimaryKeyGuid").FirstOrDefault().GetLocation();
+                primaryKeyGuid = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "PrimaryKeyGuid").Value.Value);
+                pkGuidLocation = arguments.FirstOrDefault(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "PrimaryKeyGuid").GetLocation();
             }
 
-            var outboundPrimaryKey = ((bool?)attr.NamedArguments.Where(na => na.Key == "OutboundPrimaryKey").FirstOrDefault().Value.Value).True();
-            var cloudSync = ((bool?)attr.NamedArguments.Where(na => na.Key == "CloudSync").FirstOrDefault().Value.Value).True();
+            var outboundPrimaryKey = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "OutboundPrimaryKey").Value.Value).True();
+            var cloudSync = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "CloudSync").Value.Value).True();
 
             var location = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
             return new(storeAttributeName ?? storeName, storeNameLocation, updateStore, primaryKeyName, pkNameLocation ?? Location.None, primaryKeyGuid, pkGuidLocation ?? Location.None, outboundPrimaryKey, updateStore is not null, cloudSync, location);
@@ -123,8 +123,8 @@ namespace DNTGenerator.Verifier
 
                 if (attr.NamedArguments.Where(na => na.Key == "IsPrimary").Any())
                 {
-                    primaryKey = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsPrimary").FirstOrDefault().Value.Value).True();
-                    pkLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsPrimary").FirstOrDefault().GetLocation();
+                    primaryKey = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "IsPrimary").Value.Value).True();
+                    pkLocation = arguments.FirstOrDefault(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsPrimary").GetLocation();
                 }
 
                 IEnumerable<(string Name, Location Location)> keyNames = names.Where(n => n.Name is not null)
@@ -163,6 +163,11 @@ namespace DNTGenerator.Verifier
         public static bool HasCloudSync(this IEnumerable<DBRecord> records)
         {
             return records.Any(r => r.SchemaDescriptor.HasCloudSync);
+        }
+        
+        public static bool HasPushSupport(this IEnumerable<DBRecord> records)
+        {
+            return records.Any(r => r.HasPushSupport);
         }
 
         public static string? PrimaryIndexTypeName(this DBRecord record)
@@ -300,7 +305,7 @@ namespace DNTGenerator.Verifier
                 return record.SchemaDescriptor.StoreName.ToCamelCase();
             }
 
-            var baseStore = records.Where(r => r.Symbol.Equals(record.SchemaDescriptor.UpdateStore, SymbolEqualityComparer.Default)).FirstOrDefault() ?? throw new InvalidOperationException($"Invalid UpdateStore for: {nameof(record.Symbol.Name)}");
+            var baseStore = records.FirstOrDefault(r => r.Symbol.Equals(record.SchemaDescriptor.UpdateStore, SymbolEqualityComparer.Default)) ?? throw new InvalidOperationException($"Invalid UpdateStore for: {nameof(record.Symbol.Name)}");
             return baseStore.SchemaDescriptor.StoreName.ToCamelCase();
         }
 
@@ -377,7 +382,7 @@ namespace DNTGenerator.Verifier
         {
             var name = parentName is null ? symbol.Name : parentName + "." + symbol.Name;
             var typeName = symbol.Type.ToDisplayString().TrimEnd('?');
-            var attr = symbol.GetAttributes().Where(a => a.AttributeClass.MatchIndexAttribute(compilation)).FirstOrDefault();
+            var attr = symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.MatchIndexAttribute(compilation));
 
             if (attr is null)
             {
@@ -388,16 +393,16 @@ namespace DNTGenerator.Verifier
             var node = (attr.ApplicationSyntaxReference?.GetSyntax(cancellationToken)) ?? throw new InvalidOperationException($"Invalid CompoundKey name for: {nameof(symbol)}");
             var arguments = node.DescendantNodesAndSelf().OfType<AttributeArgumentSyntax>();
 
-            var isPrimary = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsPrimary").FirstOrDefault().Value.Value).True();
-            var pkLocation = arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsPrimary").FirstOrDefault()?.GetLocation();
+            var isPrimary = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "IsPrimary").Value.Value).True();
+            var pkLocation = arguments.FirstOrDefault(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsPrimary")?.GetLocation();
 
-            var isAuto = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsAuto").FirstOrDefault().Value.Value).True();
-            pkLocation ??= arguments.Where(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsAuto").FirstOrDefault()?.GetLocation();
+            var isAuto = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "IsAuto").Value.Value).True();
+            pkLocation ??= arguments.FirstOrDefault(a => (string?)(a?.NameEquals?.Name?.Identifier.Value) == "IsAuto")?.GetLocation();
 
             var isAutoGuidPrimary = (isPrimary && isAuto && symbol.IsGuidType());
 
-            var isUnique = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsUnique").FirstOrDefault().Value.Value).True();
-            var isMultiEntry = ((bool?)attr.NamedArguments.Where(na => na.Key == "IsMultiEntry").FirstOrDefault().Value.Value).True();
+            var isUnique = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "IsUnique").Value.Value).True();
+            var isMultiEntry = ((bool?)attr.NamedArguments.FirstOrDefault(na => na.Key == "IsMultiEntry").Value.Value).True();
             var indexConverter = symbol.GetIndexConverter(compilation);
 
             var attrLocation = attr.ApplicationSyntaxReference is null ? Location.None : Location.Create(attr.ApplicationSyntaxReference.SyntaxTree, attr.ApplicationSyntaxReference.Span);
@@ -408,7 +413,7 @@ namespace DNTGenerator.Verifier
 
         private static string? GetIndexConverter(this IPropertySymbol symbol, Compilation compilation)
         {
-            var attr = symbol.GetAttributes().Where(a => a.AttributeClass.MatchIndexConverterAttribute(compilation)).FirstOrDefault();
+            var attr = symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.MatchIndexConverterAttribute(compilation));
             return attr?.AttributeClass?.Name;
         }
 

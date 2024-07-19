@@ -24,7 +24,7 @@ using DexieNET;
 
 namespace DexieCloudNET
 {
-      public sealed class DexieCloudNETFactory<T> : IDexieNETFactory<T>, IAsyncDisposable where T : IDBBase
+    public sealed class DexieCloudNETFactory<T> : IDexieNETFactory<T>, IAsyncDisposable where T : IDBBase
     {
         private readonly Lazy<Task<IJSInProcessObjectReference>> _moduleTask;
         private readonly Lazy<Task<IJSInProcessObjectReference>> _cloudTask;

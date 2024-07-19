@@ -10,6 +10,7 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 
 ##  News
 
+- Added Push support. Please check the [ReadMe](https://github.com/b-straub/DexieNET/blob/6656f4712e5ddc4f1891da039c2e8d8c2a47afbd/DexieNETCloudPushServer/README.md)
 - Preview released for [DexieCloud](https://dexie.org/cloud/)
 - Please register with **DexieCloud** and test the [ToDoSample](DexieNETCloudSample). The configuration script can be found here [configure-app.ps1](DexieNETCloudSample/Dexie/configure-app.ps1) (Windows) or here [configure-app.sh](DexieNETCloudSample/Dexie/configure-app.sh) (Nix - jq required).
 

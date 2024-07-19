@@ -34,6 +34,7 @@ namespace DNTGenerator.Matcher
         public static string SchemaAttributeName = DexieNETNamespace + "." + "SchemaAttribute";
         public static string CompoundIndexAttributeName = DexieNETNamespace + "." + "CompoundIndexAttribute";
         public static string DBNameAttributeName = DexieNETNamespace + "." + "DBNameAttribute";
+        public static string DBAddPushSupportPushAttribute = DexieNETNamespace + "." + "DBAddPushSupportAttribute";
 
         public static bool MatchDeclaration(this SyntaxNode node)
         {
@@ -93,7 +94,11 @@ namespace DNTGenerator.Matcher
         {
             return MatchType(symbol, DBNameAttributeName, compilation);
         }
-
+        
+        public static bool MatchDBAddPushSupportAttribute([NotNullWhen(true)] this INamedTypeSymbol? symbol, Compilation compilation)
+        {
+            return MatchType(symbol, DBAddPushSupportPushAttribute, compilation);
+        }
 
         public static bool MatchSystem([NotNullWhen(true)] this ISymbol? symbol)
         {

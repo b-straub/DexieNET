@@ -24,10 +24,6 @@ using JSException = Microsoft.JSInterop.JSException;
 
 namespace DexieNET
 {
-    public interface IDBStore
-    {
-    }
-
     public interface IDBBase
     {
         public static abstract IDBBase Create(IJSInProcessObjectReference module, IJSInProcessObjectReference reference, IJSInProcessObjectReference? cloud = null);
@@ -66,6 +62,7 @@ namespace DexieNET
     {
         public abstract Version Version(double versionNumber);
         public DexieJSObject? Cloud { get; }
+        public abstract bool HasPushSupport { get; }
         public abstract string[] UnsyncedTables { get; }
         internal DexieJSObject DBBaseJS { get; }
 
@@ -327,7 +324,7 @@ namespace DexieNET
 
         public static string Name(this DBBase dexie)
         {
-            return dexie.DBBaseJS.Module.Invoke<string>("Name");
+            return dexie.DBBaseJS.Module.Invoke<string>("Name", dexie.DBBaseJS.Reference);
         }
 
         public static double Version(this DBBase dexie)

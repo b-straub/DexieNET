@@ -24,7 +24,7 @@ import { SyncState } from "dexie-cloud-addon/dist/modern/types/SyncState";
 import { UserLogin } from "dexie-cloud-addon/dist/modern/db/entities/UserLogin";
 import { DBRealmRole, Invite } from "dexie-cloud-addon";
 import { PermissionChecker } from "dexie-cloud-addon/dist/modern/PermissionChecker";
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, fromEvent, map } from 'rxjs';
 import { PersistedSyncState } from "dexie-cloud-addon/dist/modern/db/entities/PersistedSyncState";
 
 let _uiInteractions: { [key: number]: DXCUserInteraction } = {};
@@ -36,9 +36,11 @@ export function UnSubscribeJSObservable(disposable: Subscription): void {
 
 export function DotNetObservable<T>(observable: Observable<T>, action: (input: T) => any, dotnetRef: any, voidObservable: boolean = false): Subscription {
 
+    const isVoidObservable = voidObservable;
+    
     return observable.subscribe({
         next: (v) => {
-            if (voidObservable || v != undefined) {
+            if (isVoidObservable || v != undefined) {
                 dotnetRef.invokeMethod('OnNext', action(v))
             }
         },
@@ -51,7 +53,7 @@ export function DotNetObservable<T>(observable: Observable<T>, action: (input: T
 export function SubscribeUserInteraction(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: DXCUserInteraction) => {
-        var type: number = -1;
+        let type: number = -1;
 
         const fieldType = (orgType: string): number => {
             switch (orgType) {
@@ -63,7 +65,7 @@ export function SubscribeUserInteraction(db: CloudDB, dotnetRef: any): Subscript
             }
         }
 
-        var field: { type: number, label: string | null, placeholder: string | null } | null = null;
+        let field: { type: number, label: string | null, placeholder: string | null } | null = null;
 
         switch (res.type) {
             case 'email':
@@ -88,7 +90,7 @@ export function SubscribeUserInteraction(db: CloudDB, dotnetRef: any): Subscript
         const alerts = Array<{ type: number, code: number, message: string, params: { [paramName: string]: string } }>();
 
         res.alerts.forEach(alert => {
-            var alertType: number = -1;
+            let alertType: number = -1;
 
             switch (alert.type) {
                 case 'info': alertType = 0; break;
@@ -97,7 +99,7 @@ export function SubscribeUserInteraction(db: CloudDB, dotnetRef: any): Subscript
                 default: throw "SubscribeUserInteraction, undefined alert type!";
             }
 
-            var messageCode: number = -1;
+            let messageCode: number = -1;
 
             switch (alert.messageCode) {
                 case 'OTP_SENT': messageCode = 0; break;
@@ -228,7 +230,7 @@ export function SubscribeUserLogin(db: CloudDB, dotnetRef: any): Subscription {
 
     const action = (res: UserLogin) => {
 
-        let convert = (o : any): any => Object.fromEntries(Object.keys(o).map(key => [key, o[key].toString()]));
+        let convert = (o: any): any => Object.fromEntries(Object.keys(o).map(key => [key, o[key].toString()]));
 
         const licenseType = (orgType: string): number => {
             switch (orgType) {
@@ -305,7 +307,7 @@ export function RejectInvite(key: string) {
 
 export function SubscribeRoles(db: CloudDB, dotnetRef: any): Subscription {
 
-    const action = (res: {[roleName: string]: DBRealmRole}) => {
+    const action = (res: { [roleName: string]: DBRealmRole }) => {
         return res;
     };
 

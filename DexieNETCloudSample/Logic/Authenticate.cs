@@ -4,6 +4,7 @@ using DexieCloudNET;
 using DexieNETCloudSample.Dialogs;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using RxMudBlazorLight.Extensions;
 
 namespace DexieNETCloudSample.Logic
 {
@@ -18,13 +19,12 @@ namespace DexieNETCloudSample.Logic
                         EmailData data = new(ui.Fields?.Placeholder);
 
                         var parameters = new DialogParameters { ["Item"] = data };
-                        var dialog = dialogService.Show<AuthenticateEMail>(ui.Title, parameters);
+                        var dialog = await dialogService.ShowAsync<AuthenticateEMail>(ui.Title, parameters);
 
                         var result = await dialog.Result;
-                        if (!result.Canceled)
+                        if (result.TryGet<EmailData>(out var newData))
                         {
-                            data = (EmailData)result.Data;
-                            UIParam emailParam = new(data.Email, ui.Type);
+                            UIParam emailParam = new(newData.Email, ui.Type);
                             db.SubmitUserInteraction(ui, emailParam);
                         }
                         else
@@ -39,13 +39,12 @@ namespace DexieNETCloudSample.Logic
                         OTPData data = new(ui.Alerts);
 
                         var parameters = new DialogParameters { ["Item"] = data };
-                        var dialog = dialogService.Show<AuthenticateOTP>(ui.Title, parameters);
+                        var dialog = await dialogService.ShowAsync<AuthenticateOTP>(ui.Title, parameters);
 
                         var result = await dialog.Result;
-                        if (!result.Canceled)
+                        if (result.TryGet<OTPData>(out var newData))
                         {
-                            data = (OTPData)result.Data;
-                            UIParam otpParam = new(data.OTP.ToUpperInvariant(), ui.Type);
+                            UIParam otpParam = new(newData.OTP.ToUpperInvariant(), ui.Type);
                             db.SubmitUserInteraction(ui, otpParam);
                         }
                         else
@@ -67,11 +66,11 @@ namespace DexieNETCloudSample.Logic
 
                         var currentUserId = ui.Alerts.First().Params["currentUserId"];
                         var parameters = new DialogParameters { ["Message"] = FormatAlertMessage(ui.Alerts).Value, ["ConfirmButton"] = "Logout", ["SuccessOnConfirm"] = false };
-                        var dialog = dialogService.Show<ConfirmDialog>($"{ui.Title} for '{currentUserId}'", parameters);
+                        var dialog = await dialogService.ShowAsync<ConfirmDialog>($"{ui.Title} for '{currentUserId}'", parameters);
 
                         var res = await dialog.Result;
 
-                        if (res.Canceled)
+                        if (!res.OK())
                         {
                             return false;
                         }

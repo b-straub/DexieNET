@@ -73,15 +73,10 @@
 
         var parameters = new DialogParameters
             { ["Message"] = message, ["ConfirmButton"] = button, ["SuccessOnConfirm"] = accept };
-        var dialog = DialogService.Show<ConfirmDialog>("Invitation", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Invitation", parameters);
 
         var res = await dialog.Result;
 
-        if (res.Canceled)
-        {
-            return false;
-        }
-
-        return true;
+        return res.OK();
     }
 }

@@ -34,7 +34,7 @@ namespace DexieNET
 
         public WhereClause(Table<T, I> table, IJSInProcessObjectReference? reference, params string[] keyArray) : base(table.TypeConverter, keyArray)
         {
-            if (reference is null && !table.TransactionCollectMode)
+            if (reference is null && !table.TransactionCollecting)
             {
                 throw new ArgumentNullException(nameof(reference));
             }

@@ -2,27 +2,30 @@
 
 module.exports = {
     mode: 'development',
-    entry: ['./src/dexieCloudNET.ts'],
+    entry: ['./dexieCloudNETServiceWorker.ts'],
     module: {
         rules: [
             {
-                test: /\.js$/,
-                enforce: "pre",
-                use: ["source-map-loader"],
+                test: /\.tsx?$/,
+                use: ["ts-loader"],
+                exclude: /node_modules/
             },
         ]
     },
     experiments: {
         outputModule: true
     },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
+      },
     devtool: 'source-map',
     output: {
         module: true,
         library: {
             type: 'module'
         },
-        path: path.resolve(__dirname, '../wwwroot/js'),
-        filename: 'dexieCloudNET.js',
+        path: path.resolve(__dirname, '../../wwwroot/js'),
+        filename: 'dexieCloudNETServiceWorker.js',
         publicPath: '_content/DexieCloudNET/js/'
     },
     optimization: {

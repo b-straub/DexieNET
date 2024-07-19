@@ -36,8 +36,8 @@ export function Delete(name: string): Promise<void> {
     return Dexie.delete(name);
 }
 
-export function Name(): string {
-    return Dexie.name;
+export function Name(db: DB): string {
+    return db.name;
 }
 
 export function Version(db: DB): number {

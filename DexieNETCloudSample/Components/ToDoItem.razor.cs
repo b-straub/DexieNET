@@ -2,6 +2,7 @@
 using DexieNETCloudSample.Logic;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using RxMudBlazorLight.Extensions;
 
 namespace DexieNETCloudSample.Components
 {
@@ -27,6 +28,12 @@ namespace DexieNETCloudSample.Components
             base.OnInitialized();
         }
 
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await Service.ClearBadgeItems();
+            await base.OnAfterRenderAsync(firstRender);
+        }
+
         private async Task<bool> ConfirmDelete(DeleteType type)
         {
             var message = type switch
@@ -38,21 +45,16 @@ namespace DexieNETCloudSample.Components
             };
 
             var parameters = new DialogParameters { ["Message"] = message };
-            var dialog = DialogService.Show<ConfirmDialog>("ToDoItem", parameters);
+            var dialog = await DialogService.ShowAsync<ConfirmDialog>("ToDoItem", parameters);
 
             var res = await dialog.Result;
-
-            if (res.Canceled)
-            {
-                return false;
-            }
-
-            return true;
+            
+            return res.OK();
         }
 
         private static string ColorForItem(ToDoDBItem item)
         {
-            return item.Completed ? $"color:{Colors.Grey.Default}" : "color:black";
+            return item.Completed ? $"color:{Colors.Gray.Default}" : "color:black";
         }
 
         private static string DateTimeForItem(ToDoDBItem item)

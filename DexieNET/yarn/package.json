@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@microsoft/dotnet-js-interop": "^8.0.0",
-    "dexie": "4.0.4"
+    "dexie": "4.0.8"
   },
   "devDependencies": {
     "css-loader": "^6.7.3",
@@ -22,6 +22,7 @@
     "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.2",
     "terser": "^5.30.4",
+    "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"

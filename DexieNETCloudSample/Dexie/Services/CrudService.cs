@@ -29,22 +29,17 @@ namespace DexieNETCloudSample.Dexie.Services
             DbService = serviceProvider.GetRequiredService<DexieCloudService>();
         }
 
-        protected override ValueTask ContextReadyAsync()
+        protected override async ValueTask ContextReadyAsync()
         {
             if (IsDBOpen)
             {
-                InitDB();
+                await InitDB();
             }
 
-            _dbDisposable = DbService.Subscribe(s =>
-            {
-                if (s.ID == DbService.State.ID && DbService.State.Value is DBState.Cloud)
-                {
-                    InitDB();
-                }
-            });
-
-            return ValueTask.CompletedTask;
+            _dbDisposable = DbService
+                .Where(s => s.ID == DbService.State.ID && DbService.State.Value is DBState.Cloud)
+                .Select(async s => await InitDB())
+                .Subscribe();
         }
 
 
@@ -67,9 +62,9 @@ namespace DexieNETCloudSample.Dexie.Services
 
         protected abstract Table<T, string> GetTable();
 
-        protected abstract LiveQuery<IEnumerable<T>> InitializeDB(ToDoDB db);
+        protected abstract Task<LiveQuery<IEnumerable<T>>> InitializeDB(ToDoDB db);
 
-        private void InitDB()
+        private async Task InitDB()
         {
             ArgumentNullException.ThrowIfNull(DbService.DB);
 
@@ -78,25 +73,26 @@ namespace DexieNETCloudSample.Dexie.Services
                 throw new InvalidOperationException("DB not disposed");
             }
 
-            var allItemsQuery = InitializeDB(DbService.DB);
+            var allItemsQuery = await InitializeDB(DbService.DB);
 
-            DBDisposeBag.Add(allItemsQuery.Subscribe(l =>
+            DBDisposeBag.Add(allItemsQuery
+                .Subscribe(l =>
             {
 #if DEBUG
                 Console.WriteLine($"CRUD new items: {l.Aggregate(string.Empty, (p, n) => p += n.ToString())}");
 #endif
                 ItemsState.Value = l;
+                ItemsChanged();
             }));
-
+            
             Permissions = GetTable().CreateUsePermissions();
-            DBDisposeBag.Add(Permissions.Subscribe(_ =>
-            {
-                StateHasChanged();
-            }));
+            DBDisposeBag.Add(Permissions.Subscribe(this));
         }
 
         protected virtual Task PostAddAction(string id) { return Task.CompletedTask; }
+        protected virtual Task PostUpdateAction(string id) { return Task.CompletedTask; }
         protected virtual Task PreDeleteAction(string id) { return Task.CompletedTask; }
         protected virtual Task PostDeleteAction(string id) { return Task.CompletedTask; }
+        protected virtual void ItemsChanged() { }
     }
 }

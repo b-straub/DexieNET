@@ -27,8 +27,6 @@
     [Parameter]
     public required ToDoDBItem? Item { get; init; }
 
-    void Cancel() => MudDialog?.Cancel();
-
     [NotNull]
     private ToDoItemService.ToDoItemItemInput? _scope { get; set; }
 

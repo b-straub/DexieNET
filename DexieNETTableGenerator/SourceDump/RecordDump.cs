@@ -18,8 +18,6 @@ limitations under the License.
 
 using DNTGenerator.Helpers;
 using DNTGenerator.Verifier;
-using Microsoft.CodeAnalysis;
-using System;
 using System.Reflection;
 using System.Text;
 
@@ -123,6 +121,26 @@ namespace DNTGenerator.SourceDump
         }}
 ");
 
+            if (records.HasPushSupport())
+            {
+                _ = sb.Append($@"
+        private Table<PushNotification, string> MakePushNotifications()
+        {{
+            if (_pushNotifications is not null)
+            {{
+                return _pushNotifications;
+            }}
+
+            {MakeEmptyConverter("PushNotification")};
+            var reference = _jso.Invoke<IJSInProcessObjectReference>(""table"", ""pushNotifications"");
+            var table = new Table<PushNotification, string>(this, reference, ""pushNotifications"", converter, new string[] {{""id""}}, Enumerable.Empty<string>().ToArray(), false, true);
+
+            _pushNotifications = table;
+            return table;
+        }}"
+);
+            }
+
             return sb.ToString();
         }
 
@@ -210,6 +228,7 @@ namespace DNTGenerator.SourceDump
     public class {dbName}: DBBase, IDBBase
     {{
         public static string Name => ""{dbName}"";
+        public override bool HasPushSupport => {records.HasPushSupport().ToString().ToLowerInvariant()};
         {records.DumpUnsyncedTables()}
 ");
             foreach (DBRecord record in records)
@@ -236,9 +255,17 @@ namespace DNTGenerator.SourceDump
         public Table<Member, string> Members => MakeMembers();
 
         private Table<Role, (string, string)>? _roles;
-        public Table<Role, (string, string)> Roles => MakeRoles();");
+        public Table<Role, (string, string)> Roles => MakeRoles();
+");
             }
-
+            
+            if (records.HasPushSupport())
+            {
+                _ = sb.Append($@"
+        private Table<PushNotification, string>? _pushNotifications;
+        public Table<PushNotification, string> PushNotifications => MakePushNotifications();");
+            }
+            
             _ = sb.Append($@"
 
         private readonly DexieJSObject _jso;
@@ -371,11 +398,18 @@ namespace DNTGenerator.SourceDump
             }
 
             sb.Append(sbInner.ToString().TrimEnd(", "));
-
-
-
-            _ = sb.Append($@"
-        }};");
+            
+            if (records.HasPushSupport())
+            {
+                _ = sb.Append($@"
+            ""pushInformations""
+        }};");       
+            }
+            else
+            {
+                _ = sb.Append($@"
+        }};");        
+            }
 
             return sb.ToString().TrimEnd();
         }
@@ -402,13 +436,13 @@ namespace DNTGenerator.SourceDump
                 {{ ""{StoreBaseName}"", ""{Schema}"" }},");
             }
 
-            /*if (records.HasCloudSync())
+            if (records.HasPushSupport())
             {
-                _ = sb.Append($@"
-                {{ ""realms"", ""@realmId"" }},
-                {{ ""members"", ""@id,[realmId+email],[userId+realmId],realmId"" }},
-                {{ ""roles"", ""[realmId+name]"" }}");
-            }*/
+                _ = sb.Append(@"
+                { ""pushSubscriptions"", ""id"" },
+                { ""pushInformations"", ""id"" },
+                { ""pushNotifications"", ""id"" }");
+            }
 
             _ = sb.Append($@"
             }};

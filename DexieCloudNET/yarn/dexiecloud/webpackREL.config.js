@@ -4,20 +4,29 @@ const RemovePlugin = require('remove-files-webpack-plugin');
 
 module.exports = {
     mode: 'production',
-    entry: ['./src/dexieCloudNET.ts'],
+    entry: ['./dexieCloudNET.ts'],
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                use: ["ts-loader"],
+                exclude: /node_modules/
+            },
         ]
     },
     experiments: {
         outputModule: true
     },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
+    },
+    devtool: 'source-map',
     output: {
         module: true,
         library: {
             type: 'module'
         },
-        path: path.resolve(__dirname, '../wwwroot/js'),
+        path: path.resolve(__dirname, '../../wwwroot/js'),
         filename: 'dexieCloudNET.js',
         publicPath: '_content/DexieCloudNET/js/*.*'
     },
@@ -30,7 +39,7 @@ module.exports = {
             before: {
                 allowRootAndOutside: true,
                 include: [
-                    path.resolve(__dirname, '../wwwroot/js')
+                    path.resolve(__dirname, '../../wwwroot/js')
                 ]
             }
         })

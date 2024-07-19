@@ -11,7 +11,7 @@ if [ ! -f "./dexie-cloud.json" ]; then
 fi
 
 echo "Adding demo users to your application..."
-npx dexie-cloud import dexie-cloud.json
+npx dexie-cloud import importfile.json
 
 URLS=$(jq -r '.profiles.https.applicationUrl' ../Properties/launchSettings.json)
 

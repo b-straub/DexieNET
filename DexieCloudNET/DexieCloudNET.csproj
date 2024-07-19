@@ -26,55 +26,68 @@
 
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="." />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="yarn\src\*.js" Pack="false" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Remove="yarn/package.json" />
-		<Content Remove="yarn/tsconfig.json" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="yarn/package.json">
+		<None Include="yarn\dexiecloud\package.json">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
+		<None Include="yarn\serviceworker\package.json">
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
 	<ItemGroup>
-		<TypeScriptCompile Include="yarn/tsconfig.json">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</TypeScriptCompile>
+		<Content Include="yarn\dexiecloud\*.js" Pack="false" />
+		<Content Include="yarn\serviceworker\*.js" Pack="false" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
-		<PackageReference Include="System.Reactive" Version="6.0.0" />
+		<Content Update="yarn/dexiecloud/package.json" Pack="false"/>
+		<Content Update="yarn/dexiecloud/tsconfig.json" Pack="false"/>
+		<Content Update="yarn/serviceworker/package.json" Pack="false"/>
+		<Content Update="yarn/serviceworker/tsconfig.json" Pack="false"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
+		<PackageReference Include="System.Reactive" Version="6.0.1" />
 		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
 	</ItemGroup>
 
 	<PropertyGroup>
 		<!-- File with mtime of last successful npm install -->
-		<YarnInstallStampFile>yarn/node_modules/.install-stamp</YarnInstallStampFile>
+		<YarnInstallStampFileSW>yarn/serviceworker/node_modules/.install-stamp</YarnInstallStampFileSW>
 		<Authors>Bernhard Straub</Authors>
 	</PropertyGroup>
 
-	<Target Name="YarnInstall" BeforeTargets="BeforeBuild" Inputs="yarn/package.json" Outputs="$(YarnInstallStampFile)">
-		<Exec Command="yarn install" WorkingDirectory="yarn" />
-		<Touch Files="$(YarnInstallStampFile)" AlwaysCreate="true" />
+	<Target Name="YarnInstallServiceWorker" BeforeTargets="BeforeBuild" Inputs="yarn/serviceworker/package.json" Outputs="$(YarnInstallStampFileSW)">
+		<Exec Command="yarn install" WorkingDirectory="yarn/serviceworker" />
+		<Touch Files="$(YarnInstallStampFileSW)" AlwaysCreate="true" />
 	</Target>
 
-	<Target Name="YarnCommandsDebug" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Debug'">
-		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
-		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn" />
+	<PropertyGroup>
+		<!-- File with mtime of last successful npm install -->
+		<YarnInstallStampFileCloud>yarn/dexiecloud/node_modules/.install-stamp</YarnInstallStampFileCloud>
+		<Authors>Bernhard Straub</Authors>
+	</PropertyGroup>
+
+	<Target Name="YarnInstallDexieCloud" BeforeTargets="BeforeBuild" Inputs="yarn/dexiecloud/package.json" Outputs="$(YarnInstallStampFileCloud)">
+		<Exec Command="yarn install" WorkingDirectory="yarn/dexiecloud" />
+		<Touch Files="$(YarnInstallStampFileCloud)" AlwaysCreate="true" />
 	</Target>
 
-	<Target Name="YarnCommandsRelease" AfterTargets="YarnInstall" Condition="'$(Configuration)' == 'Release'">
-		<Exec Command="yarn tsc" WorkingDirectory="yarn" />
-		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn" />
-		<Exec Command="yarn run buildSW" WorkingDirectory="yarn" />
+	<Target Name="YarnCommandsDebugDexieCloud" AfterTargets="YarnInstallDexieCloud" Condition="'$(Configuration)' == 'Debug'">
+		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn/dexiecloud" />
 	</Target>
 
+	<Target Name="YarnCommandsReleaseDexieCloud" AfterTargets="YarnInstallDexieCloud" Condition="'$(Configuration)' == 'Release'">
+		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn/dexiecloud" />
+	</Target>
+	
+	<Target Name="YarnCommandsDebugServiceworker" AfterTargets="YarnInstallServiceWorker" Condition="'$(Configuration)' == 'Debug'">
+		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn/serviceworker" />
+	</Target>
+
+	<Target Name="YarnCommandsReleaseServiceworker" AfterTargets="YarnInstallServiceWorker" Condition="'$(Configuration)' == 'Release'">
+		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn/serviceworker" />
+	</Target>
+	
 </Project>

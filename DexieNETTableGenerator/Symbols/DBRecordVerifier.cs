@@ -29,7 +29,7 @@ namespace DNTGenerator.Verifier
         public static IEnumerable<GeneratorDiagnostic> Verify(this DBRecord dBRecord, Compilation compilation)
         {
             List<GeneratorDiagnostic> diagnostics = new();
-            string[] reservedStoreNames = { "realms", "members", "roles" };
+            string[] reservedStoreNames = { "realms", "members", "roles", "pushSubscriptions" };
 
             bool missingPrimary = false;
 

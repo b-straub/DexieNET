@@ -18,9 +18,9 @@
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
                 <ToDoDBItemAddOrUpdate Service=@Service AddMode=@true Item=@null />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.Completed))
-                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteCompletedItems ExecuteAsyncCallback=@Service.DeleteCompletedItems />
+                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteCompletedItems ExecuteAsyncCallback=@(Service.DeleteItems(true)) />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
-                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@Service.ClearItems />
+                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@(Service.DeleteItems(false)) />
             </MudHidden>
         </CardHeaderActions>
     </MudCardHeader>
@@ -29,9 +29,9 @@
             <MudContainer Class="ml-n3 mb-8">
                 <ToDoDBItemAddOrUpdate Service=@Service AddMode=@true Item=@null />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.Completed))
-                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteCompletedItems ExecuteAsyncCallback=@Service.DeleteCompletedItems />
+                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteCompletedItems ExecuteAsyncCallback=@(Service.DeleteItems(true)) />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
-                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@Service.ClearItems />
+                               StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanClearItems ExecuteAsyncCallback=@(Service.DeleteItems(false)) />
             </MudContainer>
         </MudHidden>
         <MudTable T="ToDoDBItem" Items=@(Service.ToDoItems) Dense="true">

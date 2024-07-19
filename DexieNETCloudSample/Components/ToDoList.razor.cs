@@ -4,6 +4,7 @@ using DexieNETCloudSample.Logic;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RxBlazorLightCore;
+using RxMudBlazorLight.Extensions;
 
 namespace DexieNETCloudSample.Components
 {
@@ -11,13 +12,13 @@ namespace DexieNETCloudSample.Components
     {
         [Inject]
         public required IDialogService DialogService { get; init; }
-
+        
         private enum DeleteType
         {
             All,
             One
         }
-
+        
         private Func<IStateCommandAsync, Task> AddOrUpdate(ToDoDBList? item) => async commandAsync =>
         {
             ToDoListData data = item is null ? new ToDoListData(string.Empty) : new ToDoListData(item.Title);
@@ -25,16 +26,15 @@ namespace DexieNETCloudSample.Components
             bool canUpdateTitle = item is null || Service.CanUpdate(item, i => i.Title);
 
             var parameters = new DialogParameters { ["List"] = data, ["CanUpdateTitle"] = canUpdateTitle };
-            var dialog = DialogService.Show<AddToDoList>(item is null ? "Add ToDoList" : "Edit ToDoList", parameters);
+            var dialog = await DialogService.ShowAsync<AddToDoList>(item is null ? "Add ToDoList" : "Edit ToDoList", parameters);
 
             var result = await dialog.Result;
 
-            if (!result.Canceled)
+            if (result.TryGet<ToDoListData>(out var newData))
             {
-                data = (ToDoListData)result.Data;
-                ToDoDBList list = item is null ?
-                    ToDoListService.CreateList(data.Title) :
-                    ToDoListService.CreateList(data.Title, item);
+                var list = item is null ?
+                    ToDoListService.CreateList(newData.Title) :
+                    ToDoListService.CreateList(newData.Title, item);
 
                 if (item is null)
                 {
@@ -57,16 +57,21 @@ namespace DexieNETCloudSample.Components
             };
 
             var parameters = new DialogParameters { ["Message"] = message };
-            var dialog = DialogService.Show<ConfirmDialog>("ToDoList", parameters);
+            var dialog = await DialogService.ShowAsync<ConfirmDialog>("ToDoList", parameters);
 
             var res = await dialog.Result;
+            
+            return res.OK();
+        }
 
-            if (res.Canceled)
-            {
-                return false;
-            }
-
-            return true;
+        private string GetListOpenCloseIcon(ToDoDBList list)
+        {
+            return Service.IsListItemsOpen(list) ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight;
+        }
+        
+        private string GetShareOpenCloseIcon(ToDoDBList list)
+        {
+            return Service.IsListShareOpen(list) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share;
         }
     }
 }

@@ -1,36 +1,81 @@
-﻿@inherits RxBLServiceSubscriber<DexieCloudService>
+﻿@using System.Text.Json
+@inherits RxBLServiceSubscriber<DexieCloudService>
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
 
 <MudStack Row=@true>
-    <MudIcon Icon=@GetStatusIcon(Service.SyncState) />
-    <MudIcon Icon=@GetPhaseIcon(Service.SyncState) />
+    <MudIcon Icon=@GetStatusIcon(Service.SyncState)/>
+    <MudIcon Icon=@GetPhaseIcon(Service.SyncState)/>
 </MudStack>
-<MudSpacer />
-<HandleLicense />
-<MudSpacer />
-<HandleLogin />
-<MudSpacer />
+<MudSpacer/>
+<HandleLicense/>
+<MudSpacer/>
+<HandleLogin/>
+<MudSpacer/>
+<HandlePush/>
+<MudSpacer/>
 
 @code {
+
     [Inject]
     public required IDialogService DialogService { get; init; }
 
     [Inject]
     public required IConfiguration Configuration { get; init; }
 
-    protected override async Task OnServiceStateHasChangedAsync(ServiceChangeReason cr)
+    protected override async Task OnServiceStateHasChangedAsync(IEnumerable<ServiceChangeReason> crList)
     {
-        switch (cr.ID)
+        foreach (var cr in crList)
         {
-            case var value when value == Service.UIInteraction.ID:
-                if (Service.DB is not null && Service.UIInteraction.HasValue())
-                {
-                    bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction.Value, DialogService);
-                    if (Service.UIInteraction.Value.Type is UIInteraction.InteractionType.LOGOUT_CONFIRMATION && res)
+            switch (cr.ID)
+            {
+                case var value when value == Service.UIInteraction.ID:
+                    if (Service.DB is not null && Service.UIInteraction.HasValue())
                     {
-                        await Service.DB.Logout(true);
+                        bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction.Value, DialogService);
+                        if (Service.UIInteraction.Value.Type is UIInteraction.InteractionType.LOGOUT_CONFIRMATION && res)
+                        {
+                            await Service.DB.Logout(true);
+                        }
+                    }
+
+                    break;
+                case var value when value == Service.ServiceWorkerNotificationState.ID:
+                {
+                    if (Service.DB is not null && Service.ServiceWorkerNotificationState.HasValue())
+                    {
+                        switch (Service.ServiceWorkerNotificationState.Value.State)
+                        {
+                            case ServiceWorkerState.UpdateFound:
+                                ShowUpdate();
+                                break;
+                            case ServiceWorkerState.ReloadPage:
+                                NavigationManager.NavigateTo(NavigationManager.Uri, true);
+                                break;
+                            case ServiceWorkerState.PushNotifications:
+                                if (Service.ServiceWorkerNotificationState.Value.Clicked > 0)
+                                {
+                                    await ShowNewNotifications("Clicked Notification", Service.ServiceWorkerNotificationState.Value.ChangeSource);
+                                }
+
+                                if (Service.ServiceWorkerNotificationState.Value.ChangeSource is not ChangeSource.ServiceWorkerClicked)
+                                {
+                                    await ShowBadgeNotifications("Badge Notification", Service.ServiceWorkerNotificationState.Value.ChangeSource);
+                                }
+                                break;
+                        }
                     }
                 }
-                break;
+                    break;
+                case var value when value == Service.NotificationsState.ID:
+                    if (Service.DB is not null && Service.NotificationsState.Value == NotificationState.UnsubscribedRemote)
+                    {
+                        ShowUnsubscribedRemote();
+                    }
+
+                    break;
+            }
         }
 
         if (Service.State.Value is DBState.Closed)
@@ -41,10 +86,18 @@
 
     private async Task OpenDB()
     {
-        await Service.OpenDB();
-        ArgumentNullException.ThrowIfNull(Service.DB);
+        try
+        {
+            await Service.OpenDB();
+            ArgumentNullException.ThrowIfNull(Service.DB);
 
-        Service.ConfigureCloud(Configuration.GetDBUrl());
+            await Service.ConfigureCloud(Configuration.GetDBUrl(), Configuration.GetApplicationServerKey());
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            throw;
+        }
     }
 
     private string GetPhaseIcon(IState<SyncState?> state)
@@ -85,4 +138,129 @@
             _ => throw new ArgumentOutOfRangeException(nameof(state.Value.Status))
         };
     }
+
+    private Snackbar? _updateSnackBar;
+
+    private void ShowUpdate()
+    {
+        _updateSnackBar = Snackbar.Add(
+            @<div>
+                <MudStack>
+                    <MudText Typo=@Typo.body2>"An update for this application is available!"</MudText>
+                    <MudButton Variant=@Variant.Filled Color=@Color.Warning OnClick=@UpdateApp>Update</MudButton>
+                </MudStack>
+            </div>
+            , Severity.Success, config =>
+            {
+                config.RequireInteraction = true;
+                config.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+            });
+    }
+
+    private Snackbar? _subscribeSnackBar;
+
+    private void ShowUnsubscribedRemote()
+    {
+        _subscribeSnackBar = Snackbar.Add(
+            @<div>
+                <MudStack>
+                    <MudText Typo=@Typo.body2>"The notificaton subscription has been cancelled remotely!"</MudText>
+                    <MudButton Variant=@Variant.Filled Color=@Color.Warning OnClick=@SubscribePush>Subscribe</MudButton>
+                </MudStack>
+            </div>
+            , Severity.Success, config =>
+            {
+                config.RequireInteraction = true;
+                config.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+            });
+    }
+
+    private string ChangeSourceName(ChangeSource source) =>
+        source switch
+        {
+            ChangeSource.Push => "Push",
+            ChangeSource.Visibility => "Visibility",
+            ChangeSource.ServiceWorkerGeneric => "ServiceWorkerGeneric",
+            ChangeSource.ServiceWorkerClicked => "ServiceWorkerClicked",
+            ChangeSource.ServiceWorkerBadge => "ServiceWorkerBadge",
+            _ => throw new ArgumentException("Invalid string value for ChangeSource!", nameof(source)),
+        };
+
+    private async Task ShowNewNotifications(string message, ChangeSource changeSource)
+    {
+        ArgumentNullException.ThrowIfNull(Service.DB);
+
+        var pushEvents = (await Service.DB.GetClickedEvents()).OrderByDescending(e => e.TimeStampUtc).ToArray();
+        var last = true;
+
+        foreach (var pushEvent in pushEvents)
+        {
+            if (pushEvent.PayloadJson is null)
+            {
+                continue;
+            }
+
+            var pushPayload = JsonSerializer.Deserialize(pushEvent.PayloadJson,
+                PushPayloadConfigContext.Default.PushPayload);
+
+            ArgumentNullException.ThrowIfNull(pushPayload);
+
+            Snackbar.Add($"{message} from {ChangeSourceName(changeSource)}, ListID {pushPayload.ListID}, ItemID {pushPayload.ItemID}", Severity.Info, config => { config.RequireInteraction = false; });
+
+            if (!last) continue;
+
+            await Service.OpenList(pushPayload.ListID);
+            last = false;
+        }
+
+        var keysToDelete = pushEvents.Select(pushEvent => pushEvent.ID).ToArray();
+        await Service.DB.DeleteClickedEvents(keysToDelete);
+    }
+
+    private async Task ShowBadgeNotifications(string message, ChangeSource changeSource)
+    {
+        ArgumentNullException.ThrowIfNull(Service.DB);
+
+        var pushEvents = (await Service.DB.GetBadgeEvents()).ToArray();
+
+        if (pushEvents.Length > 0 || changeSource is ChangeSource.ServiceWorkerBadge)
+        {
+            Snackbar.Add($"{message} from {ChangeSourceName(changeSource)} - {pushEvents.Length} Badges", Severity.Info, config => { config.RequireInteraction = false; });
+
+            foreach (var pushEvent in pushEvents)
+            {
+                if (pushEvent.PayloadJson is null)
+                {
+                    continue;
+                }
+
+                var pushPayload = JsonSerializer.Deserialize(pushEvent.PayloadJson,
+                    PushPayloadConfigContext.Default.PushPayload);
+
+                ArgumentNullException.ThrowIfNull(pushPayload);
+
+                var toDoItem = await Service.DB.ToDoDBItems.Get(pushPayload.ItemID);
+                if ((toDoItem?.Completed).True())
+                {
+                    await Service.OpenList(pushPayload.ListID);
+                    break;
+                }
+            }
+        }
+    }
+
+    private async Task UpdateApp()
+    {
+        Snackbar.Remove(_updateSnackBar);
+        ArgumentNullException.ThrowIfNull(Service.DB);
+        await Service.DB.UpdateServiceWorker();
+    }
+
+    private async Task SubscribePush()
+    {
+        Snackbar.Remove(_subscribeSnackBar);
+        ArgumentNullException.ThrowIfNull(Service.DB);
+        await Service.SubscribePush();
+    }
+
 }

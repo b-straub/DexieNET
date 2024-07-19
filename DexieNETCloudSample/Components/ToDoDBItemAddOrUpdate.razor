@@ -1,4 +1,5 @@
-﻿@inherits RxBLStateSubscriber<ToDoItemService>
+﻿@using RxMudBlazorLight.Extensions
+@inherits RxBLStateSubscriber<ToDoItemService>
 
 @if (AddMode)
 {
@@ -22,13 +23,16 @@ else
     private async Task ShowAddUpdateDialog(IStateCommandAsync _)
     {
         var parameters = new DialogParameters { ["Item"] = Item, ["Service"] = Service };
-        var dialog = DialogService.Show<AddToDoItem>(AddMode ? "Add ToDo" : "Edit ToDo", parameters);
+        var dialog = await DialogService.ShowAsync<AddToDoItem>(AddMode ? "Add ToDo" : "Edit ToDo", parameters);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (result.OK())
         {
-            var scope = (ToDoItemService.ToDoItemItemInput)result.Data;
-            await scope.SubmitAsync();
+            var scope = (ToDoItemService.ToDoItemItemInput?)result.Data;
+            if (scope is not null)
+            {
+                await scope.SubmitAsync();
+            }
         }
     }
 }

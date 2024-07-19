@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SQLite" Version="0.5.1" />
+        <PackageReference Include="Bitwarden.Sdk" Version="0.0.1-alpha" Condition="'$(Configuration)' == 'Debug'"/>
+        <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.7.0" />
+        <PackageReference Include="Quartz" Version="3.11.0" />
+        <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.11.0" />
+        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.11.0" />
+        <PackageReference Include="Quartz.Plugins" Version="3.11.0" />
+        <PackageReference Include="Quartz.Serialization.Json" Version="3.11.0" />
+        <PackageReference Include="System.Text.Json" Version="8.0.4" />
+        <PackageReference Include="WebPush" Version="1.0.12"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\DexieCloudNET\DexieCloudNET\Cloud\DexieCloudNETRESTApi.cs">
+            <Link>DexieCloudNETRESTApi.cs</Link>
+        </Compile>
+        <Compile Include="..\DexieCloudNET\DexieCloudNET\Cloud\DexieCloudNETUI.cs">
+            <Link>DexieCloudNETUI.cs</Link>
+        </Compile>
+        <Compile Include="..\DexieCloudNET\DexieCloudNET\Cloud\DexieCloudNETUser.cs">
+            <Link>DexieCloudNETUser.cs</Link>
+        </Compile>
+        <Compile Include="..\DexieCloudNET\DexieCloudNET\Cloud\DexieCloudNETJson.cs">
+            <Link>DexieCloudNETJson.cs</Link>
+        </Compile>
+        <Compile Include="..\DexieCloudNET\DexieCloudNET\Cloud\DexieCloudNETShared.cs">
+            <Link>DexieCloudNETShared.cs</Link>
+        </Compile>
+        <Compile Include="..\DexieNET\DexieNET\Base\DexieNETAttributes.cs">
+            <Link>DexieNETAttributes.cs</Link>
+        </Compile>
+        <Compile Include="..\DexieNET\DexieNET\Base\DexieNETShared.cs">
+            <Link>DexieNETShared.cs</Link>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="database\secrets.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

@@ -39,8 +39,8 @@ export async function InitStoragePersistence(): Promise<number> {
   persisted the storage, false if not, and undefined if the API is not present.
 */
 export async function Persist(): Promise<Boolean> {
-    return await navigator.storage && navigator.storage.persist ?
-        navigator.storage.persist() :
+    return navigator.storage && navigator.storage.persist ?
+        await navigator.storage.persist() :
         false;
 }
 
