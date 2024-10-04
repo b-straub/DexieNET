@@ -111,7 +111,7 @@ async function doPush(event: PushEvent) {
 
 async function doNotificationClick(event: NotificationEvent) {
     try {
-        //event.preventDefault();
+        event.preventDefault();
         event.notification.close();
 
         const pushEvent: PushEventRecord | undefined = event.notification.data;
@@ -152,9 +152,9 @@ async function doNotificationClick(event: NotificationEvent) {
             }
         }
        
-        //await navigator.locks.request(DexieCloudNETClickLock, async () => {
+        await navigator.locks.request(DexieCloudNETClickLock, async () => {
             await storeClickedEvent(pushEvent);
-        //});
+        });
 
     } catch (error) {
         await ShowError(error);
