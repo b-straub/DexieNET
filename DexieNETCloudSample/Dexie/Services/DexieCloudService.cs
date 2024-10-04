@@ -4,6 +4,7 @@ using DexieCloudNET;
 //using DexieNETCloudSample.Aministration;
 using RxBlazorLightCore;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DexieNETCloudSample.Dexie.Services;
@@ -86,6 +87,7 @@ namespace DexieNETCloudSample.Logic
     }
 
     public record ColorTheme(bool Light);
+
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
     [JsonSerializable(typeof(ColorTheme))]
     public partial class ColorThemeConfigContext : JsonSerializerContext
@@ -141,7 +143,7 @@ namespace DexieNETCloudSample.Logic
         public IState<NotificationState> NotificationsState { get; }
         public IStateObserverAsync LogoutObserver { get; }
         public string? CloudURL { get; private set; }
-        public ILogger Logger { get; }
+        private ILogger Logger { get; }
 
         private readonly IDexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
@@ -226,12 +228,12 @@ namespace DexieNETCloudSample.Logic
                 Logger.LogDebug("SyncCompleteObservable {VALUE}", c);
             }));
             
-            var colorThemeSettings = await DB.Settings.Get(Settings.ColorThemeKey);
+            /*var colorThemeSettings = await DB.Settings.Get(Settings.ColorThemeKey);
             if (colorThemeSettings is null)
             {
                 var settings = Settings.CreateColorTheme(LightMode.Value);
                 await DB.Settings.Add(settings);
-            }
+            }*/
             
             var settingsQuery = DB.LiveQuery(async () =>
             {
@@ -267,14 +269,18 @@ namespace DexieNETCloudSample.Logic
                     ServiceWorkerNotificationState.Value = swn;
                 }));
 
-            State.Value = DBState.Cloud;
-
+            _DBServicesDisposeBag.Add(this.AsChangedObservable(State)
+                .Where(s => s is DBState.Cloud)
+                .Select(async s => await InitDB())
+                .Subscribe());
+            
 #if DEBUG
             Logger.LogDebug("We're using dexie-cloud-addon {VALUE}", DB.AddOnVersion());
             var cloudOptions = DB.Options();
             var schema = DB.Schema();
             var usingServiceWorker = DB.UsingServiceWorker();
 #endif
+            State.Value = DBState.Cloud;
         }
 
         public async ValueTask<string?> Login(LoginInformation loginInformation)
@@ -306,12 +312,74 @@ namespace DexieNETCloudSample.Logic
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && !_DBServicesDisposeBag.IsDisposed)
+            if (disposing)
             {
-                _DBServicesDisposeBag.Dispose();
+                if (!_DBServicesDisposeBag.IsDisposed)
+                {
+                    _DBServicesDisposeBag.Dispose(); 
+                }
+                _dexieFactory.Dispose();
             }
 
             base.Dispose(disposing);
+        }
+
+        private async Task InitDB()
+        {
+            ArgumentNullException.ThrowIfNull(DB);
+            
+            var colorThemeSettings = await DB.Settings.Get(Settings.ColorThemeKey);
+            if (colorThemeSettings is null)
+            {
+                var settings = Settings.CreateColorTheme(LightMode.Value);
+                await DB.Settings.Add(settings);
+            }
+       
+            var lq = DB.LiveQuery(async () =>
+            {
+                return await DB.ToDoDBItems.Where(i => i.Completed, false).ToArray();
+            });
+
+            _DBServicesDisposeBag.Add(lq.SubscribeAsyncConcat(async items =>
+            {
+                await ClearBadgeItems(items);
+            }));
+        }
+        
+        private async Task ClearBadgeItems(IEnumerable<ToDoDBItem> items)
+        {
+            ArgumentNullException.ThrowIfNull(DB);
+
+            var badgeEvents = await DB.GetBadgeEvents();
+
+            if (badgeEvents.Length == 0)
+            {
+                return;
+            }
+
+            var badgeEventKeys = badgeEvents.Select(pushEvent =>
+            {
+                if (pushEvent.PayloadJson == null)
+                {
+                    return null;
+                }
+
+                var pushPayload = JsonSerializer.Deserialize(pushEvent.PayloadJson,
+                    PushPayloadConfigContext.Default.PushPayload);
+
+                return pushPayload == null ? null : Tuple.Create(pushEvent.ID, pushPayload.ItemID);
+            }).Where(p => p is not null).Select(p => p!).ToArray();
+
+            var itemsKeys = items.Select(i => i.ID).ToArray();
+            List<long> keysToDelete = [];
+            keysToDelete.AddRange(badgeEventKeys.Where(be => !itemsKeys.Contains(be.Item2)).Select(be => be.Item1));
+
+            if (keysToDelete.Count == 0)
+            {
+                return;
+            }
+
+            await DB.DeleteBadgeEvents(keysToDelete.ToArray());
         }
     }
 }

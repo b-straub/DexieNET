@@ -12,7 +12,7 @@ namespace DexieNETCloudSample.Dexie.Services
     {
         public const string PushIcon = "checklist-512.png";
 
-        public string Tag => ListID + ItemID;
+        public string Tag => ItemID;
     }
     
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
@@ -250,53 +250,6 @@ namespace DexieNETCloudSample.Dexie.Services
                 default:
                     throw new ArgumentOutOfRangeException(nameof(reason), reason, null);
             }
-        }
-
-        private bool _dirty;
-        protected override void ItemsChanged()
-        {
-            _dirty = true;
-        }
-
-        public async Task ClearBadgeItems()
-        {
-            if (_db is null || !_dirty)
-            {
-                return;
-            }
-
-            _dirty = false;
-            var badgeEvents = await _db.GetBadgeEvents();
-
-            if (badgeEvents.Length == 0)
-            {
-                return;
-            }
-            
-            var badgeEventKeys = badgeEvents.Select(pushEvent =>
-            {
-                if (pushEvent.PayloadJson == null)
-                {
-                    return null;
-                }
-
-                var pushPayload = JsonSerializer.Deserialize(pushEvent.PayloadJson,
-                    PushPayloadConfigContext.Default.PushPayload);
-                
-                return pushPayload == null ? null : Tuple.Create(pushEvent.ID, pushPayload.ListID + pushPayload.ItemID);
-                
-            }).Where(p => p is not null).Select(p => p!).ToArray();
-
-            var itemsKeys = (await _db.ToDoDBItems.Where(i => i.Completed, false).ToArray()).Select(i => i.ListID + i.ID).ToArray();
-            List<long> keysToDelete = [];
-            keysToDelete.AddRange(badgeEventKeys.Where(be => !itemsKeys.Contains(be.Item2)).Select(be => be.Item1));
-
-            if (keysToDelete.Count == 0)
-            {
-                return;
-            }
-            
-            await _db.DeleteBadgeEvents(keysToDelete.ToArray());
         }
     }
 }

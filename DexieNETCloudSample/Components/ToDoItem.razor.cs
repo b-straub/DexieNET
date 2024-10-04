@@ -27,13 +27,7 @@ namespace DexieNETCloudSample.Components
             Service.CurrentList.Value = List;
             base.OnInitialized();
         }
-
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            await Service.ClearBadgeItems();
-            await base.OnAfterRenderAsync(firstRender);
-        }
-
+        
         private async Task<bool> ConfirmDelete(DeleteType type)
         {
             var message = type switch

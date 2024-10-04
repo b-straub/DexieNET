@@ -31,13 +31,13 @@ namespace DexieNETCloudSample.Dexie.Services
 
         protected override async ValueTask ContextReadyAsync()
         {
-            if (IsDBOpen)
+            if (DbService.State.Value is DBState.Cloud)
             {
                 await InitDB();
             }
 
-            _dbDisposable = DbService
-                .Where(s => s.ID == DbService.State.ID && DbService.State.Value is DBState.Cloud)
+            _dbDisposable = DbService.AsChangedObservable(DbService.State)
+                .Where(s => s is DBState.Cloud)
                 .Select(async s => await InitDB())
                 .Subscribe();
         }
@@ -82,7 +82,6 @@ namespace DexieNETCloudSample.Dexie.Services
                 Console.WriteLine($"CRUD new items: {l.Aggregate(string.Empty, (p, n) => p += n.ToString())}");
 #endif
                 ItemsState.Value = l;
-                ItemsChanged();
             }));
             
             Permissions = GetTable().CreateUsePermissions();
@@ -93,6 +92,5 @@ namespace DexieNETCloudSample.Dexie.Services
         protected virtual Task PostUpdateAction(string id) { return Task.CompletedTask; }
         protected virtual Task PreDeleteAction(string id) { return Task.CompletedTask; }
         protected virtual Task PostDeleteAction(string id) { return Task.CompletedTask; }
-        protected virtual void ItemsChanged() { }
     }
 }
