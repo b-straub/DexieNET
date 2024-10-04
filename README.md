@@ -10,11 +10,11 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 
 ##  News
 
+- Released [DexieCloud](https://dexie.org/cloud/)
 - Added Push support. Please check the [ReadMe](DexieNETCloudPushServer/README.md)
-- Preview released for [DexieCloud](https://dexie.org/cloud/)
+  - Clicking on notifications currently does not work reliable for iOS [notificationclick events in serviceworkers not firing](https://bugs.webkit.org/show_bug.cgi?id=268797)
+  - Clicking on notifications currently does not work reliable for Chrome on MacOS 15
 - Please register with **DexieCloud** and test the [ToDoSample](DexieNETCloudSample). The configuration script can be found here [configure-app.ps1](DexieNETCloudSample/Dexie/configure-app.ps1) (Windows) or here [configure-app.sh](DexieNETCloudSample/Dexie/configure-app.sh) (Nix - jq required).
-
-
 - Published a new helper library [RxBlazorLight](https://github.com/b-straub/RxBlazorLight)  
 
 ---
