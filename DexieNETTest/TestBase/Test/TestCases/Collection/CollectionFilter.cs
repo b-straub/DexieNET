@@ -14,12 +14,11 @@ namespace DexieNETTest.TestBase.Test
             var persons = DataGenerator.GetPersons();
             await table.BulkAdd(persons);
 
-            var oldBuddysData = persons.Where(p => p.Tags.Contains("Buddy") && p.Age > 30);
-
+            var oldBuddysData = persons.Where(p => p.Tags.Contains("Buddy") && p.Age > 30); 
             var col = table.ToCollection().Filter(p => p.Tags.Contains("Buddy")).Filter(p => p.Age > 30);
             var oldBuddys = await col.ToArray();
             var oldBuddysCount = await col.Count();
-
+        
             if (!oldBuddys.SequenceEqual(oldBuddysData, new PersonComparer(true)))
             {
                 throw new InvalidOperationException("Items not identical.");

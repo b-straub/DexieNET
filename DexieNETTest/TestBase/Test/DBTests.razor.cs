@@ -54,19 +54,19 @@ namespace DexieNETTest.TestBase.Test
 
                     _db.Version(1).Stores();
 
-                    SecondDB? _dbsecond = null;
+                    SecondDB? dbsecond = null;
 
                     if (string.IsNullOrEmpty(TestName))
                     {
                         await DexieNETServiceSecond.DexieNETFactory.Delete();
-                        _dbsecond = await DexieNETServiceSecond.DexieNETFactory.Create();
+                        dbsecond = await DexieNETServiceSecond.DexieNETFactory.Create();
 
-                        if (_dbsecond is null)
+                        if (dbsecond is null)
                         {
                             throw new InvalidOperationException("Can not create second database.");
                         }
 
-                        _dbsecond.Version(1).Stores();
+                        dbsecond.Version(1).Stores();
                     }
 
                     var testFactory = new TestFactory(_db);
@@ -83,7 +83,7 @@ namespace DexieNETTest.TestBase.Test
                     _running = true;
                     await InvokeAsync(StateHasChanged);
 
-                    await foreach (var testResult in RunTestsAsync(_dbsecond, Benchmark))
+                    await foreach (var testResult in RunTestsAsync(dbsecond, Benchmark))
                     {
                         _testResults.Add(testResult);
                         await InvokeAsync(StateHasChanged);
@@ -108,6 +108,8 @@ namespace DexieNETTest.TestBase.Test
         public void Dispose()
         {
             _db?.Close();
+            DexieNETService?.DexieNETFactory.Dispose();
+            DexieNETServiceSecond?.DexieNETFactory.Dispose();
         }
 
         public void Cancel()
