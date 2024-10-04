@@ -18,31 +18,33 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander 
 */
 
-import { liveQuery, Observable, Subscription } from 'dexie';
+import {liveQuery} from 'dexie';
+import {from, Observable, Subscription} from 'rxjs';
 
 const liveQueryObservables: { [id: number]: Observable<any>; } = {};
 const liveQuerySubscription: { [id: number]: Subscription; } = {};
 
 // LiveQuery
-export function LiveQuery(dotnetRef: any, id: number): void {
-    const query = liveQuery(() => { dotnetRef.invokeMethod('LiveQueryCallback'); });
-    liveQueryObservables[id] = query;
-}
+export function LiveQuerySubscribe(dotnetRef: any): number {
 
-export function LiveQuerySubscribe(id: number): void {
+    const id = Date.now();
+    liveQueryObservables[id] = from(liveQuery(async () => {
+        return await dotnetRef.invokeMethodAsync('LiveQueryCallback');
+    }));
 
-    if (id in liveQueryObservables) {
-        let query = liveQueryObservables[id];
-        let subscription = query.subscribe();
-        liveQuerySubscription[id] = subscription;
-    }
+    liveQuerySubscription[id] = liveQueryObservables[id].subscribe({
+        next: (v) => dotnetRef.invokeMethod('OnNext', v),
+        error: (e) => dotnetRef.invokeMethod('OnError', e.message),
+        complete: () => dotnetRef.invokeMethod('OnCompleted')
+    });
+
+    return id;
 }
 
 export function LiveQueryUnsubscribe(id: number): void {
 
     if (id in liveQuerySubscription) {
-        let subscription = liveQuerySubscription[id];
-        subscription.unsubscribe();
+        liveQuerySubscription[id].unsubscribe();
         delete liveQuerySubscription[id];
     }
 }

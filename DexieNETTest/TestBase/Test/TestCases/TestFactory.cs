@@ -41,6 +41,7 @@
             _tests.Add(("General", new Reverse(db)));
             _tests.Add(("General", new CompoundPrimary(db)));
             _tests.Add(("General", new LiveQueryTest(db)));
+            _tests.Add(("General", new LiveQueryWriteTest(db)));
             _tests.Add(("Playground", new Playground(db)));
             // Table
             _tests.Add(("Table", new ClearCount(db)));

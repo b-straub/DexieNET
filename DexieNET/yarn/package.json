@@ -13,7 +13,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@microsoft/dotnet-js-interop": "^8.0.0",
-    "dexie": "4.0.8"
+    "dexie": "4.0.8",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "css-loader": "^6.7.3",

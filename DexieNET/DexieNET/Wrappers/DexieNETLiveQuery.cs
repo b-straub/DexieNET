@@ -25,16 +25,16 @@ using System.Reactive.Subjects;
 
 namespace DexieNET
 {
-    public sealed class LiveQuery<T> : IObservable<T>, IDisposable
+    public sealed class LiveQuery<T> : IObservable<T>
     {
-        internal int ID { get; }
-        internal DotNetObjectReference<LiveQuery<T>> DotnetRef { get; }
-
+        private DotNetObjectReference<LiveQuery<T>>? dotnetRef;
+        private long? _id;
+        
         private readonly DBBase _db;
         private readonly Func<ValueTask<T>> _query;
         private readonly BehaviorSubject<T?> _changedSubject;
         private readonly IObservable<T> _queryObservable;
-
+        
         internal LiveQuery(DBBase db, Func<ValueTask<T>> query)
         {
             _db = db;
@@ -45,10 +45,7 @@ namespace DexieNET
                 .Where(t => t is not null)
                 .Select(t => t!)
                 .DistinctUntilChanged()
-                .Finally(LiveQueryUnsubscribe);
-
-            DotnetRef = DotNetObjectReference.Create(this);
-            ID = GetHashCode();
+                .Finally(Unsubscribe);
         }
 
         public UseLiveQuery<T> UseLiveQuery(params IObservable<Unit>[] observables)
@@ -57,38 +54,42 @@ namespace DexieNET
         }
 
         [JSInvokable]
-        public async ValueTask LiveQueryCallback()
-        {
-            _db.LiveQueryRunning = true;
-
-            try
-            {
-                var result = await _query();
-                _changedSubject.OnNext(result);
-            }
-            catch (Exception ex)
-            {
-                _changedSubject.OnError(ex);
-            }
-
-            _db.LiveQueryRunning = false;
-        }
-
-        public async Task<T> ExecuteQuery()
+        public async ValueTask<T> LiveQueryCallback()
         {
             return await _query();
         }
 
+        [JSInvokable]
+        public void OnNext(T value)
+        {
+            _changedSubject.OnNext(value);
+        }
+
+        [JSInvokable]
+        public void OnCompleted()
+        {
+            _changedSubject.OnCompleted();
+        }
+
+        [JSInvokable]
+        public void OnError(string error)
+        {
+            _changedSubject.OnError(new InvalidOperationException(error));
+        }
+
         public IDisposable Subscribe(IObserver<T> observer)
         {
-            bool liveQuerySubscribe = !_changedSubject.HasObservers;
+            var liveQuerySubscribe = !_changedSubject.HasObservers;
 
+            dotnetRef ??= DotNetObjectReference.Create(this);
+            
             if (liveQuerySubscribe)
             {
+                _id = _db.DBBaseJS.Module.Invoke<long>("LiveQuerySubscribe", dotnetRef);
 #if DEBUG
-                Console.WriteLine($"LiveQuery subscribe: {ID}");
+                Console.WriteLine($"LiveQuery subscribe: {_id}");
 #endif
-                _db.DBBaseJS.Module.InvokeVoid("LiveQuerySubscribe", ID);
+                
                 return _changedSubject.Value is null ?
                     _queryObservable.Subscribe(observer) :
                     _queryObservable.Skip(1).Subscribe(observer); // LiveQuerySubscribe invokes initial query
@@ -97,20 +98,19 @@ namespace DexieNET
             return _queryObservable.Subscribe(observer); ;
         }
 
-        private void LiveQueryUnsubscribe()
+        private void Unsubscribe()
         {
             if (!_changedSubject.HasObservers)
             {
 #if DEBUG
-                Console.WriteLine($"LiveQuery unsubscribe: {ID}");
+                Console.WriteLine($"LiveQuery unsubscribe: {_id}");
 #endif
-                _db.DBBaseJS.Module.InvokeVoid("LiveQueryUnsubscribe", ID);
+                _db.DBBaseJS.Module.InvokeVoid("LiveQueryUnsubscribe", _id);
+                _id = null;
+                
+                dotnetRef?.Dispose();
+                dotnetRef = null;
             }
-        }
-
-        public void Dispose()
-        {
-            DotnetRef.Dispose();
         }
     }
 
@@ -129,13 +129,13 @@ namespace DexieNET
             Observable
                 .Merge(observables)
                 .StartWith(Unit.Default)
-                .Finally(Dispose);
+                .Finally(Unsubscribe);
         }
 
-        private void Dispose()
+        private void Unsubscribe()
         {
             _lqDisposable?.Dispose();
-            _liveQuery.Dispose();
+            _lqDisposable = null;
         }
 
         public IDisposable Subscribe(IObserver<T> observer)

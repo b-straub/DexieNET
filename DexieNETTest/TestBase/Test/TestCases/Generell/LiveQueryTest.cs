@@ -64,7 +64,6 @@ namespace DexieNETTest.TestBase.Test
 
         public override async ValueTask<string?> RunTest()
         {
-            var comparer = new PersonComparer(true);
             var disposeBag = new CompositeDisposable();
             var disposeSubject = new BehaviorSubject<int>(0);
             string? firstError = null;
@@ -86,7 +85,7 @@ namespace DexieNETTest.TestBase.Test
                 }
                 return values;
             });
-
+            
             var observableS = DB.LiveQuery(async () =>
             {
                 var values = await tableStudents.ToArray();
@@ -96,7 +95,7 @@ namespace DexieNETTest.TestBase.Test
                 }
                 return values;
             });
-
+            
             var observableSP = DB.LiveQuery(async () =>
             {
                 Student? student = null;
@@ -106,7 +105,7 @@ namespace DexieNETTest.TestBase.Test
 
                 return persons.Where(p => (int?)p.Id == student?.Id).Select(p => p.Age);
             });
-
+            
             int executionCountP = 0;
 
             var disposableP = observableP.Subscribe(values =>
