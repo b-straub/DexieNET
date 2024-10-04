@@ -24,10 +24,12 @@ using DexieNET;
 
 namespace DexieCloudNET
 {
-    public sealed class DexieCloudNETFactory<T> : IDexieNETFactory<T>, IAsyncDisposable where T : IDBBase
+    public sealed class DexieCloudNETFactory<T> : IDexieNETFactory<T> where T : IDBBase
     {
-        private readonly Lazy<Task<IJSInProcessObjectReference>> _moduleTask;
-        private readonly Lazy<Task<IJSInProcessObjectReference>> _cloudTask;
+        private IJSInProcessObjectReference? _module;
+        private IJSInProcessObjectReference? _cloud;
+        
+        private readonly IJSRuntime _jsRuntime;
         public DexieCloudNETFactory(IJSRuntime jsRuntime)
         {
             if (!OperatingSystem.IsBrowser())
@@ -35,36 +37,29 @@ namespace DexieCloudNET
                 throw new InvalidOperationException("This IndexedDB wrapper is only designed for Webassembly usage!");
             }
 
-            _moduleTask = new(() => jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
-               "import", @"./_content/DexieNET/js/dexieNET.js").AsTask());
-
-            _cloudTask = new(() => jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
-               "import", @"./_content/DexieCloudNET/js/dexieCloudNET.js").AsTask());
+            _jsRuntime = jsRuntime;
         }
 
         public async ValueTask<T> Create()
         {
-            var module = await _moduleTask.Value;
-            var cloud = await _cloudTask.Value;
+            _module ??= await _jsRuntime.InvokeAsync<IJSInProcessObjectReference>("import", @"./_content/DexieNET/js/dexieNET.js");
+            _cloud ??= await _jsRuntime.InvokeAsync<IJSInProcessObjectReference>("import", @"./_content/DexieCloudNET/js/dexieCloudNET.js");
+            
+            var reference = await _cloud.InvokeAsync<IJSInProcessObjectReference>("CreateCloud", T.Name);
 
-            var reference = await cloud.InvokeAsync<IJSInProcessObjectReference>("CreateCloud", T.Name);
-
-            return (T)T.Create(module, reference, cloud);
+            return (T)T.Create(_module, reference, _cloud);
         }
 
         public async ValueTask Delete()
         {
-            var module = await _moduleTask.Value;
-            await module.InvokeVoidAsync("Delete", T.Name);
+            _module ??= await _jsRuntime.InvokeAsync<IJSInProcessObjectReference>("import", @"./_content/DexieNET/js/dexieNET.js");
+            await _module.InvokeVoidAsync("Delete", T.Name);
         }
-
-        public async ValueTask DisposeAsync()
+        
+        public void Dispose()
         {
-            if (_moduleTask.IsValueCreated)
-            {
-                var module = await _moduleTask.Value;
-                await module.DisposeAsync();
-            }
+            _cloud?.Dispose();
+            _module?.Dispose();
         }
     }
 
@@ -77,8 +72,7 @@ namespace DexieCloudNET
     {
         public static IServiceCollection AddDexieCloudNET<T>(this IServiceCollection services) where T : DBBase, IDBBase
         {
-            services.AddSingleton<IDexieNETService<T>, DexieCloudNETService<T>>();
-            return services;
+            return services.AddSingleton<IDexieNETService<T>, DexieCloudNETService<T>>();
         }
     }
 }

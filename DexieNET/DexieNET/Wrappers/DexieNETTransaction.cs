@@ -47,7 +47,7 @@ namespace DexieNET
     {
     }
 
-    public sealed class Transaction : DexieJSObject, IDisposable
+    public sealed class Transaction : DexieJSObject
     {
         public DBBase DB { get; }
         public bool Collecting { get; private set; }
@@ -72,6 +72,11 @@ namespace DexieNET
             _mode = TAMode.Read;
             _parallel = parallel;
             _tables = [];
+        }
+        
+        ~Transaction()
+        {   
+            _dotnetRef.Dispose();
         }
 
         internal bool AddTableInfo((string Name, TAMode Mode) tableInfo)
@@ -200,12 +205,6 @@ namespace DexieNET
                     Abort(ex.Message);
                 }
             }
-        }
-
-        public override void Dispose()
-        {
-            _dotnetRef.Dispose();
-            Dispose();
         }
     }
 }

@@ -14,7 +14,7 @@ namespace DexieNETTest.TestBase.Components
         [property: Index] int Age
     ) : IDBStore;
 
-    public partial class DBComponentTest : IAsyncDisposable
+    public partial class DBComponentTest
     {
         private IEnumerable<Friend> _friends = Enumerable.Empty<Friend>();
         private IEnumerable<Friend> _friendsSecond = Enumerable.Empty<Friend>();
@@ -54,21 +54,6 @@ namespace DexieNETTest.TestBase.Components
 
                 _friendsQuery = Dexie.LiveQuery(async () =>
                 {
-                    if (CreateByTransaction)
-                    {
-                        await Dexie.Transaction(async ta =>
-                        {
-                            await Dexie.Friends.Add(new Components.Friend("TA1", 55));
-
-                            await Dexie.Transaction(async _ =>
-                            {
-                                await Dexie.Friends.Add(new Components.Friend("TA2", 57));
-                            }, TAType.TopLevel);
-                        });
-
-                        CreateByTransaction = false; // caution reset to prevent endless recursion
-                    }
-
                     var f = await Dexie.Friends.ToArray();
                     return f;
                 });
@@ -114,11 +99,26 @@ namespace DexieNETTest.TestBase.Components
 
         private void Subscribe()
         {
-            var disposable = _friendsQuery?.Subscribe(values =>
+            var disposable = _friendsQuery?.Select(async values =>
             {
+                if (CreateByTransaction)
+                {
+                    await Dexie.Transaction(async ta =>
+                    {
+                        await Dexie.Friends.Add(new Components.Friend("TA1", 55));
+
+                        await Dexie.Transaction(async _ =>
+                        {
+                            await Dexie.Friends.Add(new Components.Friend("TA2", 57));
+                        }, TAType.TopLevel);
+                    });
+
+                    CreateByTransaction = false; // caution reset to prevent endless recursion
+                }
+
                 _friends = values;
-                InvokeAsync(StateHasChanged);
-            });
+                await InvokeAsync(StateHasChanged);
+            }).Subscribe();
 
             if (disposable is not null)
             {
@@ -165,24 +165,20 @@ namespace DexieNETTest.TestBase.Components
             InvokeAsync(StateHasChanged);
         }
 
-        public async ValueTask DisposeAsync()
+        protected override void Dispose(bool disposing)
         {
-            await DisposeAsyncCore().ConfigureAwait(false);
-
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual ValueTask DisposeAsyncCore()
-        {
-            if (!_disposeBag.IsDisposed)
+            if (disposing)
             {
-                _disposeBag.Dispose();
+                if (!_disposeBag.IsDisposed)
+                {
+                    _disposeBag.Dispose();
+                }
+
+                _hasDataDisposable?.Dispose();
+                _hasDataDisposable = null;
             }
 
-            _hasDataDisposable?.Dispose();
-            _hasDataDisposable = null;
-
-            return ValueTask.CompletedTask;
+            base.Dispose(disposing);
         }
     }
 }

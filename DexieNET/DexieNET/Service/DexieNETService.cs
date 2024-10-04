@@ -23,7 +23,7 @@ using Microsoft.JSInterop;
 
 namespace DexieNET
 {
-    public interface IDexieNETFactory<T>
+    public interface IDexieNETFactory<T> : IDisposable
     {
         public ValueTask<T> Create();
         public ValueTask Delete();
@@ -43,8 +43,7 @@ namespace DexieNET
     {
         public static IServiceCollection AddDexieNET<T>(this IServiceCollection services) where T : DBBase, IDBBase
         {
-            services.AddSingleton<IDexieNETService<T>, DexieNETService<T>>();
-            return services;
+            return services.AddSingleton<IDexieNETService<T>, DexieNETService<T>>();
         }
     }
 }

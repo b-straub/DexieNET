@@ -24,17 +24,28 @@ using System.Text.Json.Serialization;
 
 namespace DexieNET
 {
-    public class DexieJSObject(IJSInProcessObjectReference module, IJSInProcessObjectReference? reference) : IJSInProcessObjectReference
+    public class DexieJSObject(IJSInProcessObjectReference module, IJSInProcessObjectReference? reference)
     {
         public IJSInProcessObjectReference Module { get; } = module;
         public IJSInProcessObjectReference? Reference { get; private set; } = reference;
 
+        ~DexieJSObject()
+        {   
+            Reference?.Dispose();
+        }
+        
         public void SetReference(IJSInProcessObjectReference? reference)
         {
+            if (Reference is not null && Reference.Equals(reference))
+            {
+                return;
+            }
+            
+            Reference?.Dispose();
             Reference = reference;
         }
 
-        public virtual ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, params object?[]? args)
         {
             if (Reference is null)
             {
@@ -44,7 +55,7 @@ namespace DexieNET
             return Reference.InvokeAsync<TValue>(identifier, args);
         }
 
-        public ValueTask InvokeVoidAsync(string identifier, object?[]? args)
+        public ValueTask InvokeVoidAsync(string identifier, params object?[]? args)
         {
             if (Reference is null)
             {
@@ -54,7 +65,8 @@ namespace DexieNET
             return Reference.InvokeVoidAsync(identifier, args);
         }
 
-        public virtual ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Mimic base API")]
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, params object?[]? args)
         {
             if (Reference is null)
             {
@@ -65,7 +77,7 @@ namespace DexieNET
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Mimic base API")]
-        public ValueTask InvokeVoidAsync(string identifier, CancellationToken cancellationToken, object?[]? args)
+        public ValueTask InvokeVoidAsync(string identifier, CancellationToken cancellationToken, params object?[]? args)
         {
             if (Reference is null)
             {
@@ -84,38 +96,15 @@ namespace DexieNET
 
             return Reference.Invoke<TValue>(identifier, args);
         }
-
-        public virtual void Dispose()
+        
+        public void InvokeVoid(string identifier, params object?[]? args)
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            await DisposeAsyncCore().ConfigureAwait(false);
-
-            Dispose(disposing: false);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
+            if (Reference is null)
             {
-                Reference?.Dispose();
-                Reference = null;
+                throw new InvalidDataException("Set reference first.");
             }
-        }
-
-        protected virtual async ValueTask DisposeAsyncCore()
-        {
-            if (Reference is not null)
-            {
-                await Reference.DisposeAsync().ConfigureAwait(false);
-            }
-
-            Reference = null;
+            
+            Reference.InvokeVoid(identifier, args);
         }
     }
 

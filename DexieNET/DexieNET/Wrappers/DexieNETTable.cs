@@ -39,7 +39,7 @@ namespace DexieNET
     {
     }
 
-    public class Table<T, I> : ITable where T : IDBStore
+    public sealed class Table<T, I> : ITable where T : IDBStore
     {
         public Expression<Func<T, I>> PrimaryKey => _ => DefaultPrimaryKey;
         public string Name { get; }

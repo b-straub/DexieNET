@@ -41,7 +41,7 @@ public class JSObservableKey<T>(DBBase db, string jsSubscribeFunction, string js
     }
 }
 
-public class JSObservable<T> : IObservable<T>, IDisposable
+public class JSObservable<T> : IObservable<T>
 {
     public record TimeOut(TimeSpan TimeSpan, T Value);
     
@@ -49,7 +49,7 @@ public class JSObservable<T> : IObservable<T>, IDisposable
     protected DBBase DB { get; }
     protected string? JsPostUnsubscribeFunction { get; }
 
-    private readonly DotNetObjectReference<JSObservable<T>> _dotnetRef;
+    private DotNetObjectReference<JSObservable<T>>? _dotnetRef;
     private readonly BehaviorSubject<T?> _subject;
     private readonly string _jsSubscribeFunction;
 
@@ -75,7 +75,6 @@ public class JSObservable<T> : IObservable<T>, IDisposable
     protected JSObservable(DBBase db, string jsSubscribeFunction, string? jsPostUnsubscribeFunction = null, TimeOut? timeout = null, params object?[] args)
     {
         DB = db;
-        _dotnetRef = DotNetObjectReference.Create(this);
         _subject = new(default);
         _jsSubscribeFunction = jsSubscribeFunction;
         JsPostUnsubscribeFunction = jsPostUnsubscribeFunction;
@@ -104,29 +103,16 @@ public class JSObservable<T> : IObservable<T>, IDisposable
 #if DEBUG
         Console.WriteLine($"JSObservable subscribe: {_jsSubscribeFunction}");
 #endif
-        var disposable = _observable
-            .Subscribe(observer);
-
-        var args = new List<object?>() { DB.Cloud.Reference, _dotnetRef };
-        args.AddRange(_args);
-
-        _jsSubscription ??= DB.Cloud.Module.Invoke<IJSInProcessObjectReference>(_jsSubscribeFunction, [.. args]);
-        return disposable;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
+        _dotnetRef ??= DotNetObjectReference.Create(this);
+        
+        if (_jsSubscription is null)
         {
-            Unsubscribe();
-            _dotnetRef.Dispose();
+            var args = new List<object?>() { DB.Cloud.Reference, _dotnetRef };
+            args.AddRange(_args);
+            _jsSubscription = DB.Cloud.Module.Invoke<IJSInProcessObjectReference>(_jsSubscribeFunction, [.. args]);
         }
+   
+        return _observable.Subscribe(observer);
     }
 
     [JSInvokable]
@@ -173,12 +159,19 @@ public class JSObservable<T> : IObservable<T>, IDisposable
         if (_jsSubscription is not null)
         {
             DB.Cloud.Module.InvokeVoid("UnSubscribeJSObservable", _jsSubscription);
+            _jsSubscription.Dispose();
             _jsSubscription = null;
             PostUnsubscribe();
 
 #if DEBUG
             Console.WriteLine($"JSObservable unsubscribe");
 #endif
+        }
+
+        if (!_subject.HasObservers)
+        {
+            _dotnetRef?.Dispose();
+            _dotnetRef = null;
         }
     }
 }

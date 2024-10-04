@@ -45,6 +45,11 @@ namespace DexieCloudNET
             DotnetRef = DotNetObjectReference.Create(this);
             _fetchTokens = fetchTokens;
         }
+
+        ~DBCloudFetchTokens()
+        {
+            DotnetRef.Dispose();
+        }
     }
 
     public static partial class DBCloudExtensions

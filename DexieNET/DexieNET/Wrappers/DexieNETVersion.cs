@@ -22,7 +22,7 @@ using Microsoft.JSInterop;
 
 namespace DexieNET
 {
-    public sealed class Version : IDisposable
+    public sealed class Version
     {
         internal Dictionary<string, string> Stores { get; }
 
@@ -44,6 +44,11 @@ namespace DexieNET
             Transaction = new(db, false);
             Stores = stores;
             UpdateStores = updateStores;
+        }
+        
+        ~Version()
+        {   
+            _dotnetRef.Dispose();
         }
 
         [JSInvokable]
@@ -71,11 +76,6 @@ namespace DexieNET
             var reference = VersionJS.Module.Invoke<IJSInProcessObjectReference>("Upgrade", VersionJS.Reference, _dotnetRef);
 
             VersionJS.SetReference(reference);
-        }
-
-        public void Dispose()
-        {
-            _dotnetRef.Dispose();
         }
     }
 

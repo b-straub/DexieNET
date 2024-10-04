@@ -4,15 +4,15 @@ using DexieNET;
 
 namespace DexieCloudNET.Component
 {
-    public class DexieCloudNET<T>(string cloudURL) : ComponentBase where T : DBBase, IDBBase
+    public class DexieCloudNET<T>(string cloudURL) : OwningComponentBase where T : DBBase, IDBBase
     {
         [Inject]
         protected IDexieNETService<T>? DexieNETService { get; set; }
 
         [NotNull] // OnInitializedAsync will throw
-        public T? Dexie { get; private set; }
+        protected T? Dexie { get; set; }
 
-        protected async override Task OnInitializedAsync()
+        protected override async Task OnInitializedAsync()
         {
             if (DexieNETService is not null)
             {
@@ -29,6 +29,15 @@ namespace DexieCloudNET.Component
             }
 
             await base.OnInitializedAsync();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                DexieNETService?.DexieNETFactory.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

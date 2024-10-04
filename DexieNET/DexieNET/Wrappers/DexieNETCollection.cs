@@ -24,7 +24,7 @@ using System.Text.Json;
 
 namespace DexieNET
 {
-    internal sealed class CollectionJS<T, I, Q> : IDisposable where T : IDBStore
+    internal sealed class CollectionJS<T, I, Q>  where T : IDBStore
     {
         public DotNetObjectReference<CollectionJS<T, I, Q>> DotnetRef { get; }
 
@@ -41,6 +41,11 @@ namespace DexieNET
             DotnetRef = DotNetObjectReference.Create(this);
             _filterList = [];
             _untilList = [];
+        }
+        
+        ~CollectionJS()
+        {   
+            DotnetRef.Dispose();
         }
 
         public CollectionJS(CollectionJS<T, I, Q> other)
@@ -92,7 +97,7 @@ namespace DexieNET
             _modify = modify;
         }
 
-        internal bool Filter(T item)
+        private bool Filter(T item)
         {
             return _filterList.Aggregate(true, (current, next) => current && next(item));
         }
@@ -185,33 +190,26 @@ namespace DexieNET
             var modified = _modify(item).FromObject();
             return modified;
         }
-
-        public void Dispose()
-        {
-            DotnetRef.Dispose();
-        }
     }
 
-    public class Collection<T, I, Q> : WhereClause<T, I, Q> where T : IDBStore
+    public sealed class Collection<T, I, Q> : WhereClause<T, I, Q> where T : IDBStore
     {
         internal CollectionJS<T, I, Q> CollectionJS { get; }
 
         public Collection(Table<T, I> table, IJSInProcessObjectReference? reference, params string[] keyArray) : base(table, reference, keyArray)
         {
             CollectionJS = new();
-            JSObject.SetReference(reference);
         }
 
-        public Collection(WhereClause<T, I, Q> whereClause, IJSInProcessObjectReference? reference) : base(whereClause.Table, whereClause.JSObject?.Reference, whereClause.Keys)
+        public Collection(WhereClause<T, I, Q> whereClause, IJSInProcessObjectReference? reference) : base(whereClause.Table, reference, whereClause.Keys)
         {
             CollectionJS = new();
-            JSObject.SetReference(reference);
         }
 
-        public Collection(Collection<T, I, Q> other, IJSInProcessObjectReference? reference) : base(other.Table, reference, other.Keys)
+        public Collection(Collection<T, I, Q> other, IJSInProcessObjectReference? reference) : base(other.Table,
+            reference, other.Keys)
         {
             CollectionJS = new(other.CollectionJS);
-            JSObject.SetReference(reference);
         }
 
         internal void SetJSO(IJSInProcessObjectReference reference)

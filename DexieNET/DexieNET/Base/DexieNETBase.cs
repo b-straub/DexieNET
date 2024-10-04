@@ -65,8 +65,6 @@ namespace DexieNET
         public abstract bool HasPushSupport { get; }
         public abstract string[] UnsyncedTables { get; }
         internal DexieJSObject DBBaseJS { get; }
-
-        internal bool LiveQueryRunning { get; set; } = false;
         internal Transaction? CurrentTransaction { get; set; }
         internal Stack<Transaction> TransactionCollectStack { get; }
         internal Dictionary<int, Transaction> TransactionDict { get; }
@@ -87,7 +85,7 @@ namespace DexieNET
                 Cloud = new(cloud, reference);
             }
         }
-
+        
         public Persistance Persistance()
         {
             return new Persistance(DBBaseJS.Module, null);
@@ -100,40 +98,47 @@ namespace DexieNET
         }
     }
 
-    public sealed class DexieNETFactory<T> : IDexieNETFactory<T>, IAsyncDisposable where T : IDBBase
+    public sealed class DexieNETFactory<T> : IDexieNETFactory<T> where T : IDBBase
     {
-        private readonly Lazy<Task<IJSInProcessObjectReference>> _moduleTask;
+        private IJSInProcessObjectReference? _module;
+        private readonly  IJSRuntime _jsRuntime;
+        
         public DexieNETFactory(IJSRuntime jsRuntime)
         {
             if (!OperatingSystem.IsBrowser())
             {
                 throw new InvalidOperationException("This IndexedDB wrapper is only designed for Webassembly usage!");
             }
-            _moduleTask = new(() => jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
-               "import", @"./_content/DexieNET/js/dexieNET.js").AsTask());
+
+            _jsRuntime = jsRuntime;
+        }
+
+        ~DexieNETFactory()
+        {
+            _module?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            _module?.Dispose();
+            _module = null;
         }
 
         public async ValueTask<T> Create()
         {
-            var module = await _moduleTask.Value;
-            var reference = await module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name);
+            _module ??= await _jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
+                "import", @"./_content/DexieNET/js/dexieNET.js");
+            
+            var reference = await _module.InvokeAsync<IJSInProcessObjectReference>("Create", T.Name);
 
-            return (T)T.Create(module, reference, null);
+            return (T)T.Create(_module, reference);
         }
 
         public async ValueTask Delete()
         {
-            var module = await _moduleTask.Value;
-            await module.InvokeVoidAsync("Delete", T.Name);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            if (_moduleTask.IsValueCreated)
-            {
-                var module = await _moduleTask.Value;
-                await module.DisposeAsync();
-            }
+            _module ??= await _jsRuntime.InvokeAsync<IJSInProcessObjectReference>(
+                "import", @"./_content/DexieNET/js/dexieNET.js");
+            await _module.InvokeVoidAsync("Delete", T.Name);
         }
     }
 
@@ -141,9 +146,7 @@ namespace DexieNET
     {
         public static LiveQuery<T> LiveQuery<T>(this DBBase db, Func<ValueTask<T>> query)
         {
-            var lq = new LiveQuery<T>(db, query);
-            db.DBBaseJS.Module.InvokeVoid("LiveQuery", lq.DotnetRef, lq.ID);
-            return lq;
+            return new LiveQuery<T>(db, query);
         }
 
         public static async Task Transaction(this DBBase db, Func<Transaction, Task> create, TAType type = TAType.Nested)
@@ -153,7 +156,8 @@ namespace DexieNET
 
             try
             {
-                if (db.TransactionState is not TAState.Collecting && db.TransactionState is not TAState.ParallelCollecting)
+                if (db.TransactionState is not TAState.Collecting &&
+                    db.TransactionState is not TAState.ParallelCollecting)
                 {
                     if (topLevel)
                     {
@@ -211,14 +215,7 @@ namespace DexieNET
                             if (db.TransactionDict.TryGetValue(create.Method.GetHashCode(), out Transaction? t))
                             {
                                 db.CurrentTransaction = t;
-                                if (db.LiveQueryRunning)
-                                {
-                                    t.Commit(create);
-                                }
-                                else
-                                {
-                                    await t.CommitAsync(create);
-                                }
+                                await t.CommitAsync(create);
                             }
                             else
                             {
@@ -250,6 +247,7 @@ namespace DexieNET
                                 {
                                     db.TransactionTasks.Push(db.CurrentTransaction.CommitAsync(create).AsTask());
                                 }
+
                                 db.CurrentTransaction.StopCollect();
 
                                 db.TransactionCollectStack.Pop();
@@ -289,22 +287,18 @@ namespace DexieNET
                     {
                         throw new TransactionException(message);
                     }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                else
-                {
+ 
                     throw;
                 }
+
+                throw;
             }
         }
 
         public static async ValueTask<T> Open<T>(this T dexie) where T : DBBase, IDBBase
         {
             var reference = await dexie.DBBaseJS.InvokeAsync<IJSInProcessObjectReference>("open");
-            return (T)T.Create(dexie.DBBaseJS.Module, reference, dexie.Cloud);
+            return (T)T.Create(dexie.DBBaseJS.Module, reference, dexie.Cloud?.Reference);
         }
 
         public static bool IsOpen(this DBBase dexie)

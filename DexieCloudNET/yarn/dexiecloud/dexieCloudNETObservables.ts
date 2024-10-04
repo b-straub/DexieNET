@@ -24,7 +24,7 @@ import { SyncState } from "dexie-cloud-addon/dist/modern/types/SyncState";
 import { UserLogin } from "dexie-cloud-addon/dist/modern/db/entities/UserLogin";
 import { DBRealmRole, Invite } from "dexie-cloud-addon";
 import { PermissionChecker } from "dexie-cloud-addon/dist/modern/PermissionChecker";
-import { Observable, Subscription, fromEvent, map } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { PersistedSyncState } from "dexie-cloud-addon/dist/modern/db/entities/PersistedSyncState";
 
 let _uiInteractions: { [key: number]: DXCUserInteraction } = {};

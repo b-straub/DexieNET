@@ -26,15 +26,10 @@ import {DotNetObservable} from "./dexieCloudNETObservables";
 import {UserLogin} from "dexie-cloud-addon";
 import {liveQuery} from 'dexie';
 import {
-    BadgeEventsTableName,
-    ClickedEventsTableName,
-    DexieCloudNETBroadcastIn,
-    DexieCloudNETBroadcastOut, DexieCloudNETClickLock, DexieCloudNETReloadPage,
-    DexieCloudNETSkipWaiting,
-    DexieCloudNETSubscriptionChanged,
-    DexieCloudNETUpdateFound,
-    PushEventRecord,
-    PushEventsDB,
+    BadgeEventsTableName, ClickedEventsTableName,
+    DexieCloudNETBroadcastIn, DexieCloudNETBroadcastOut, DexieCloudNETClickLock, DexieCloudNETReloadPage,
+    DexieCloudNETSkipWaiting, DexieCloudNETSubscriptionChanged, DexieCloudNETUpdateFound,
+    PushEventRecord, PushEventsDB,
 } from "../serviceworker/dexieCloudNETSWBroadcast";
 
 interface PushInformation {
@@ -107,7 +102,6 @@ let worker = await navigator.serviceWorker.getRegistration();
 let SubscriptionCountSubscription: Subscription | undefined = undefined;
 let SubscriptionClickedSubscription: Subscription | undefined = undefined;
 let SubscriptionBadgeSubscription: Subscription | undefined = undefined;
-let clickLock = false;
 
 export async function SubscribePush(): Promise<boolean> {
     if (!CurrentDB) {
@@ -390,26 +384,24 @@ async function SubscribeLiveQueries(subscriptionId: string) {
 }
 
 async function CheckPushEvents(changeSource: ChangeSource) {
-    if (clickLock) {
-        return;
-    }
-    
-    const clickedEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(ClickedEventsTableName);
-    const clickedEventsCount = await clickedEventsTable.count();
-    console.log(`New ClickedEvents from ${ChangeSource[changeSource]}: ${clickedEventsCount}`)
+    await navigator.locks.request(DexieCloudNETClickLock, async () => {
+        const clickedEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(ClickedEventsTableName);
+        const clickedEventsCount = await clickedEventsTable.count();
+        console.log(`New ClickedEvents from ${ChangeSource[changeSource]}: ${clickedEventsCount}`)
 
-    const badgeEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(BadgeEventsTableName);
-    const badgeEventsCount = await badgeEventsTable.count();
-    console.log(`New BadgeEvents from ${ChangeSource[changeSource]}: ${badgeEventsCount}`)
+        const badgeEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(BadgeEventsTableName);
+        const badgeEventsCount = await badgeEventsTable.count();
+        console.log(`New BadgeEvents from ${ChangeSource[changeSource]}: ${badgeEventsCount}`)
 
-    if (clickedEventsCount > 0 || badgeEventsCount > 0 || changeSource === ChangeSource.ServiceWorkerBadge) {
-        ServiceWorkerNotificationSubject.next({
-            state: ServiceWorkerState.PushNotifications,
-            clicked: clickedEventsCount,
-            badge: badgeEventsCount,
-            changeSource: changeSource
-        });
-    }
+        if (clickedEventsCount > 0 || badgeEventsCount > 0 || changeSource === ChangeSource.ServiceWorkerBadge) {
+            ServiceWorkerNotificationSubject.next({
+                state: ServiceWorkerState.PushNotifications,
+                clicked: clickedEventsCount,
+                badge: badgeEventsCount,
+                changeSource: changeSource
+            });
+        }
+    });
 }
 
 export function UpdateServiceWorker() {
@@ -435,13 +427,15 @@ export async function GetBadgeEvents(): Promise<PushEventRecord[]> {
     return badgeEventsTable.toArray();
 }
 
-export async function DeleteBadgeEvents(ids: number[]): Promise<void> {
+export async function DeleteBadgeEvents(keysToDelete: number[]): Promise<void> {
+    console.log(`DeleteBadgeEvents: ${keysToDelete.length}`)
+    //BroadcastOut.postMessage({type: DexieCloudNETDeleteBadgeEvents, keysToDelete: keysToDelete});
     const badgeEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(BadgeEventsTableName);
-    await badgeEventsTable.bulkDelete(ids);
+    await badgeEventsTable.bulkDelete(keysToDelete);
 
     if (navigator.setAppBadge) {
         const count = await badgeEventsTable.count();
-        navigator.setAppBadge(count).then();
+        await navigator.setAppBadge(count);
     }
 }
 
@@ -502,10 +496,6 @@ BroadcastIn.onmessage = async (event) => {
                     badge: 0,
                     changeSource: ChangeSource.ServiceWorkerGeneric
                 });
-                break;
-            case DexieCloudNETClickLock:
-                console.log(`DexieCloudNETClickLock: ${String(event.data.lock)}`);
-                clickLock = event.data.lock;
                 break;
         }
     }

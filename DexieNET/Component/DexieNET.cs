@@ -3,16 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DexieNET.Component
 {
-    public class DexieNET<T>() : ComponentBase where T : DBBase, IDBBase
+    public class DexieNET<T>() : OwningComponentBase where T : DBBase, IDBBase
     {
         [Inject]
         protected IDexieNETService<T>? DexieNETService { get; set; }
 
         [NotNull] // OnInitializedAsync will throw
-        public T? Dexie { get; private set; }
-
-
-        protected async override Task OnInitializedAsync()
+        protected T? Dexie { get; private set; }
+        
+        protected override async Task OnInitializedAsync()
         {
             if (DexieNETService is not null)
             {
@@ -25,6 +24,15 @@ namespace DexieNET.Component
             }
 
             await base.OnInitializedAsync();
+        }
+        
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                DexieNETService?.DexieNETFactory.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

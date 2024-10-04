@@ -1,12 +1,10 @@
 ﻿/// <reference lib="webworker" />
-import {liveQuery, Observable} from "dexie";
-
 import {
     BadgeEventsTableName, ClickedEventsTableName, DexieCloudNETBroadcastIn, DexieCloudNETBroadcastOut,
     DexieCloudNETSubscriptionChanged,
     DexieCloudNETSkipWaiting, DexieCloudNETReloadPage, DexieCloudNETUpdateFound, DexieCloudNETClickLock,
     PushEventRecord,
-    PushEventsDB, 
+    PushEventsDB
 } from "./dexieCloudNETSWBroadcast";
 
 declare const self: ServiceWorkerGlobalScope
@@ -21,11 +19,6 @@ interface PushNotificationRecord {
     tag?: string,
 }
 
-interface NotificationData {
-    setBadge: boolean,
-    pushEvent: PushEventRecord
-}
-
 const broadcastIn = new BroadcastChannel(DexieCloudNETBroadcastIn);
 const broadcastOut = new BroadcastChannel(DexieCloudNETBroadcastOut);
 const rootUrl = new URL('./', location.origin + location.pathname).href;
@@ -35,15 +28,12 @@ self.addEventListener('push', async event => {
 });
 
 self.addEventListener('notificationclick', async function (event) {
-    event.waitUntil(
-        doNotificationClick(event)
-    );
+    event.waitUntil(doNotificationClick(event));
+    
 });
 
 self.onpushsubscriptionchange = (event) => {
-    broadcastOut.postMessage({
-        type: DexieCloudNETSubscriptionChanged
-    });
+    broadcastOut.postMessage({type: DexieCloudNETSubscriptionChanged});
 };
 
 broadcastIn.onmessage = async (event) => {
@@ -84,7 +74,7 @@ async function storeBadgeEvent(pushEvent: PushEventRecord) {
 
         if (navigator.setAppBadge) {
             const count = await badgeEventsTable.count();
-            navigator.setAppBadge(count).then();
+            await navigator.setAppBadge(count);
         }
     } catch (error) {
         await ShowError(error);
@@ -105,12 +95,10 @@ async function doPush(event: PushEvent) {
         tag: pushNotification.tag,
         id: undefined
     }
-
-    const notificationData: NotificationData = {setBadge: pushNotification.setBadge === true, pushEvent: pushEvent};
-
+    
     await self.registration.showNotification(pushNotification.title, {
         body: pushNotification.message,
-        data: notificationData,
+        data: pushEvent,
         icon: pushNotification.icon,
         tag: pushNotification.tag,
         requireInteraction: pushNotification.requireInteraction
@@ -123,21 +111,21 @@ async function doPush(event: PushEvent) {
 
 async function doNotificationClick(event: NotificationEvent) {
     try {
-        broadcastOut.postMessage({type: DexieCloudNETClickLock, lock: true});
-        event.preventDefault();
+        //event.preventDefault();
         event.notification.close();
-        
-        const notificationData: NotificationData | undefined = event.notification.data;
-        if (!notificationData) {
+
+        const pushEvent: PushEventRecord | undefined = event.notification.data;
+        if (!pushEvent) {
             if (event.notification.title !== "Debug") {
                 await ShowError("Notificationclick with no pushEvent data!");
             }
             return;
         }
 
+        let processed = false;
+        
         const matchedClients = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
         
-        let processed = false;
         for (let client of matchedClients) {
             if (client.url.indexOf(rootUrl) >= 0) {
                 try {
@@ -163,11 +151,10 @@ async function doNotificationClick(event: NotificationEvent) {
                 console.log(`Has window of type: ${window.type}`);
             }
         }
-        
-        notificationData.pushEvent.timeStampUtc = new Date(Date.now()).toISOString();
-        await storeClickedEvent(notificationData.pushEvent);
-
-        broadcastOut.postMessage({type: DexieCloudNETClickLock, lock: false});
+       
+        //await navigator.locks.request(DexieCloudNETClickLock, async () => {
+            await storeClickedEvent(pushEvent);
+        //});
 
     } catch (error) {
         await ShowError(error);
@@ -186,4 +173,3 @@ async function ShowError(error: unknown) {
 export function notifyUpdate() {
     broadcastOut.postMessage({type: DexieCloudNETUpdateFound});
 }
-
