@@ -251,14 +251,22 @@
 
     private async Task UpdateApp()
     {
-        Snackbar.Remove(_updateSnackBar);
+        if (_updateSnackBar is not null)
+        {
+            Snackbar.Remove(_updateSnackBar);
+            _updateSnackBar = null;
+        }
         ArgumentNullException.ThrowIfNull(Service.DB);
         await Service.DB.UpdateServiceWorker();
     }
 
     private async Task SubscribePush()
     {
-        Snackbar.Remove(_subscribeSnackBar);
+        if (_subscribeSnackBar is not null)
+        {
+            Snackbar.Remove(_subscribeSnackBar);
+            _subscribeSnackBar = null;
+        }
         ArgumentNullException.ThrowIfNull(Service.DB);
         await Service.SubscribePush();
     }
