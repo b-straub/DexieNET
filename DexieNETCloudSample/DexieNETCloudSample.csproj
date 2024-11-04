@@ -15,11 +15,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DexieCloudNET" Version="1.3.2"
-			Condition="'$(Configuration)' == 'Release'" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.7" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.7" PrivateAssets="all" />
-		<PackageReference Include="RxMudBlazorLight" Version="0.9.6" />
+		<PackageReference Include="DexieCloudNET" Version="1.3.3" Condition="'$(Configuration)' == 'Release'" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.10" PrivateAssets="all" />
+		<PackageReference Include="RxMudBlazorLight" Version="0.9.7" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -37,7 +36,7 @@
 
 	<ItemGroup>
 		<Content Update="wwwroot\*.json">
-			<CopyToOutputDirectory>None</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
