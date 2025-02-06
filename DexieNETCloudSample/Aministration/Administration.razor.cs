@@ -16,7 +16,7 @@ namespace DexieNETCloudSample.Aministration
             CloudKeyData data = new("clientId", "clientSecret");
 
             var parameters = new DialogParameters { ["Item"] = data };
-            var dialog = DialogService.Show<GetClientKeys>("Cloud Client Keys", parameters);
+            var dialog = await DialogService.ShowAsync<GetClientKeys>("Cloud Client Keys", parameters);
 
             var result = await dialog.Result;
             if (result.OK())

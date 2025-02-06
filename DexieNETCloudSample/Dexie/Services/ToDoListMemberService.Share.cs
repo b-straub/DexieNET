@@ -74,8 +74,6 @@ namespace DexieNETCloudSample.Dexie.Services
             ArgumentNullException.ThrowIfNull(List.Value?.ID);
             ArgumentNullException.ThrowIfNull(List.Value?.Owner);
             ArgumentNullException.ThrowIfNull(Member.Id);
-            ArgumentNullException.ThrowIfNull(Role);
-            ArgumentNullException.ThrowIfNull(NewRole);
 
             var realmId = _dbService.DB.GetTiedRealmID(List.Value.ID);
 

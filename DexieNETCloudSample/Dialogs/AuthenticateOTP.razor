@@ -38,17 +38,20 @@
 @code {
 
     [CascadingParameter]
-    public required MudDialogInstance MudDialog { get; init; }
+    public required IMudDialogInstance MudDialog { get; init; }
 
     [Parameter, EditorRequired]
     public required OTPData Item { get; init; }
 
-    void Cancel() => MudDialog?.Cancel();
-
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        MudDialog.Options.CloseButton = true;
-        MudDialog.SetOptions(MudDialog.Options);
+        var options = MudDialog.Options with
+        {
+            CloseButton = true
+        };
+        
+        await MudDialog.SetOptionsAsync(options);
+        await base.OnInitializedAsync();
     }
 
     private void OnValidSubmit(EditContext context)

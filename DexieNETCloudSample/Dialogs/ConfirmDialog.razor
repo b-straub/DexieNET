@@ -10,7 +10,7 @@
 
 @code {
     [CascadingParameter]
-    public required MudDialogInstance MudDialog { get; init; }
+    public required IMudDialogInstance MudDialog { get; init; }
 
     [Parameter, EditorRequired]
     public required string Message { get; init; }
@@ -21,14 +21,17 @@
     [Parameter]
     public bool SuccessOnConfirm { get; set; } = false;
 
-    void Submit() => MudDialog?.Close(DialogResult.Ok(true));
-    void Cancel() => MudDialog?.Cancel();
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        MudDialog.Options.CloseButton = false;
-        MudDialog.SetOptions(MudDialog.Options);
-
-        base.OnInitialized();
+        var options = MudDialog.Options with
+        {
+            CloseButton = false
+        };
+        
+        await MudDialog.SetOptionsAsync(options);
+        await base.OnInitializedAsync();
     }
 }

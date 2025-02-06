@@ -18,15 +18,18 @@
 
 @code {
     [CascadingParameter] 
-    public required MudDialogInstance MudDialog { get; init; }
+    public required IMudDialogInstance MudDialog { get; init; }
 
-    void Submit() => MudDialog?.Close(DialogResult.Ok(true));
-
-    protected override void OnInitialized()
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    
+    protected override async Task OnInitializedAsync()
     {
-        MudDialog.Options.CloseButton = false;
-        MudDialog.SetOptions(MudDialog.Options);
-
-        base.OnInitialized();
+        var options = MudDialog.Options with
+        {
+            CloseButton = false
+        };
+        
+        await MudDialog.SetOptionsAsync(options);
+        await base.OnInitializedAsync();
     }
 }

@@ -29,7 +29,7 @@
 
 @code {
     [Inject]
-    public IDialogService? DialogService { get; set; }
+    public required IDialogService DialogService { get; init; }
 
     private bool _drawerOpen = true;
     private readonly MudTheme _theme = new();
@@ -39,9 +39,9 @@
         _drawerOpen = !_drawerOpen;
     }
 
-    private void OpenAboutDialog()
+    private async Task OpenAboutDialog()
     {
-        DialogService?.Show<AboutDialog>("About DexieNETCloudSample");
+        await DialogService.ShowAsync<AboutDialog>("About DexieNETCloudSample");
     }
 
     private string GetColorThemeIcon()

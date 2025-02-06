@@ -22,25 +22,28 @@
 @code {
 
     [CascadingParameter]
-    public required MudDialogInstance MudDialog { get; init; }
+    public required IMudDialogInstance MudDialog { get; init; }
 
     [Parameter]
     public required ToDoDBItem? Item { get; init; }
 
     [NotNull]
     private ToDoItemService.ToDoItemItemInput? _scope { get; set; }
-
-    protected override void OnInitialized()
+    
+    protected override async Task OnInitializedAsync()
     {
         _scope = Service.CreateItemInput(Item);
         ArgumentNullException.ThrowIfNull(_scope);
-
-        MudDialog.Options.CloseButton = true;
-        MudDialog.SetOptions(MudDialog.Options);
-
-        base.OnInitialized();
+        
+        var options = MudDialog.Options with
+        {
+            CloseButton = true
+        };
+        
+        await MudDialog.SetOptionsAsync(options);
+        await base.OnInitializedAsync();
     }
-
+    
     private void OnValidSubmit(EditContext context)
     {
         MudDialog.Close(_scope);
