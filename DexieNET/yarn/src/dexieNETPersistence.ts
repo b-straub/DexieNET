@@ -84,9 +84,16 @@ export async function tryPersistWithoutPromtingUser(): Promise<string> {
         return "prompt"; // It MAY be successful to prompt. Don't know.
     }
     
-    const permission = await navigator.permissions.query({
-        name: "persistent-storage"
-    });
+    let permission : PermissionStatus | undefined = undefined;
+    
+    try {
+        permission = await navigator.permissions.query({
+            name: "persistent-storage"
+        });
+    } catch (ex) {
+        // Permission API may throw if not supported.
+        return "prompt";
+    }
 
     if (permission.state === "granted") {
         persisted = await navigator.storage.persist();
