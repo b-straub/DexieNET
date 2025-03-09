@@ -26,10 +26,14 @@ const rootUrl = new URL('./', location.origin + location.pathname).href;
 self.addEventListener('push', async event => {
     event.waitUntil(doPush(event));
 });
-
-self.addEventListener('notificationclick', async function (event) {
-    event.waitUntil(doNotificationClick(event));
-    
+self.addEventListener('notificationclick', async event => {
+    let isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (!isSafari) {
+        event.waitUntil(doNotificationClick(event));
+    }
+    else {
+        await storeClickedEvent(event);
+    }
 });
 
 self.onpushsubscriptionchange = (event) => {
@@ -49,10 +53,20 @@ broadcastIn.onmessage = async (event) => {
     }
 };
 
-async function storeClickedEvent(pushEvent: PushEventRecord) {
+async function storeClickedEvent(event: NotificationEvent) {
     try {
-        const clickedEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(ClickedEventsTableName);
-        await clickedEventsTable.add(pushEvent);
+        const pushEvent: PushEventRecord | undefined = event.notification.data;
+        if (!pushEvent) {
+            if (event.notification.title !== "Debug") {
+                await ShowError("Notificationclick with no pushEvent data!");
+            }
+            return;
+        }
+
+        await navigator.locks.request(DexieCloudNETClickLock, async () => {
+            const clickedEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(ClickedEventsTableName);
+            await clickedEventsTable.add(pushEvent);
+        });
     } catch (error) {
         await ShowError(error);
     }
@@ -95,7 +109,7 @@ async function doPush(event: PushEvent) {
         tag: pushNotification.tag,
         id: undefined
     }
-    
+
     await self.registration.showNotification(pushNotification.title, {
         body: pushNotification.message,
         data: pushEvent,
@@ -111,21 +125,11 @@ async function doPush(event: PushEvent) {
 
 async function doNotificationClick(event: NotificationEvent) {
     try {
-        event.preventDefault();
         event.notification.close();
-
-        const pushEvent: PushEventRecord | undefined = event.notification.data;
-        if (!pushEvent) {
-            if (event.notification.title !== "Debug") {
-                await ShowError("Notificationclick with no pushEvent data!");
-            }
-            return;
-        }
-
         let processed = false;
-        
+
         const matchedClients = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
-        
+
         for (let client of matchedClients) {
             if (client.url.indexOf(rootUrl) >= 0) {
                 try {
@@ -151,11 +155,9 @@ async function doNotificationClick(event: NotificationEvent) {
                 console.log(`Has window of type: ${window.type}`);
             }
         }
-       
-        await navigator.locks.request(DexieCloudNETClickLock, async () => {
-            await storeClickedEvent(pushEvent);
-        });
 
+        await storeClickedEvent(event);
+        
     } catch (error) {
         await ShowError(error);
     }
