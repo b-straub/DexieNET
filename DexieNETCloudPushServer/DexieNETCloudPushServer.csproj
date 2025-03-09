@@ -9,13 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SQLite" Version="0.5.1" />
         <PackageReference Include="Bitwarden.Sdk" Version="0.0.1-alpha" Condition="'$(Configuration)' == 'Debug'"/>
         <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="9.0.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
         <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0" />
         <PackageReference Include="Quartz" Version="3.13.1" />
         <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.13.1" />
@@ -56,5 +57,4 @@
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
-
 </Project>
