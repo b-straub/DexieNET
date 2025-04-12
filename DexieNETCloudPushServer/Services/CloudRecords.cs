@@ -28,7 +28,7 @@ public partial class PushMemberContext : JsonSerializerContext
 }
 
 // ReSharper disable once InconsistentNaming
-public record WebPushNotification(string Title, string Body, string Navigate, string? Tag = null, long? App_badge = null, string? Icon =  null, string Lang = "en-US", string Dir = "rtl", bool Silent = false);
+public record WebPushNotification(string Title, string Body, string Navigate, string? Tag = null, long? App_badge = null, string? Icon =  null, bool? RequireInteraction = null);
 
 // ReSharper disable once InconsistentNaming
 public record DeclarativeWebPushNotification(int? Web_push, WebPushNotification Notification)

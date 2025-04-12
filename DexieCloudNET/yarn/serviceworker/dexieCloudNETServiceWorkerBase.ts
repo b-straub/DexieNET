@@ -15,13 +15,11 @@ interface WebPushNotification {
     tag?: string,
     app_badge?: number,
     icon?: string,
-    lang?: string,
-    dir?: string
+    requireInteraction?: boolean
 }
 
 const broadcastIn = new BroadcastChannel(DexieCloudNETBroadcastIn);
 const broadcastOut = new BroadcastChannel(DexieCloudNETBroadcastOut);
-const rootUrl = new URL('./', location.origin + location.pathname).href;
 
 self.addEventListener('push', async event => {
     event.waitUntil(doPush(event));
@@ -66,7 +64,7 @@ async function doPush(event: PushEvent) {
         data: webPushNotification.navigate,
         tag: webPushNotification.tag,
         icon: webPushNotification.icon,
-        requireInteraction: !webPushNotification.silent
+        requireInteraction: webPushNotification.requireInteraction
     });
 }
 

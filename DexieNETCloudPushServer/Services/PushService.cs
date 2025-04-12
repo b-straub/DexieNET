@@ -45,7 +45,7 @@ namespace DexieNETCloudPushServer.Services
         private const string PushSubscriptionsTableName = "pushSubscriptions";
         private const string PushNotificationsTableName = "pushNotifications";
         private const string MembersTableName = "members";
-        
+
         public PushService(IServiceProvider serviceProvider)
         {
             _httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>()
@@ -353,44 +353,56 @@ namespace DexieNETCloudPushServer.Services
                         return; // cleaned-up elsewhere
                     }
 
-                    var pushSubscription = new PushSubscription(dexieSubscription.Subscription.Endpoint,
-                        dexieSubscription.Subscription.Keys.P256dh,
-                        dexieSubscription.Subscription.Keys.Auth);
-                    var vapidDetails = new VapidDetails(@$"mailto:user@localhost.de",
-                        _vapidKey.PublicKey, _vapidKey.PrivateKey);
-
-                    var pushEventJsonBase64 =
-                        Convert.ToBase64String(Encoding.UTF8.GetBytes(pushTrigger.PushPayloadJson));
-                    var pushURLBase64 = dexieSubscription.PushURL +
-                                        $"?{PushConstants.PushPayloadJsonBase64}={pushEventJsonBase64}";
-
-                    // currently declarative push is working only for iOS/iPadOS, icon is not supported on any Safari version
-                    var webPushNotification =
-                        new WebPushNotification(notification.Title, pushTrigger.Message, pushURLBase64,
-                            notification.Tag, notification.AppBadge, dexieSubscription.PushSupport.Declarative ? null : pushTrigger.Icon);
-                    var magicNumber = dexieSubscription.PushSupport is { Declarative: true, IsMobile: true }
-                        ? DeclarativeWebPushNotification.DeclarativeWebPushMagicNumber
-                        : (int?)null;
-                    var declarativePushNotification = new DeclarativeWebPushNotification(magicNumber, webPushNotification);
-
-                    var declarativePushNotificationJson =
-                        JsonSerializer.Serialize(declarativePushNotification,
-                            DeclarativeWebPushNotificationContext.Default.DeclarativeWebPushNotification);
                     try
                     {
-                        await webPushClient.SendNotificationAsync(pushSubscription, declarativePushNotificationJson, vapidDetails,
+                        var pushSubscription = new PushSubscription(dexieSubscription.Subscription.Endpoint,
+                            dexieSubscription.Subscription.Keys.P256dh,
+                            dexieSubscription.Subscription.Keys.Auth);
+                        var vapidDetails = new VapidDetails(@$"mailto:user@localhost.de",
+                            _vapidKey.PublicKey, _vapidKey.PrivateKey);
+
+                        var pushEventJsonBase64 =
+                            Convert.ToBase64String(Encoding.UTF8.GetBytes(pushTrigger.PushPayloadJson));
+                        var pushURLBase64 = dexieSubscription.PushURL +
+                                            $"?{PushConstants.PushPayloadJsonBase64}={pushEventJsonBase64}";
+
+                        // currently declarative push is working only for iOS/iPadOS
+                        // the notification format is a bit picky about optional fields, leave out icon and requireInteraction
+                        var webPushNotification =
+                            new WebPushNotification(notification.Title, pushTrigger.Message, pushURLBase64,
+                                notification.Tag, notification.AppBadge, 
+                                dexieSubscription.PushSupport.Declarative ? null : pushTrigger.Icon, 
+                                dexieSubscription.PushSupport.Declarative ? null : pushTrigger.RequireInteraction);
+                        var magicNumber = dexieSubscription.PushSupport is { Declarative: true, IsMobile: true }
+                            ? DeclarativeWebPushNotification.DeclarativeWebPushMagicNumber
+                            : (int?)null;
+                        var declarativePushNotification =
+                            new DeclarativeWebPushNotification(magicNumber, webPushNotification);
+
+                        var declarativePushNotificationJson =
+                            JsonSerializer.Serialize(declarativePushNotification,
+                                DeclarativeWebPushNotificationContext.Default.DeclarativeWebPushNotification);
+
+                        await webPushClient.SendNotificationAsync(pushSubscription, declarativePushNotificationJson,
+                            vapidDetails,
                             cancellationToken);
 
                         Logger.LogDebug("Submit notification '{MESSAGE}' to {URL}.", pushTrigger.Message,
                             GetURLPart(dexieSubscription.Subscription.Endpoint));
                     }
-                    catch (WebPushException exception)
+                    catch (Exception exception)
                     {
-                        if (exception.StatusCode is HttpStatusCode.Gone)
+                        var cleanSubscription = exception switch
+                        {
+                            WebPushException webPushException => webPushException.StatusCode is HttpStatusCode.Gone,
+                            _ => true, // likely some outdated subscription
+                        };
+
+                        if (cleanSubscription)
                         {
                             await DeleteTableEntries(dbInfo, PushSubscriptionsTableName, [dexieSubscription.ID],
                                 cancellationToken);
-                            Logger.LogWarning("Remove gone Subscription with endpoint to {URL}.",
+                            Logger.LogWarning("Remove gone or invalid Subscription with endpoint to {URL}.",
                                 GetURLPart(dexieSubscription.Subscription.Endpoint));
                         }
                         else
