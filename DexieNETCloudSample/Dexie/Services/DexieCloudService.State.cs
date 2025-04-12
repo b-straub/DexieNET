@@ -126,4 +126,9 @@ public partial class DexieCloudService
             .Select(_ => -1L)
             .Subscribe(observer);
     };
+    
+    public void SetPushPayloadEvent(PushPayload pushPayload)
+    {
+        PushPayloadEventState.Value = pushPayload;
+    }
 }

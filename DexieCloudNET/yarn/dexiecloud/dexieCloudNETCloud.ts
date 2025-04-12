@@ -27,8 +27,7 @@ import {
     SetPushNotificationState,
     SetPushStatesToNone
 } from "./dexieCloudNETPush";
-
-export function ConfigureCloud(db: CloudDB, cloudOptions: DexieCloudOptions, applicationServerKey: string | undefined, dotnetRef: any): string | null {
+export function ConfigureCloud(db: CloudDB, cloudOptions: DexieCloudOptions, pushURL: string | undefined, applicationServerKey: string | undefined, dotnetRef: any): string | null {
     try {
         if (dotnetRef !== null) {
             cloudOptions.fetchTokens = async (tokenParams) => {
@@ -37,10 +36,10 @@ export function ConfigureCloud(db: CloudDB, cloudOptions: DexieCloudOptions, app
         }
         db.cloud.configure(cloudOptions);
 
-        if (applicationServerKey) {
+        if (pushURL && applicationServerKey) {
             db.cloud.currentUser.pipe(
                 concatMap(async ul => {
-                    await SetPushNotificationState(ul, applicationServerKey);
+                    await SetPushNotificationState(ul, pushURL, applicationServerKey);
                 })
             ).subscribe();
         } else {

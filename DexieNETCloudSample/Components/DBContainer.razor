@@ -24,6 +24,8 @@
     [Inject]
     public required IConfiguration Configuration { get; init; }
 
+    private PushPayload? _pushPayload;
+    
     protected override async Task OnServiceStateHasChangedAsync(IEnumerable<ServiceChangeReason> crList)
     {
         foreach (var cr in crList)
@@ -53,26 +55,23 @@
                             case ServiceWorkerState.ReloadPage:
                                 NavigationManager.NavigateTo(NavigationManager.Uri, true);
                                 break;
-                            case ServiceWorkerState.PushNotifications:
-                                if (Service.ServiceWorkerNotificationState.Value.Clicked > 0)
-                                {
-                                    await ShowNewNotifications("Clicked Notification", Service.ServiceWorkerNotificationState.Value.ChangeSource);
-                                }
-
-                                if (Service.ServiceWorkerNotificationState.Value.ChangeSource is not ChangeSource.ServiceWorkerClicked)
-                                {
-                                    await ShowBadgeNotifications("Badge Notification", Service.ServiceWorkerNotificationState.Value.ChangeSource);
-                                }
-                                break;
                         }
                     }
                 }
                     break;
+
                 case var value when value == Service.NotificationsState.ID:
                     if (Service.DB is not null && Service.NotificationsState.Value == NotificationState.UnsubscribedRemote)
                     {
                         ShowUnsubscribedRemote();
                     }
+
+                    break;
+
+                case var value when value == Service.PushPayloadEventState.ID && Service.PushPayloadEventState.HasValue():
+                {
+                    _pushPayload = Service.PushPayloadEventState.Value;
+                }
 
                     break;
             }
@@ -88,10 +87,13 @@
     {
         try
         {
+            var hostURL = new Uri(NavigationManager.Uri).GetLeftPart(UriPartial.Path);
+            var pushUrl = new Uri(new Uri(hostURL), Configuration.GetRouteFolder().TrimEnd('/') + PushConstants.PushRoute);
+           
             await Service.OpenDB();
             ArgumentNullException.ThrowIfNull(Service.DB);
 
-            await Service.ConfigureCloud(Configuration.GetDBUrl(), Configuration.GetApplicationServerKey());
+            await Service.ConfigureCloud(Configuration.GetDBUrl(), pushUrl.ToString(), Configuration.GetApplicationServerKey());
         }
         catch (Exception e)
         {
@@ -175,78 +177,21 @@
             });
     }
 
-    private string ChangeSourceName(ChangeSource source) =>
-        source switch
-        {
-            ChangeSource.Push => "Push",
-            ChangeSource.Visibility => "Visibility",
-            ChangeSource.ServiceWorkerGeneric => "ServiceWorkerGeneric",
-            ChangeSource.ServiceWorkerClicked => "ServiceWorkerClicked",
-            ChangeSource.ServiceWorkerBadge => "ServiceWorkerBadge",
-            _ => throw new ArgumentException("Invalid string value for ChangeSource!", nameof(source)),
-        };
-
-    private async Task ShowNewNotifications(string message, ChangeSource changeSource)
+    private async Task SetSelectedItem((string ListID, string ItemID) pushItem)
     {
-        ArgumentNullException.ThrowIfNull(Service.DB);
-
-        var pushEvents = (await Service.DB.GetClickedEvents()).OrderByDescending(e => e.TimeStampUtc).ToArray();
-        var last = true;
-
-        foreach (var pushEvent in pushEvents)
+        if (Service.DB is not null)
         {
-            if (pushEvent.PayloadJson is null)
-            {
-                continue;
-            }
-
-            var pushPayload = JsonSerializer.Deserialize(pushEvent.PayloadJson,
-                PushPayloadConfigContext.Default.PushPayload);
-
-            ArgumentNullException.ThrowIfNull(pushPayload);
-
-            Snackbar.Add($"{message} from {ChangeSourceName(changeSource)}, ListID {pushPayload.ListID}, ItemID {pushPayload.ItemID}", Severity.Info, config => { config.RequireInteraction = false; });
-
-            if (!last) continue;
-
-            await Service.OpenList(pushPayload.ListID);
-            last = false;
+            await Service.OpenList(pushItem.ListID);
         }
-
-        var keysToDelete = pushEvents.Select(pushEvent => pushEvent.ID).ToArray();
-        await Service.DB.DeleteClickedEvents(keysToDelete);
     }
-
-    private async Task ShowBadgeNotifications(string message, ChangeSource changeSource)
+    
+    private async Task HandlePushPayload()
     {
         ArgumentNullException.ThrowIfNull(Service.DB);
-
-        var pushEvents = (await Service.DB.GetBadgeEvents()).ToArray();
-
-        if (pushEvents.Length > 0 || changeSource is ChangeSource.ServiceWorkerBadge)
-        {
-            Snackbar.Add($"{message} from {ChangeSourceName(changeSource)} - {pushEvents.Length} Badges", Severity.Info, config => { config.RequireInteraction = false; });
-
-            foreach (var pushEvent in pushEvents)
-            {
-                if (pushEvent.PayloadJson is null)
-                {
-                    continue;
-                }
-
-                var pushPayload = JsonSerializer.Deserialize(pushEvent.PayloadJson,
-                    PushPayloadConfigContext.Default.PushPayload);
-
-                ArgumentNullException.ThrowIfNull(pushPayload);
-
-                var toDoItem = await Service.DB.ToDoDBItems.Get(pushPayload.ItemID);
-                if ((toDoItem?.Completed).True())
-                {
-                    await Service.OpenList(pushPayload.ListID);
-                    break;
-                }
-            }
-        }
+        ArgumentNullException.ThrowIfNull(_pushPayload);
+        
+        Snackbar.Add($"Push Notification, ListID {_pushPayload.ListID}, ItemID {_pushPayload.ItemID}", Severity.Info, config => { config.RequireInteraction = false; });
+        await Service.OpenList(_pushPayload.ListID);
     }
 
     private async Task UpdateApp()
@@ -256,6 +201,7 @@
             Snackbar.Remove(_updateSnackBar);
             _updateSnackBar = null;
         }
+
         ArgumentNullException.ThrowIfNull(Service.DB);
         await Service.DB.UpdateServiceWorker();
     }
@@ -267,8 +213,19 @@
             Snackbar.Remove(_subscribeSnackBar);
             _subscribeSnackBar = null;
         }
+
         ArgumentNullException.ThrowIfNull(Service.DB);
         await Service.SubscribePush();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        
+        if (!firstRender && _pushPayload is not null)
+        {
+            await HandlePushPayload();
+            _pushPayload = null;
+        }
+    }
 }

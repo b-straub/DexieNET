@@ -18,6 +18,7 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander
 */
 
+using System.Text.Json.Serialization;
 using Microsoft.JSInterop;
 using DexieNET;
 
@@ -32,29 +33,14 @@ namespace DexieCloudNET
         Subscribed,
     }
     
-    public enum ChangeSource {
-        Push,
-        Visibility,
-        ServiceWorkerGeneric,
-        ServiceWorkerClicked,
-        ServiceWorkerBadge
-    }
-    
     public enum ServiceWorkerState 
     {
         None,
         UpdateFound,
-        ReloadPage,
-        PushNotifications
+        ReloadPage
     }
     
-    public record PushEvent(
-        DateTime TimeStampUtc,
-        string? PayloadJson,
-        long ID
-    );
-    
-    public record ServiceWorkerNotifications(ServiceWorkerState State, int Clicked, int Badge, ChangeSource ChangeSource);
+    public record ServiceWorkerNotifications(ServiceWorkerState State);
     
     public static partial class DBCloudExtensions
     {
@@ -176,7 +162,7 @@ namespace DexieCloudNET
 
             if (expiredNotifications == 0)
             {
-                var notification = new PushNotification(notifierID, string.Empty, string.Empty, [], true);
+                var notification = new PushNotification(notifierID, string.Empty, string.Empty, [], null, null, true);
                 await table.Put(notification);
             }
         }
@@ -190,23 +176,8 @@ namespace DexieCloudNET
 
             await dexie.Cloud.Module.InvokeVoidAsync("UpdateServiceWorker");
         }
-
-        public static async Task<PushEvent[]> GetClickedEvents(this DBBase dexie)
-        {
-            if (!dexie.HasCloud())
-            {
-                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
-            }
-
-            if (!dexie.HasPushSupport)
-            {
-                throw new InvalidOperationException("Database has no push support can not handle notifications.");
-            }
-            
-            return await dexie.Cloud.Module.InvokeAsync<PushEvent[]>("GetClickedEvents");
-        }
         
-        public static async Task DeleteClickedEvents(this DBBase dexie, long[] keysToDelete)
+        public static async Task SetAppBadge(this DBBase dexie, long count)
         {
             if (!dexie.HasCloud())
             {
@@ -218,37 +189,7 @@ namespace DexieCloudNET
                 throw new InvalidOperationException("Database has no push support can not handle notifications.");
             }
             
-            await dexie.Cloud.Module.InvokeVoidAsync("DeleteClickedEvents", keysToDelete);
-        }
-        
-        public static async Task<PushEvent[]> GetBadgeEvents(this DBBase dexie)
-        {
-            if (!dexie.HasCloud())
-            {
-                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
-            }
-
-            if (!dexie.HasPushSupport)
-            {
-                throw new InvalidOperationException("Database has no push support can not handle notifications.");
-            }
-            
-            return await dexie.Cloud.Module.InvokeAsync<PushEvent[]>("GetBadgeEvents");
-        }
-        
-        public static async Task DeleteBadgeEvents(this DBBase dexie, long[] keysToDelete)
-        {
-            if (!dexie.HasCloud())
-            {
-                throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
-            }
-
-            if (!dexie.HasPushSupport)
-            {
-                throw new InvalidOperationException("Database has no push support can not handle notifications.");
-            }
-            
-            await dexie.Cloud.Module.InvokeVoidAsync("DeleteBadgeEvents", keysToDelete);
+            await dexie.Cloud.Module.InvokeVoidAsync("SetAppBadge", count);
         }
     }
 }

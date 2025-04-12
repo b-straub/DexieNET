@@ -29,11 +29,11 @@ namespace DexieNETCloudSample.Extensions
             try
             {
                 using var importfileR = await http.GetAsync("importfile.json");
-                using var importfileS = await importfileR.Content.ReadAsStreamAsync();
+                await using var importfileS = await importfileR.Content.ReadAsStreamAsync();
                 builder.Configuration.AddJsonStream(importfileS);
 
                 using var dexieCloudR = await http.GetAsync("dexie-cloud.json");
-                using var dexieCloudS = await dexieCloudR.Content.ReadAsStreamAsync();
+                await using var dexieCloudS = await dexieCloudR.Content.ReadAsStreamAsync();
                 builder.Configuration.AddJsonStream(dexieCloudS);
             }
             catch
@@ -61,6 +61,14 @@ namespace DexieNETCloudSample.Extensions
             ArgumentNullException.ThrowIfNull(configuration);
             var applicationServerKey = configuration.GetSection("applicationServerKey").Value;
             return applicationServerKey;
+        }
+        
+        public static string GetRouteFolder(this IConfiguration? configuration)
+        {
+            ArgumentNullException.ThrowIfNull(configuration);
+            var rootFolder = configuration.GetSection("rootFolder").Value;
+            ArgumentNullException.ThrowIfNull(rootFolder);
+            return rootFolder;
         }
         
         public static IDisposable SubscribeAsyncSwitch<T>(this IObservable<T> source, Func<T, CancellationToken, Task> onNextAsync) =>

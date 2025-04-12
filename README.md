@@ -10,10 +10,11 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 
 ##  News
 
+- Added Declarative Web Push support. Please check the [Explanation](https://www.webkit.org/blog/16535/meet-declarative-web-push/#how-to-use-declarative-web-push) and PushServer [ReadMe](DexieNETCloudPushServer/README.md)
+    - Declarative WebPush is only support for iOS and iPadOS >= 18.4
+    - Especially on iOS < 18.4 clicking on notifications currently does not work reliable [notificationclick events in serviceworkers not firing](https://bugs.webkit.org/show_bug.cgi?id=268797)
+    - Clicking on notifications currently does not work reliable for Chrome on MacOS >= 15 in addition to several other problems, use Safari for MacOS desktop PWA instead.
 - Released [DexieCloud](https://dexie.org/cloud/)
-- Added Push support. Please check the [ReadMe](DexieNETCloudPushServer/README.md)
-  - Clicking on notifications currently does not work reliable for iOS [notificationclick events in serviceworkers not firing](https://bugs.webkit.org/show_bug.cgi?id=268797)
-  - Clicking on notifications currently does not work reliable for Chrome on MacOS 15
 - Please register with **DexieCloud** and test the [ToDoSample](DexieNETCloudSample). The configuration script can be found here [configure-app.ps1](DexieNETCloudSample/Dexie/configure-app.ps1) (Windows) or here [configure-app.sh](DexieNETCloudSample/Dexie/configure-app.sh) (Nix - jq required).
 - Published a new helper library [RxBlazorLight](https://github.com/b-straub/RxBlazorLight)  
 

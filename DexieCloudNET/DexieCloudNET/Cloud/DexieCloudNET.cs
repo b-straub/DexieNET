@@ -54,7 +54,7 @@ namespace DexieCloudNET
 
     public static partial class DBCloudExtensions
     {
-        public static async Task ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions,
+        public static async Task ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions, string? pushURL = null,
             string? applicationServerKey = null)
         {
             if (!dexie.HasCloud())
@@ -90,7 +90,7 @@ namespace DexieCloudNET
             }
 
             var err = await dexie.Cloud.Module.InvokeAsync<string?>("ConfigureCloud", dexie.Cloud.Reference, cloudOptions,
-                applicationServerKey, dotnetRef);
+                pushURL, applicationServerKey, dotnetRef);
 
             if (err is not null)
             {

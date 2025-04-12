@@ -14,7 +14,7 @@ using WebPush;
 
 namespace DexieNETCloudPushServer.Services
 {
-    public sealed class PushService : IHostedService
+    public sealed partial class PushService : IHostedService
     {
         public static TimeSpan PushSubscriptionsInterval => TimeSpan.FromMinutes(1);
 #if DEBUG
@@ -45,12 +45,12 @@ namespace DexieNETCloudPushServer.Services
         private const string PushSubscriptionsTableName = "pushSubscriptions";
         private const string PushNotificationsTableName = "pushNotifications";
         private const string MembersTableName = "members";
-
+        
         public PushService(IServiceProvider serviceProvider)
         {
-            _httpClient = serviceProvider .GetRequiredService<IHttpClientFactory>()
+            _httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>()
                 .CreateClient("PushClient");
-            
+
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
             _configuration = serviceProvider.GetRequiredService<ISecretsConfigurationService>();
@@ -119,7 +119,7 @@ namespace DexieNETCloudPushServer.Services
                     _databases.Remove(dbUrl);
                     return DateTime.UtcNow;
                 }
-                
+
                 throw new InvalidOperationException(
                     $"Status {tokenResponse.StatusCode} -> Administration - Can not get token!");
             }
@@ -359,14 +359,26 @@ namespace DexieNETCloudPushServer.Services
                     var vapidDetails = new VapidDetails(@$"mailto:user@localhost.de",
                         _vapidKey.PublicKey, _vapidKey.PrivateKey);
 
-                    var payload = new WebPushMessage(notification.Title, pushTrigger.Message, pushTrigger.Icon, pushTrigger.RequireInteraction,
-                        pushTrigger.SetBadge, pushTrigger.PayloadJson, pushTrigger.Tag);
-                    var payloadJson =
-                        JsonSerializer.Serialize(payload, WebPushMessageContext.Default.WebPushMessage);
+                    var pushEventJsonBase64 =
+                        Convert.ToBase64String(Encoding.UTF8.GetBytes(pushTrigger.PushPayloadJson));
+                    var pushURLBase64 = dexieSubscription.PushURL +
+                                        $"?{PushConstants.PushPayloadJsonBase64}={pushEventJsonBase64}";
 
+                    // currently declarative push is working only for iOS/iPadOS, icon is not supported on any Safari version
+                    var webPushNotification =
+                        new WebPushNotification(notification.Title, pushTrigger.Message, pushURLBase64,
+                            notification.Tag, notification.AppBadge, dexieSubscription.PushSupport.Declarative ? null : pushTrigger.Icon);
+                    var magicNumber = dexieSubscription.PushSupport is { Declarative: true, IsMobile: true }
+                        ? DeclarativeWebPushNotification.DeclarativeWebPushMagicNumber
+                        : (int?)null;
+                    var declarativePushNotification = new DeclarativeWebPushNotification(magicNumber, webPushNotification);
+
+                    var declarativePushNotificationJson =
+                        JsonSerializer.Serialize(declarativePushNotification,
+                            DeclarativeWebPushNotificationContext.Default.DeclarativeWebPushNotification);
                     try
                     {
-                        await webPushClient.SendNotificationAsync(pushSubscription, payloadJson, vapidDetails,
+                        await webPushClient.SendNotificationAsync(pushSubscription, declarativePushNotificationJson, vapidDetails,
                             cancellationToken);
 
                         Logger.LogDebug("Submit notification '{MESSAGE}' to {URL}.", pushTrigger.Message,

@@ -135,6 +135,7 @@ namespace DexieNETCloudSample.Logic
         public IState<DBState> State { get; }
         public IState<SyncState?> SyncState { get; }
         public IState<ServiceWorkerNotifications?> ServiceWorkerNotificationState { get; }
+        public IState<PushPayload?> PushPayloadEventState { get; }
         public IState<UserLogin?> UserLogin { get; }
         public IState<UIInteraction?> UIInteraction { get; }
         public IState<IEnumerable<Invite>?> Invites { get; }
@@ -147,7 +148,7 @@ namespace DexieNETCloudSample.Logic
 
         private readonly IDexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
-
+        
         public DexieCloudService(IServiceProvider serviceProvider)
         {
             Logger = serviceProvider.GetRequiredService<ILoggerFactory>()
@@ -159,6 +160,8 @@ namespace DexieNETCloudSample.Logic
             State = this.CreateState(DBState.Closed);
             SyncState = this.CreateState((SyncState?)null);
             ServiceWorkerNotificationState = this.CreateState((ServiceWorkerNotifications?)null);
+            PushPayloadEventState = this.CreateState<PushPayload?>(null);
+            
             UserLogin = this.CreateState((UserLogin?)null);
             UIInteraction = this.CreateState((UIInteraction?)null);
             Invites = this.CreateState((IEnumerable<Invite>?)null);
@@ -183,7 +186,7 @@ namespace DexieNETCloudSample.Logic
             }
         }
 
-        public async Task ConfigureCloud(string cloudURL, string? applicationServerKey = null)
+        public async Task ConfigureCloud(string cloudURL, string pushURL, string? applicationServerKey = null)
         {
             if (CloudURL == cloudURL)
             {
@@ -209,7 +212,7 @@ namespace DexieNETCloudSample.Logic
             // call before configure cloud to have login UI ready when needed
             _DBServicesDisposeBag.Add(DB.UserInteractionObservable().Subscribe(ui => { UIInteraction.Value = ui; }));
 
-            await DB.ConfigureCloud(options, applicationServerKey);
+            await DB.ConfigureCloud(options, pushURL, applicationServerKey);
 
             _DBServicesDisposeBag.Add(DB.SyncStateObservable().Subscribe(ss => { SyncState.Value = ss; }));
 
@@ -340,46 +343,10 @@ namespace DexieNETCloudSample.Logic
                 return await DB.ToDoDBItems.Where(i => i.Completed, false).ToArray();
             });
 
-            _DBServicesDisposeBag.Add(lq.SubscribeAsyncConcat(async items =>
+            _DBServicesDisposeBag.Add(lq.SubscribeAsyncConcat(async notCompletedItems =>
             {
-                await ClearBadgeItems(items);
+                await DB.SetAppBadge(notCompletedItems.LongCount());
             }));
-        }
-        
-        private async Task ClearBadgeItems(IEnumerable<ToDoDBItem> items)
-        {
-            ArgumentNullException.ThrowIfNull(DB);
-
-            var badgeEvents = await DB.GetBadgeEvents();
-
-            if (badgeEvents.Length == 0)
-            {
-                return;
-            }
-
-            var badgeEventKeys = badgeEvents.Select(pushEvent =>
-            {
-                if (pushEvent.PayloadJson == null)
-                {
-                    return null;
-                }
-
-                var pushPayload = JsonSerializer.Deserialize(pushEvent.PayloadJson,
-                    PushPayloadConfigContext.Default.PushPayload);
-
-                return pushPayload == null ? null : Tuple.Create(pushEvent.ID, pushPayload.ItemID);
-            }).Where(p => p is not null).Select(p => p!).ToArray();
-
-            var itemsKeys = items.Select(i => i.ID).ToArray();
-            List<long> keysToDelete = [];
-            keysToDelete.AddRange(badgeEventKeys.Where(be => !itemsKeys.Contains(be.Item2)).Select(be => be.Item1));
-
-            if (keysToDelete.Count == 0)
-            {
-                return;
-            }
-
-            await DB.DeleteBadgeEvents(keysToDelete.ToArray());
         }
     }
 }

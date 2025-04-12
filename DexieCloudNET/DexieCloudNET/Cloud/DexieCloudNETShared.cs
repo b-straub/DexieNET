@@ -42,11 +42,9 @@ namespace DexieCloudNET
     
     public record PushTrigger(
         string Message,
+        string PushPayloadJson,
         string Icon,
-        bool SetBadge = false,
         DateTime? PushTimeUtc = null,
-        string? PayloadJson = null,
-        string? Tag = null,
         bool RequireInteraction = false,
         int? IntervalMinutes = null,
         int? RepeatCount = null
@@ -58,8 +56,17 @@ namespace DexieCloudNET
         string Title,
         string NotifierRealm,
         PushTrigger[] Triggers,
+        string? Tag = null,
+        long? AppBadge = null,
         bool Expired = false,
         string? RealmId = null,
         string? Owner = null
     ) : IDBStore, IDBCloudEntity;
+    
+    public static class PushConstants
+    {
+        public const string PushRoute = "/push";
+        public const string PushPayloadJsonBase64 = "pushPayloadJsonBase64";
+        public const string PushIcon = "checklist-512.png";
+    }
 }

@@ -150,17 +150,32 @@ namespace DexieCloudNET
     public record SubscriptionKeys(string P256dh, string Auth);
     public record Subscription(string Endpoint, double? ExpirationTime, SubscriptionKeys Keys);
     
+    public record DeclarativeWebPushSupport(bool Declarative, bool IsMobile);
+    
     public record WebPushSubscription
     (
         Subscription Subscription,
         string Owner,
         string ID,
+        string PushURL,
+        DeclarativeWebPushSupport PushSupport,
         bool Expired = true
     );
     
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
     [JsonSerializable(typeof(WebPushSubscription[]))]
     public partial class WebPushSubscriptionEntryContext : JsonSerializerContext
+    {
+    }
+    
+    public record PushPayload(string ListID, string ItemID)
+    {
+        public string Tag => ItemID;
+    }
+    
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+    [JsonSerializable(typeof(PushPayload))]
+    public partial class PushPayloadConfigContext : JsonSerializerContext
     {
     }
 }

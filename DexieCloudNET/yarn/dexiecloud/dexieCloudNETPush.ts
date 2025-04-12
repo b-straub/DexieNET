@@ -26,10 +26,8 @@ import {DotNetObservable} from "./dexieCloudNETObservables";
 import {UserLogin} from "dexie-cloud-addon";
 import {liveQuery} from 'dexie';
 import {
-    BadgeEventsTableName, ClickedEventsTableName,
-    DexieCloudNETBroadcastIn, DexieCloudNETBroadcastOut, DexieCloudNETClickLock, DexieCloudNETReloadPage,
-    DexieCloudNETSkipWaiting, DexieCloudNETSubscriptionChanged, DexieCloudNETUpdateFound,
-    PushEventRecord, PushEventsDB,
+    DexieCloudNETBroadcastIn, DexieCloudNETBroadcastOut, DexieCloudNETReloadPage,
+    DexieCloudNETSkipWaiting, DexieCloudNETSubscriptionChanged, DexieCloudNETUpdateFound
 } from "../serviceworker/dexieCloudNETSWBroadcast";
 
 interface PushInformation {
@@ -38,9 +36,16 @@ interface PushInformation {
     id: number
 }
 
+interface  DeclarativeWebPushSupport {
+    declarative : boolean
+    isMobile: boolean
+}
+
 interface DexieCloudPushSubscription {
     id: string,
     expired: boolean,
+    pushURL: string,
+    pushSupport: DeclarativeWebPushSupport,
     subscription: PushSubscriptionJSON
 }
 
@@ -60,30 +65,16 @@ enum NotificationState {
 enum ServiceWorkerState {
     None,
     UpdateFound,
-    ReloadPage,
-    PushNotifications
+    ReloadPage
 }
 
-enum ChangeSource {
-    Push,
-    Visibility,
-    ServiceWorkerGeneric,
-    ServiceWorkerClicked,
-    ServiceWorkerBadge
-}
 
 interface ServiceWorkerNotification {
     state: ServiceWorkerState,
-    clicked: number,
-    badge: number,
-    changeSource: ChangeSource
 }
 
 const ServiceWorkerNotificationNone: ServiceWorkerNotification = {
     state: ServiceWorkerState.None,
-    clicked: 0,
-    badge: 0,
-    changeSource: ChangeSource.Push
 };
 
 const PushSubscriptionsTableName: string = "pushSubscriptions";
@@ -100,8 +91,7 @@ const BroadcastOut = new BroadcastChannel(DexieCloudNETBroadcastIn);
 
 let worker = await navigator.serviceWorker.getRegistration();
 let SubscriptionCountSubscription: Subscription | undefined = undefined;
-let SubscriptionClickedSubscription: Subscription | undefined = undefined;
-let SubscriptionBadgeSubscription: Subscription | undefined = undefined;
+let PushURL: string | undefined = undefined;
 
 export async function SubscribePush(): Promise<boolean> {
     if (!CurrentDB) {
@@ -162,7 +152,7 @@ export async function AskForNotificationPermission(): Promise<boolean> {
     return Notification.permission === "granted";
 }
 
-export async function SetPushNotificationState(ul: UserLogin, applicationServerKey: string) {
+export async function SetPushNotificationState(ul: UserLogin, pushURL: string, applicationServerKey: string) {
     if (!ul.isLoggedIn) {
         NotificationStateSubject.next(NotificationState.None);
         return;
@@ -173,9 +163,9 @@ export async function SetPushNotificationState(ul: UserLogin, applicationServerK
         return;
     }
 
+    PushURL = pushURL;
     await InitPushInformation(applicationServerKey);
     await UpdatePushDatabases(true, false);
-    await CheckPushEvents(ChangeSource.Push);
 }
 
 export function SetPushStatesToNone() {
@@ -299,19 +289,19 @@ async function UpdateSubscription(initial: boolean, pushInformation: PushInforma
             if (initial) { // subscription has been removed by browser but did exist -> notify
                 NotificationStateSubject.next(NotificationState.UnsubscribedRemote);
             }
-
-            const clickedEventsTable = PushEventsDB.table(ClickedEventsTableName);
-            await clickedEventsTable.clear();
         }
         return;
     }
 
     const subscriptionId = GetSubscriptionID(subscription);
 
-    if (subscriptionId) {
+    if (subscriptionId && PushURL) {
         if (!initial) {
+            
+            // @ts-ignore
+            const pushSupport: DeclarativeWebPushSupport = {declarative: window.pushManager !== undefined, isMobile: navigator.maxTouchPoints > 1}
             const subscriptionItem: DexieCloudPushSubscription = {
-                id: subscriptionId, expired: false, subscription: subscription.toJSON()
+                id: subscriptionId, expired: false, pushURL: PushURL, pushSupport: pushSupport, subscription: subscription.toJSON()
             };
 
             await subscriptionsTable.put(subscriptionItem);
@@ -330,10 +320,6 @@ function GetSubscriptionID(subscription: PushSubscription | null | undefined) {
 async function UnsubscribeLiveQueries() {
     SubscriptionCountSubscription?.unsubscribe();
     SubscriptionCountSubscription = undefined;
-    SubscriptionClickedSubscription?.unsubscribe();
-    SubscriptionClickedSubscription = undefined;
-    SubscriptionBadgeSubscription?.unsubscribe();
-    SubscriptionBadgeSubscription = undefined;
 }
 
 async function SubscribeLiveQueries(subscriptionId: string) {
@@ -357,51 +343,6 @@ async function SubscribeLiveQueries(subscriptionId: string) {
             }
         })
     ).subscribe();
-
-    const badgeEventsTable = PushEventsDB.table(BadgeEventsTableName);
-    const observableBadgeEvents: Observable<number> = from(liveQuery(() => badgeEventsTable.count()));
-    SubscriptionBadgeSubscription = observableBadgeEvents.subscribe(count => {
-        console.log(`New BadgeEvents from LiveQuery: ${count}`)
-        ServiceWorkerNotificationSubject.next({
-            state: ServiceWorkerState.PushNotifications,
-            clicked: 0,
-            badge: count,
-            changeSource: ChangeSource.ServiceWorkerBadge
-        })
-    });
-
-    const clickedEventsTable = PushEventsDB.table(ClickedEventsTableName);
-    const observableClickedEvents: Observable<number> = from(liveQuery(() => clickedEventsTable.count()));
-    SubscriptionClickedSubscription = observableClickedEvents.subscribe(count => {
-        console.log(`New ClickedEvents from LiveQuery: ${count}`)
-        ServiceWorkerNotificationSubject.next({
-            state: ServiceWorkerState.PushNotifications,
-            clicked: count,
-            badge: 0,
-            changeSource: ChangeSource.ServiceWorkerClicked
-        })
-    });
-}
-
-async function CheckPushEvents(changeSource: ChangeSource) {
-    await navigator.locks.request(DexieCloudNETClickLock, async () => {
-        const clickedEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(ClickedEventsTableName);
-        const clickedEventsCount = await clickedEventsTable.count();
-        console.log(`New ClickedEvents from ${ChangeSource[changeSource]}: ${clickedEventsCount}`)
-
-        const badgeEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(BadgeEventsTableName);
-        const badgeEventsCount = await badgeEventsTable.count();
-        console.log(`New BadgeEvents from ${ChangeSource[changeSource]}: ${badgeEventsCount}`)
-
-        if (clickedEventsCount > 0 || badgeEventsCount > 0 || changeSource === ChangeSource.ServiceWorkerBadge) {
-            ServiceWorkerNotificationSubject.next({
-                state: ServiceWorkerState.PushNotifications,
-                clicked: clickedEventsCount,
-                badge: badgeEventsCount,
-                changeSource: changeSource
-            });
-        }
-    });
 }
 
 export function UpdateServiceWorker() {
@@ -412,63 +353,11 @@ export function UpdateServiceWorker() {
     BroadcastOut.postMessage({type: DexieCloudNETSkipWaiting});
 }
 
-export async function GetClickedEvents(): Promise<PushEventRecord[]> {
-    const clickedEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(ClickedEventsTableName);
-    return clickedEventsTable.toArray();
-}
-
-export async function DeleteClickedEvents(ids: number[]): Promise<void> {
-    const clickedEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(ClickedEventsTableName);
-    await clickedEventsTable.bulkDelete(ids);
-}
-
-export async function GetBadgeEvents(): Promise<PushEventRecord[]> {
-    const badgeEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(BadgeEventsTableName);
-    return badgeEventsTable.toArray();
-}
-
-export async function DeleteBadgeEvents(keysToDelete: number[]): Promise<void> {
-    console.log(`DeleteBadgeEvents: ${keysToDelete.length}`)
-    //BroadcastOut.postMessage({type: DexieCloudNETDeleteBadgeEvents, keysToDelete: keysToDelete});
-    const badgeEventsTable = PushEventsDB.table<PushEventRecord, number, PushEventRecord>(BadgeEventsTableName);
-    await badgeEventsTable.bulkDelete(keysToDelete);
-
+export async function SetAppBadge(count: number): Promise<void> {
     if (navigator.setAppBadge) {
-        const count = await badgeEventsTable.count();
         await navigator.setAppBadge(count);
     }
 }
-
-// https://stackoverflow.com/a/64979288/3708778
-const getState = () => {
-    if (document.visibilityState === 'hidden') {
-        return 'hidden';
-    }
-    if (document.hasFocus()) {
-        return 'active';
-    }
-    return 'passive';
-};
-
-let displayState = getState();
-
-const onDisplayStateChanged = async () => {
-    const nextState = getState();
-    const prevState = displayState;
-
-    if (nextState !== prevState) {
-        console.log(`State changed: ${prevState} >>> ${nextState}`);
-        displayState = nextState;
-
-        if (nextState === 'active') {
-            await CheckPushEvents(ChangeSource.Visibility);
-        }
-    }
-};
-
-['pageshow', 'focus', 'blur', 'visibilitychange', 'resume'].forEach((type) => {
-    window.addEventListener(type, onDisplayStateChanged, {capture: true});
-});
 
 BroadcastIn.onmessage = async (event) => {
     if (event.data) {
@@ -483,18 +372,12 @@ BroadcastIn.onmessage = async (event) => {
                 break;
             case DexieCloudNETUpdateFound:
                 ServiceWorkerNotificationSubject.next({
-                    state: ServiceWorkerState.UpdateFound,
-                    clicked: 0,
-                    badge: 0,
-                    changeSource: ChangeSource.ServiceWorkerGeneric
+                    state: ServiceWorkerState.UpdateFound
                 });
                 break;
             case DexieCloudNETReloadPage:
                 ServiceWorkerNotificationSubject.next({
-                    state: ServiceWorkerState.ReloadPage,
-                    clicked: 0,
-                    badge: 0,
-                    changeSource: ChangeSource.ServiceWorkerGeneric
+                    state: ServiceWorkerState.ReloadPage
                 });
                 break;
         }

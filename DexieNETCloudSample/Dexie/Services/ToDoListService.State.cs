@@ -67,5 +67,10 @@ namespace DexieNETCloudSample.Dexie.Services
         };
 
         public static Func<bool> CanRejectInvite(Invite? invite) => () => { return invite?.Rejected is null; };
+        
+        public void SetPushPayloadEvent(PushPayload pushPayload)
+        {
+            DbService.SetPushPayloadEvent(pushPayload);
+        }
     }
 }

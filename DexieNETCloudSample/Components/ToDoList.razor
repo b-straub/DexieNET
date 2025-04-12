@@ -1,4 +1,6 @@
 ﻿@page "/"
+@attribute [Route(PushConstants.PushRoute)]
+
 @inherits RxBLServiceSubscriber<ToDoListService>
 
 <MudCard Class="mt-2 mx-n14">

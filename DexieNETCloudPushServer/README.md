@@ -27,18 +27,18 @@ Setting up the app's secrets is a two-step process:
   } 
 }
 ```
-* Add a property to *dexie-cloud.json* or any other settings file with the vapid public key, e.g.
+* create a settings file (rooteFolder may be different for *development* and *production*) with the vapid public key and the root folder of the pwa, e.g.
 ```json
 {
-   "serviceUrl": "https://dexie.cloud",
-   "dbUrl": "your dexie cloud database url",
-   "applicationServerKey": "your Vapid public key"
+   "applicationServerKey": "your Vapid public key",
+   "rootFolder": "your folder for the pwa"
 }
 ```
-In any case, the vapid public key must be added when configuring the cloud database.
+In any case, the root folder and vapid public key must be added when configuring the cloud database.
+Make sure that the resulting push URL will be correctly decoded on one of your pages.
 ```csharp
-public static async Task ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions,
-string? applicationServerKey = null)
+public static async Task ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions, 
+    string pushURL, string? applicationServerKey = null)
 ```
 
 See the [DexieNETCloudSample](../DexieNETCloudSample) for more information.

@@ -27,14 +27,21 @@ public partial class PushMemberContext : JsonSerializerContext
 {
 }
 
-public record WebPushMessage(string Title, string Message, string Icon, bool RequireInteraction, bool? SetBadge = null, string? PayloadJson = null , string? Tag = null);
+// ReSharper disable once InconsistentNaming
+public record WebPushNotification(string Title, string Body, string Navigate, string? Tag = null, long? App_badge = null, string? Icon =  null, string Lang = "en-US", string Dir = "rtl", bool Silent = false);
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-[JsonSerializable(typeof(WebPushMessage))]
-public partial class WebPushMessageContext : JsonSerializerContext
+// ReSharper disable once InconsistentNaming
+public record DeclarativeWebPushNotification(int? Web_push, WebPushNotification Notification)
 {
+    public static int DeclarativeWebPushMagicNumber = 8030;
 }
 
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(DeclarativeWebPushNotification))]
+public partial class DeclarativeWebPushNotificationContext : JsonSerializerContext
+{
+}
+    
 public record DatabaseConfig(string Url, string ClientId, string ClientSecret);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
