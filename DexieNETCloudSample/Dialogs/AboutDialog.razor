@@ -7,6 +7,7 @@
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
+                <MudText Typo="Typo.body1">Build at @_buildTime</MudText>
                 <MudText Typo="Typo.body1">© Bernhard Straub 2024</MudText>
             </MudCardContent>
         </MudCard>
@@ -21,6 +22,8 @@
     public required IMudDialogInstance MudDialog { get; init; }
 
     void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private readonly string _buildTime = BuildTimestamp.BuildTime.ToLongDateString() + " - " + BuildTimestamp.BuildTime.ToLongTimeString();
     
     protected override async Task OnInitializedAsync()
     {
