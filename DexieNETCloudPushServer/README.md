@@ -9,6 +9,8 @@ The best way to set up your own PushServer is with Docker.
 Create a Docker image using the [buildPushServer.sh](../buildPushServer.sh) script.
 Make sure *--platform* matches your desired architecture.
 
+**For new releases please expire all subscriptions and if push still doesn't work delete and reinstall your PWA!**
+
 Setting up the app's secrets is a two-step process:
 * map any local directory to */pushserver/database/*
 * Place a *secrets.json* file inside the mounted directory with the following content
@@ -27,15 +29,16 @@ Setting up the app's secrets is a two-step process:
   } 
 }
 ```
-* create a settings file (rooteFolder may be different for *development* and *production*) with the vapid public key and the root folder of the pwa, e.g.
+* create a settings file (rootFolder may be different for *development* and *production*) with the vapid public key and the root folder of the pwa, e.g.
 ```json
 {
    "applicationServerKey": "your Vapid public key",
    "rootFolder": "your folder for the pwa"
 }
 ```
-In any case, the root folder and vapid public key must be added when configuring the cloud database.
+In any case, the pushURL and vapid public key must be added when configuring the cloud database.
 Make sure that the resulting push URL will be correctly decoded on one of your pages.
+
 ```csharp
 public static async Task ConfigureCloud(this DBBase dexie, DexieCloudOptions cloudOptions, 
     string pushURL, string? applicationServerKey = null)
