@@ -15,10 +15,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DexieCloudNET" Version="1.4.1" Condition="'$(Configuration)' == 'Release'" />
+		<PackageReference Include="DexieCloudNET" Version="1.4.2" Condition="'$(Configuration)' == 'Release'" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.4" PrivateAssets="all" />
-		<PackageReference Include="RxMudBlazorLight" Version="1.0.0" />
+		<PackageReference Include="RxMudBlazorLight" Version="1.0.1" />
 		<PackageReference Include="cmdwtf.BuildTimestampGenerator" Version="*" PrivateAssets="all" />
 	</ItemGroup>
 	

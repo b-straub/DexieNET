@@ -1,13 +1,10 @@
 ﻿using DexieNETCloudSample.Dexie.Services;
 using DexieNETCloudSample.Dialogs;
 using DexieNETCloudSample.Logic;
-using DexieCloudNET;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RxBlazorLightCore;
 using RxMudBlazorLight.Extensions;
-using System.Text;
-using System.Text.Json;
 
 namespace DexieNETCloudSample.Components
 {
@@ -15,11 +12,10 @@ namespace DexieNETCloudSample.Components
     {
         [Inject]
         public required IDialogService DialogService { get; init; }
-
-        [Parameter]
-        [SupplyParameterFromQuery(Name = $"{PushConstants.PushPayloadJsonBase64}")]
-        public string? PushPayloadJsonBase64 { get; set; }
-
+        
+        [Inject]
+        public required  ISnackbar Snackbar { get; init; }
+        
         private enum DeleteType
         {
             All,
@@ -83,17 +79,75 @@ namespace DexieNETCloudSample.Components
         {
             return Service.IsListShareOpen(list) ? Icons.Material.TwoTone.Share : Icons.Material.Filled.Share;
         }
-
-        protected override void OnParametersSet()
+        
+        private async Task HandlePushPayload()
         {
-            if (PushPayloadJsonBase64 is not null)
+            ArgumentNullException.ThrowIfNull(Service.PushPayload?.ListID);
+        
+            Snackbar.Add($"Push Notification, ListID {Service.PushPayload.ListID}, ItemID {Service.PushPayload.ItemID}", Severity.Info, config => { config.RequireInteraction = false; });
+            await Service.OpenList(Service.PushPayload.ListID);
+            Service.SetPushPayload(null);
+        }
+        
+        private async Task HandleSharePayload()
+        {
+            ArgumentNullException.ThrowIfNull(Service.SharePayload);
+
+            if (Service.SharePayload.List is not null)
             {
-                var pushPayloadJson = Encoding.UTF8.GetString(Convert.FromBase64String(PushPayloadJsonBase64));
-                var pushPayload = JsonSerializer.Deserialize(pushPayloadJson,
-                    PushPayloadConfigContext.Default.PushPayload);
+                Snackbar.Add($"Push Notification, List {Service.SharePayload.List} opened", Severity.Info,
+                    config => { config.RequireInteraction = false; });
+
+                var lists = Service.ToDoLists.ToArray();
+                var list = lists.FirstOrDefault(l => l.Title == Service.SharePayload.List, lists.First());
+
+                if (list.ID is not null)
+                {
+                    await Service.OpenList(list.ID);
+                }
+
+                Service.SetSharePayload(Service.SharePayload with { List = null });
+            }
+            else
+            {
+                var list = Service.ToDoLists.FirstOrDefault(l => l.Title == PushConstants.ShareListTitle);
+
+                if (Service.CanAdd() && list is null)
+                {
+                    Snackbar.Add($"Push Notification, List {PushConstants.ShareListTitle} added", Severity.Info,
+                        config => { config.RequireInteraction = false; });
+
+                    var newList = ToDoListService.CreateList(PushConstants.ShareListTitle);
+                    await Service.DoAddItem(newList);
+                    
+                    Service.SetSharePayload(Service.SharePayload with { List = PushConstants.ShareListTitle });
+                }
+                else
+                {
+                    Snackbar.Add($"Push Notification, List {PushConstants.ShareListTitle} skipped", Severity.Info,
+                        config => { config.RequireInteraction = false; });
+
+                    if (list?.ID is not null)
+                    {
+                        await Service.OpenList(list.ID);
+                    }
+                }
+            }
+        }
+
+        protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList)
+        {
+            if (crList.Any(cr => cr.ID == Service.ItemsState.ID))
+            {
+                if (Service.PushPayload?.ListID is not null)
+                {
+                    await HandlePushPayload();
+                }
                 
-                ArgumentNullException.ThrowIfNull(pushPayload);
-                Service.SetPushPayloadEvent(pushPayload);
+                if (Service.SharePayload is not null)
+                {
+                    await HandleSharePayload();
+                }
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using System.Reactive;
-using DexieNET;
+﻿using DexieNET;
 using DexieCloudNET;
 //using DexieNETCloudSample.Aministration;
 using RxBlazorLightCore;
@@ -7,7 +6,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using DexieNETCloudSample.Dexie.Services;
 using DexieNETCloudSample.Extensions;
 
 namespace DexieNETCloudSample.Logic
@@ -135,7 +133,8 @@ namespace DexieNETCloudSample.Logic
         public IState<DBState> State { get; }
         public IState<SyncState?> SyncState { get; }
         public IState<ServiceWorkerNotifications?> ServiceWorkerNotificationState { get; }
-        public IState<PushPayload?> PushPayloadEventState { get; }
+        public PushPayloadToDo? PushPayload { get; private set; }
+        public SharePayload? SharePayload { get; private set; }
         public IState<UserLogin?> UserLogin { get; }
         public IState<UIInteraction?> UIInteraction { get; }
         public IState<IEnumerable<Invite>?> Invites { get; }
@@ -148,6 +147,7 @@ namespace DexieNETCloudSample.Logic
 
         private readonly IDexieNETFactory<ToDoDB> _dexieFactory;
         private readonly CompositeDisposable _DBServicesDisposeBag = [];
+        private string _pushMessageTag;
         
         public DexieCloudService(IServiceProvider serviceProvider)
         {
@@ -160,8 +160,7 @@ namespace DexieNETCloudSample.Logic
             State = this.CreateState(DBState.Closed);
             SyncState = this.CreateState((SyncState?)null);
             ServiceWorkerNotificationState = this.CreateState((ServiceWorkerNotifications?)null);
-            PushPayloadEventState = this.CreateState<PushPayload?>(null);
-            
+             
             UserLogin = this.CreateState((UserLogin?)null);
             UIInteraction = this.CreateState((UIInteraction?)null);
             Invites = this.CreateState((IEnumerable<Invite>?)null);
@@ -169,6 +168,7 @@ namespace DexieNETCloudSample.Logic
             LightMode = this.CreateState(true);
             NotificationsState = this.CreateState(NotificationState.None);
             LogoutObserver = this.CreateStateObserverAsync();
+            _pushMessageTag = Guid.NewGuid().ToString();
         }
 
         public async ValueTask OpenDB()

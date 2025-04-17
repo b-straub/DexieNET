@@ -8,7 +8,6 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class ToDoItemService
     {
-
         public Func<IStateCommandAsync, Task> ToggledItemCompleted(ToDoDBItem item) => async _ =>
         {
             ArgumentNullException.ThrowIfNull(_db);

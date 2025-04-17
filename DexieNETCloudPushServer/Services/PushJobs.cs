@@ -102,7 +102,7 @@ public class SchedulePushMessagesJob(IServiceProvider serviceProvider) : IJob
     }
 }
 
-//[DisallowConcurrentExecution]
+[DisallowConcurrentExecution]
 [PersistJobDataAfterExecution]
 public class ExecutePushMessagesJob(IServiceProvider serviceProvider) : IJob
 {

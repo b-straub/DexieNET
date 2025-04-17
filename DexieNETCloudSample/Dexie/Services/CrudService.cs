@@ -13,7 +13,9 @@ namespace DexieNETCloudSample.Dexie.Services
     {
         public IState<IEnumerable<T>> ItemsState { get; }
         public bool IsDBOpen => DbService.DB is not null;
-
+        public PushPayloadToDo? PushPayload => DbService.PushPayload;
+        public SharePayload? SharePayload => DbService.SharePayload;
+        
         // Transformers
         protected CompositeDisposable DBDisposeBag { get; } = [];
         protected DexieCloudService DbService { get; }
@@ -48,6 +50,16 @@ namespace DexieNETCloudSample.Dexie.Services
             return entity is not null && (Permissions?.CanUpdate(entity, query)).True();
         }
 
+        public void SetPushPayload(PushPayloadToDo? pushPayload)
+        {
+            DbService.SetPushPayload(pushPayload);
+        }
+    
+        public void SetSharePayload(SharePayload? sharePayload)
+        {
+            DbService.SetSharePayload(sharePayload);
+        }
+        
         protected override void Dispose(bool disposing)
         {
             DBDisposeBag.Clear();

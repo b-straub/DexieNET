@@ -361,21 +361,19 @@ namespace DexieNETCloudPushServer.Services
                         var vapidDetails = new VapidDetails(@$"mailto:user@localhost.de",
                             _vapidKey.PublicKey, _vapidKey.PrivateKey);
 
-                        var pushEventJsonBase64 =
-                            Convert.ToBase64String(Encoding.UTF8.GetBytes(pushTrigger.PushPayloadJson));
-                        var pushURLBase64 = dexieSubscription.PushURL +
-                                            $"?{PushConstants.PushPayloadJsonBase64}={pushEventJsonBase64}";
+                        var pushURLBase64 = dexieSubscription.PushURL + pushTrigger.PushPayloadBase64;
 
                         // currently declarative push is working only for iOS/iPadOS
                         // the notification format is a bit picky about optional fields, leave out icon and requireInteraction
                         var webPushNotification =
                             new WebPushNotification(notification.Title, pushTrigger.Message, pushURLBase64,
-                                notification.Tag, notification.AppBadge, 
-                                dexieSubscription.PushSupport.Declarative ? null : pushTrigger.Icon, 
+                                notification.Tag, notification.AppBadge,
+                                dexieSubscription.PushSupport.Declarative ? null : pushTrigger.Icon,
                                 dexieSubscription.PushSupport.Declarative ? null : pushTrigger.RequireInteraction);
                         var magicNumber = dexieSubscription.PushSupport is { Declarative: true, IsMobile: true }
                             ? DeclarativeWebPushNotification.DeclarativeWebPushMagicNumber
                             : (int?)null;
+
                         var declarativePushNotification =
                             new DeclarativeWebPushNotification(magicNumber, webPushNotification);
 
@@ -387,8 +385,13 @@ namespace DexieNETCloudPushServer.Services
                             vapidDetails,
                             cancellationToken);
 
-                        Logger.LogDebug("Submit notification '{MESSAGE}' to {URL}.", pushTrigger.Message,
-                            GetURLPart(dexieSubscription.Subscription.Endpoint));
+#if !DEBUG
+                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}'", notification.Title,
+                            GetURLPart(dexieSubscription.Subscription.Endpoint, 40), pushTrigger.Message);
+#else
+                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}' - '{NAVIGATE}' - '{TAG}'.", notification.Title,
+                            GetURLPart(dexieSubscription.Subscription.Endpoint), pushTrigger.Message, pushURLBase64, notification.Tag);
+#endif
                     }
                     catch (Exception exception)
                     {

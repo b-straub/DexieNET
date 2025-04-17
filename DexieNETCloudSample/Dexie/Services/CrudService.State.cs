@@ -1,24 +1,26 @@
 ﻿using DexieNET;
 using DexieNETCloudSample.Extensions;
-using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
     public partial class CrudService<T>
     {
+        
         public Func<IStateCommandAsync, Task> AddItem(T value)
         {
+            return async _ => await DoAddItem(value);
+        }
+        
+        public async Task DoAddItem(T value)
+        {
             ArgumentNullException.ThrowIfNull(DbService.DB);
-
-            return async _ =>
+            
+            await DbService.DB.Transaction(async t =>
             {
-                await DbService.DB.Transaction(async t =>
-                {
-                    var id = await GetTable().Add(value);
-                    await PostAddAction(id);
-                });
-            };
+                var id = await GetTable().Add(value);
+                await PostAddAction(id);
+            });
         }
 
         public Func<bool> CanAddItem => () => CanAdd();
@@ -88,7 +90,9 @@ namespace DexieNETCloudSample.Dexie.Services
                     await GetTable().Delete(item.ID);
                     await PostDeleteAction(item.ID);
                 });
-            };
+            }
+
+            ;
         };
 
         public Func<bool> CanClearItems => () => CanClearItemsDo();
@@ -96,6 +100,11 @@ namespace DexieNETCloudSample.Dexie.Services
         private bool CanClearItemsDo()
         {
             return ItemsState.Value.Any(CanDelete);
+        }
+
+        public async Task OpenList(string listID)
+        {
+            await DbService.OpenList(listID);
         }
     }
 }

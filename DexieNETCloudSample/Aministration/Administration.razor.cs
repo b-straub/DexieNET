@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using DexieNETCloudSample.Dialogs;
+using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 using RxMudBlazorLight.Extensions;
 
@@ -10,6 +11,8 @@ namespace DexieNETCloudSample.Aministration
     {
         [Inject]
         public required IDialogService DialogService { get; init; }
+
+        private string _notification = "Important message to all users! An update is available!";
 
         private Func<IStateCommandAsync, Task> GetUsers => async stateCommandAsync =>
         {
@@ -50,6 +53,11 @@ namespace DexieNETCloudSample.Aministration
             }
 
             await Service1.ExpireAllPushSubscriptions();
+        }
+        
+        private async Task SendPushNotification()
+        {
+            await Service1.DBService.SendPushNotification(_notification.MakeLines());
         }
     }
 }

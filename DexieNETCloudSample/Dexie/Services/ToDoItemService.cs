@@ -3,7 +3,6 @@ using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using DexieCloudNET;
 
 namespace DexieNETCloudSample.Dexie.Services
@@ -187,9 +186,15 @@ namespace DexieNETCloudSample.Dexie.Services
             ArgumentNullException.ThrowIfNull(item.ID);
             ArgumentNullException.ThrowIfNull(item.RealmId);
 
-            var pushPayload = new PushPayload(item.ListID, item.ID);
+            var pushPayload = new PushPayloadToDo(item.ListID, item.ID);
             var pushPayloadJson = JsonSerializer.Serialize(pushPayload,
-                PushPayloadConfigContext.Default.PushPayload);
+                PushPayloadToDoConfigContext.Default.PushPayloadToDo);
+
+            var pushPayloadEnvelope = new PushPayloadEnvelope(PushPayloadType.TODO, pushPayloadJson);
+            var pushPayloadEnvelopeJson = JsonSerializer.Serialize(pushPayloadEnvelope,
+                PushPayloadEnvelopeConfigContext.Default.PushPayloadEnvelope);
+            
+            var pushPayloadBase64 = pushPayloadEnvelopeJson.ToBase64();
             
             var firstReminderDateTime = item.DueDate - TimeSpan.FromMinutes(5);
 
@@ -201,8 +206,10 @@ namespace DexieNETCloudSample.Dexie.Services
             var messageReminder =
                 $"Reminder for {item.Text} at {item.DueDate:G}";
 
-            var reminderTrigger = new PushTrigger(messageReminder, pushPayloadJson, PushConstants.PushIcon, firstReminderDateTime.ToUniversalTime(),
+            var reminderTrigger = new PushTrigger(messageReminder, pushPayloadBase64, PushConstants.PushIconToDo, firstReminderDateTime.ToUniversalTime(),
                 false, 2, 2);
+
+            long? appBadge = notCompletedCount > 0 ? notCompletedCount : null;
             
             switch (reason)
             {
@@ -210,16 +217,16 @@ namespace DexieNETCloudSample.Dexie.Services
                 {
                     var messageAdd =
                         $"Added {item.Text} at {DateTime.Now:G}";
-                    var addTrigger = new PushTrigger(messageAdd, pushPayloadJson, PushConstants.PushIcon);
+                    var addTrigger = new PushTrigger(messageAdd, pushPayloadBase64, PushConstants.PushIconToDo);
                     var pushNotification =
-                        new PushNotification(item.ID, "ToDo", item.RealmId, [addTrigger, reminderTrigger], pushPayload.Tag, notCompletedCount);
+                        new PushNotification(item.ID, "ToDo", item.RealmId, [addTrigger, reminderTrigger], pushPayload.Tag, appBadge);
                     await _db.PushNotifications.Put(pushNotification);
                 }
                     break;
                 case PnReason.REMINDER:
                 {
                     var pushNotification =
-                        new PushNotification(item.ID, "ToDo", item.RealmId, [reminderTrigger], pushPayload.Tag, notCompletedCount);
+                        new PushNotification(item.ID, "ToDo", item.RealmId, [reminderTrigger], pushPayload.Tag, appBadge);
                     await _db.PushNotifications.Put(pushNotification);
                 }
                     break;
@@ -227,9 +234,9 @@ namespace DexieNETCloudSample.Dexie.Services
                 {
                     var messageCompleted =
                         $"{item.Text} completed!";
-                    var completedTrigger = new PushTrigger(messageCompleted, pushPayloadJson, PushConstants.PushIcon);
+                    var completedTrigger = new PushTrigger(messageCompleted, pushPayloadBase64, PushConstants.PushIconToDo);
                     var pushNotification =
-                        new PushNotification(item.ID, "ToDo", item.RealmId, [completedTrigger], pushPayload.Tag, notCompletedCount);
+                        new PushNotification(item.ID, "ToDo", item.RealmId, [completedTrigger], pushPayload.Tag, appBadge);
                     await _db.PushNotifications.Put(pushNotification);
                 }
                     break;

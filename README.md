@@ -9,11 +9,12 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/Rider.png" alt="Rider logo." style="width:100px;"> [*Support for Open-Source Projects*](https://www.jetbrains.com/community/opensource/#support) !
 
 ##  News
-
+- Added experimental support for 'share' via a magic link. See the updates in the [ToDoSample](DexieNETCloudSample). Unfortunately, the basic idea of using this for an iOS/iPadOS shortcut doesn't work as expected. The shortcut scheme *"webapp://"* does not handle query parameters. On macOS using the normal *"https://"* scheme it's working as expected!
+- You can find the experimental shortcut here [AddToDO](https://www.icloud.com/shortcuts/053b0c9644eb41bdb5139734591bce2d)
 - Added Declarative Web Push support. Please check the [Explanation](https://www.webkit.org/blog/16535/meet-declarative-web-push/#how-to-use-declarative-web-push) and PushServer [ReadMe](DexieNETCloudPushServer/README.md)
-    - Declarative WebPush is only support for iOS and iPadOS >= 18.4
+    - Declarative WebPush is only supported for iOS and iPadOS >= 18.4
     - Especially on iOS < 18.4 clicking on notifications currently does not work reliable [notificationclick events in serviceworkers not firing](https://bugs.webkit.org/show_bug.cgi?id=268797)
-    - Clicking on notifications currently does not work reliable for Chrome on MacOS >= 15 in addition to several other problems, use Safari for MacOS desktop PWA instead.
+    - Clicking on notifications currently does not work reliably for Chrome on MacOS >= 15 in addition to several other problems, use Safari for MacOS desktop PWA instead.
 - Released [DexieCloud](https://dexie.org/cloud/)
 - Please register with **DexieCloud** and test the [ToDoSample](DexieNETCloudSample). The configuration script can be found here [configure-app.ps1](DexieNETCloudSample/Dexie/configure-app.ps1) (Windows) or here [configure-app.sh](DexieNETCloudSample/Dexie/configure-app.sh) (Nix - jq required).
 - Published a new helper library [RxBlazorLight](https://github.com/b-straub/RxBlazorLight)  
@@ -24,7 +25,7 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 
 **DexieNET** aims to be a feature complete .NET wrapper for **Dexie.js** the famous Javascript IndexedDB wrapper from David Fahlander including support for **cloud sync**.
 
-I consists of two parts, a source generator converting  a C# record, class, struct to a DB store and a set of wrappers around the well known Dexie.js API constructs such as *Table, WhereClause, Collection*, ...
+It consists of two parts, a source generator converting a C# record, class, struct to a DB store and a set of wrappers around the well known Dexie.js API constructs such as *Table, WhereClause, Collection*, ...
 
 It's designed to work within a Blazor Webassembly application with minimal effort. 
 

@@ -167,15 +167,4 @@ namespace DexieCloudNET
     public partial class WebPushSubscriptionEntryContext : JsonSerializerContext
     {
     }
-    
-    public record PushPayload(string ListID, string ItemID)
-    {
-        public string Tag => ItemID;
-    }
-    
-    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-    [JsonSerializable(typeof(PushPayload))]
-    public partial class PushPayloadConfigContext : JsonSerializerContext
-    {
-    }
 }

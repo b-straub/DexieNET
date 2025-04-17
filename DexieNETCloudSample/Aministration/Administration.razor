@@ -2,9 +2,22 @@
 
 <MudStack Class="mt-6">
     <MudContainer MaxWidth=@MaxWidth.Small>
-        <MudButton Style="width: fit-content" Color="Color.Error" Variant=@Variant.Filled Disabled=@(!Service1.IsLoggedIn()) OnClick=@(async () => await ExpirePushSubscriptions())>
-            Expire PushSubscriptions
-        </MudButton>
+        <MudStack>
+            <MudButton Style="width: fit-content" Color="Color.Error" Variant=@Variant.Filled
+                       Disabled=@(!Service1.IsLoggedIn()) OnClick=@(async () => await ExpirePushSubscriptions())>
+                Expire PushSubscriptions
+            </MudButton>
+            <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                <MudTextField @bind-Value=@_notification Label="Notification" HelperText="A notification send to all users" Variant="Variant.Text" Lines="2" />
+            </MudHidden>
+            <MudHidden Breakpoint="Breakpoint.Xs">
+                <MudTextField @bind-Value=@_notification Label="Notification" HelperText="A notification send to all users" Variant="Variant.Text" />
+            </MudHidden>
+            <MudButton Style="width: fit-content" Color="Color.Warning" Variant=@Variant.Filled
+                       Disabled=@(!Service1.IsLoggedIn()) OnClick=@(async () => await SendPushNotification())>
+                Send PushNotification
+            </MudButton>
+        </MudStack>
     </MudContainer>
 
     <MudCard Class="mt-6 mx-n14">

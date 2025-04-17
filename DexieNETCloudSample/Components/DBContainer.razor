@@ -1,5 +1,4 @@
-﻿@using System.Text.Json
-@inherits RxBLServiceSubscriber<DexieCloudService>
+﻿@inherits RxBLServiceSubscriber<DexieCloudService>
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -23,10 +22,8 @@
 
     [Inject]
     public required IConfiguration Configuration { get; init; }
-
-    private PushPayload? _pushPayload;
     
-    protected override async Task OnServiceStateHasChangedAsync(IEnumerable<ServiceChangeReason> crList)
+    protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList)
     {
         foreach (var cr in crList)
         {
@@ -67,13 +64,6 @@
                     }
 
                     break;
-
-                case var value when value == Service.PushPayloadEventState.ID && Service.PushPayloadEventState.HasValue():
-                {
-                    _pushPayload = Service.PushPayloadEventState.Value;
-                }
-
-                    break;
             }
         }
 
@@ -88,8 +78,9 @@
         try
         {
             var hostURL = new Uri(NavigationManager.Uri).GetLeftPart(UriPartial.Path);
-            var pushUrl = new Uri(new Uri(hostURL), Configuration.GetRouteFolder().TrimEnd('/') + PushConstants.PushRoute);
-           
+            var pushUrl = new Uri(new Uri(hostURL), Configuration.GetRouteFolder());
+            pushUrl = new Uri(pushUrl, PushConstants.PushRoute + $"?{PushConstants.PushPayloadBase64}=");
+             
             await Service.OpenDB();
             ArgumentNullException.ThrowIfNull(Service.DB);
 
@@ -184,15 +175,6 @@
             await Service.OpenList(pushItem.ListID);
         }
     }
-    
-    private async Task HandlePushPayload()
-    {
-        ArgumentNullException.ThrowIfNull(Service.DB);
-        ArgumentNullException.ThrowIfNull(_pushPayload);
-        
-        Snackbar.Add($"Push Notification, ListID {_pushPayload.ListID}, ItemID {_pushPayload.ItemID}", Severity.Info, config => { config.RequireInteraction = false; });
-        await Service.OpenList(_pushPayload.ListID);
-    }
 
     private async Task UpdateApp()
     {
@@ -216,16 +198,5 @@
 
         ArgumentNullException.ThrowIfNull(Service.DB);
         await Service.SubscribePush();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        
-        if (!firstRender && _pushPayload is not null)
-        {
-            await HandlePushPayload();
-            _pushPayload = null;
-        }
     }
 }

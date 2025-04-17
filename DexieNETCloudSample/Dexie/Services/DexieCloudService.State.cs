@@ -1,5 +1,6 @@
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Text.Json;
 using DexieCloudNET;
 using DexieNET;
 using DexieNETCloudSample.Extensions;
@@ -127,8 +128,28 @@ public partial class DexieCloudService
             .Subscribe(observer);
     };
     
-    public void SetPushPayloadEvent(PushPayload pushPayload)
+    public void SetPushPayload(PushPayloadToDo? pushPayload)
     {
-        PushPayloadEventState.Value = pushPayload;
+        PushPayload = pushPayload;
+    }
+    
+    public void SetSharePayload(SharePayload? sharePayload)
+    {
+        SharePayload = sharePayload;
+    }
+
+    public async Task SendPushNotification(string message)
+    {
+        ArgumentNullException.ThrowIfNull(DB);
+        
+        var pushPayloadEnvelope = new PushPayloadEnvelope(PushPayloadType.MESSAGE, message);
+        var pushPayloadEnvelopeJson = JsonSerializer.Serialize(pushPayloadEnvelope,
+            PushPayloadEnvelopeConfigContext.Default.PushPayloadEnvelope);
+            
+        var pushPayloadBase64 = pushPayloadEnvelopeJson.ToBase64();
+        var messageTrigger = new PushTrigger(message, pushPayloadBase64, PushConstants.PushIconMessage);
+        var pushNotification =
+            new PushNotification(_pushMessageTag, "ToDo", string.Empty, [messageTrigger], _pushMessageTag);
+        await DB.PushNotifications.Put(pushNotification);
     }
 }
