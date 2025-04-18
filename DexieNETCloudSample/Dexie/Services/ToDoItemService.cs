@@ -196,11 +196,11 @@ namespace DexieNETCloudSample.Dexie.Services
             
             var pushPayloadBase64 = pushPayloadEnvelopeJson.ToBase64();
             
-            var firstReminderDateTime = item.DueDate - TimeSpan.FromMinutes(5);
+            var firstReminderDateTime = item.DueDate - TimeSpan.FromMinutes(10);
 
             if (firstReminderDateTime <= DateTime.Now)
             {
-                firstReminderDateTime = DateTime.Now + TimeSpan.FromMinutes(1);
+                firstReminderDateTime = DateTime.Now + TimeSpan.FromMinutes(2);
             }
 
             var messageReminder =

@@ -23,6 +23,7 @@ namespace DexieNETCloudPushServer.Services
         private static TimeSpan PushSubscriptionsStartOffset => PushSubscriptionsInterval;
 #endif
         public static TimeSpan NotificationsInterval => TimeSpan.FromMinutes(1);
+        private static TimeSpan NotificationDirectStartOffset => TimeSpan.FromSeconds(10);
         private static TimeSpan NotificationExpiredMinutes => TimeSpan.FromMinutes(5);
         private static TimeSpan TokeRefreshOffsetMinutes => TimeSpan.FromMinutes(5);
 
@@ -225,9 +226,10 @@ namespace DexieNETCloudPushServer.Services
                                 TimeStamp(pushTimeUtc.ToLocalTime()));
                             continue;
                         }
-                        else if (pushTimeUtc < DateTime.UtcNow)
+
+                        if (pushTimeUtc <= DateTime.UtcNow)
                         {
-                            pushTimeUtc = DateTime.UtcNow;
+                            pushTimeUtc = DateTime.UtcNow + NotificationDirectStartOffset;
                         }
 
                         var intervalMinutes = pushTrigger.IntervalMinutes ?? 0;
@@ -385,12 +387,13 @@ namespace DexieNETCloudPushServer.Services
                             vapidDetails,
                             cancellationToken);
 
+                        var timeStamp = TimeStamp(DateTime.UtcNow.ToLocalTime());
 #if !DEBUG
-                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}'", notification.Title,
-                            GetURLPart(dexieSubscription.Subscription.Endpoint, 40), pushTrigger.Message);
+                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}' at '{TIMESTAMP}'.", notification.Title,
+                            GetURLPart(dexieSubscription.Subscription.Endpoint, 40), pushTrigger.Message, timeStamp);
 #else
-                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}' - '{NAVIGATE}' - '{TAG}'.", notification.Title,
-                            GetURLPart(dexieSubscription.Subscription.Endpoint), pushTrigger.Message, pushURLBase64, notification.Tag);
+                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}' - '{NAVIGATE}' - '{TAG}' at '{TIMESTAMP}'.", notification.Title,
+                            GetURLPart(dexieSubscription.Subscription.Endpoint), pushTrigger.Message, pushURLBase64, notification.Tag, timeStamp);
 #endif
                     }
                     catch (Exception exception)
