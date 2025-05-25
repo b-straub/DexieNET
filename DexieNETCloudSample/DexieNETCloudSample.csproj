@@ -90,7 +90,7 @@ catch (Exception ex)
 			Filename="wwwroot\index.html"
 			Default="/"
 			Match="(&lt;base href=&quot;)(.*)(&quot; /&gt;)"
-			Settings="wwwroot\dexie-cloud.json"
+			Settings="wwwroot\appsettings.Production.json"
 			Field="rootFolder"
 		/>
 
@@ -98,7 +98,7 @@ catch (Exception ex)
 			Filename="wwwroot\service-worker.published.js"
 			Default="/"
 			Match="(const base = &quot;)(.*)(&quot;)"
-			Settings="wwwroot\dexie-cloud.json"
+			Settings="wwwroot\appsettings.Production.json"
 			Field="rootFolder"
 		/>
 	</Target>
