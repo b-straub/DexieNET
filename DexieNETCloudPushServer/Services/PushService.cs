@@ -365,14 +365,14 @@ namespace DexieNETCloudPushServer.Services
 
                         var pushURLBase64 = dexieSubscription.PushURL + pushTrigger.PushPayloadBase64;
 
-                        // currently declarative push is working only for iOS/iPadOS
+                        // currently declarative push is working only for iOS/iPadOS >= 18.4, MacOS >= 15.5
                         // the notification format is a bit picky about optional fields, leave out icon and requireInteraction
                         var webPushNotification =
                             new WebPushNotification(notification.Title, pushTrigger.Message, pushURLBase64,
                                 notification.Tag, notification.AppBadge,
                                 dexieSubscription.PushSupport.Declarative ? null : pushTrigger.Icon,
                                 dexieSubscription.PushSupport.Declarative ? null : pushTrigger.RequireInteraction);
-                        var magicNumber = dexieSubscription.PushSupport is { Declarative: true, IsMobile: true }
+                        var magicNumber = dexieSubscription.PushSupport is { Declarative: true }
                             ? DeclarativeWebPushNotification.DeclarativeWebPushMagicNumber
                             : (int?)null;
 
