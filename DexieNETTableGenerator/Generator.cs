@@ -44,7 +44,7 @@ namespace DNTGenerator
                 .CreateSyntaxProvider(
                     predicate: static (syntaxNode, _) => syntaxNode.MatchDeclaration(),
                     transform: static (context, _) => context.MatchInterface())
-                .Where(static m => m is not null)!;
+                .Where(static m => m is not null);
 
             IncrementalValueProvider<(Compilation, ImmutableArray<TypeDeclarationSyntax?>)> compilationWithRecords
                 = context.CompilationProvider.Combine(records.Collect());

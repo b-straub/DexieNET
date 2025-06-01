@@ -22,7 +22,7 @@ using System.Text.Json;
 
 namespace DNTGenerator.Helpers
 {
-    internal static class HelperExtensions
+    public static class HelperExtensions
     {
         public static bool True(this bool? value)
         {

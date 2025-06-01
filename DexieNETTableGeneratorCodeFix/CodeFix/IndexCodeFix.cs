@@ -26,8 +26,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("DexieNETTest.TableGeneratorTest")]
 namespace DNTGenerator.CodeFix
 {
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(IndexCodeFix)), Shared]

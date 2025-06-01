@@ -26,9 +26,9 @@ using System.Threading;
 
 namespace DNTGenerator.Verifier
 {
-    internal static class DBRecordExtensions
+    public static class DBRecordExtensions
     {
-        public static string DexieNETNamespace = "DexieNET";
+        private static string DexieNETNamespace = "DexieNET";
         public static string IndexAttributeName = DexieNETNamespace + "." + "IndexAttribute";
         public static string SchemaAttributeName = DexieNETNamespace + "." + "SchemaAttribute";
 

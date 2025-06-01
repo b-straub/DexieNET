@@ -24,7 +24,7 @@ using static DNTGenerator.Verifier.DBRecordExtensions;
 
 namespace DNTGenerator.Diagnostics
 {
-    internal partial class GeneratorDiagnostic
+    public partial class GeneratorDiagnostic
     {
         private readonly DiagnosticDescriptor _descriptor;
         private readonly Location? _location;

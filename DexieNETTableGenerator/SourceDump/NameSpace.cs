@@ -17,7 +17,6 @@ limitations under the License.
 */
 
 using DNTGenerator.Verifier;
-using Microsoft.CodeAnalysis;
 using System.Text;
 
 namespace DNTGenerator.SourceDump

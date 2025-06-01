@@ -20,7 +20,7 @@ using Microsoft.CodeAnalysis;
 
 namespace DNTGenerator.Diagnostics
 {
-    internal partial class GeneratorDiagnostic
+    public partial class GeneratorDiagnostic
     {
         #region General
         public static DiagnosticDescriptor Internal =

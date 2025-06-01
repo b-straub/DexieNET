@@ -22,7 +22,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DNTGenerator.Helpers
 {
-    internal static class GeneratorDiagnosticExtensions
+    public static class GeneratorDiagnosticExtensions
     {
         public static bool EqualsId(this DiagnosticDescriptor source, DiagnosticDescriptor other)
         {

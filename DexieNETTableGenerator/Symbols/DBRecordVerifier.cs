@@ -20,7 +20,6 @@ using DNTGenerator.Diagnostics;
 using DNTGenerator.Helpers;
 using DNTGenerator.Query;
 using Microsoft.CodeAnalysis;
-using System;
 
 namespace DNTGenerator.Verifier
 {

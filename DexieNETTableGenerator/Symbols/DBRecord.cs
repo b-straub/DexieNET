@@ -24,7 +24,7 @@ using static DNTGenerator.Verifier.DBRecordExtensions;
 
 namespace DNTGenerator.Verifier
 {
-    internal class DBRecord(INamedTypeSymbol symbol, DBRecord.RecordType recordType, bool isPartial, Compilation compilation, CancellationToken cancellationToken)
+    public class DBRecord(INamedTypeSymbol symbol, DBRecord.RecordType recordType, bool isPartial, Compilation compilation, CancellationToken cancellationToken)
     {
         public enum RecordType
         {
