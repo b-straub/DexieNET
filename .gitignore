@@ -15,30 +15,24 @@ DexieNETTest/TableGeneratorTest/TestResults
 Publish
 GeneratorRunner
 payload.json
+docker-compose.yml
+*.tar
+Nuget
+**node_modules
 
-DexieNET/npm/node_modules
 DexieNET/wwwroot
 DexieNET/yarn/src/*.js
-DexieNET/yarn/node_modules
+DexieNET/yarn/.eslintrc.js
 
-DexieCloudNET/yarn/node_modules
-DexieCloudNET/yarn/src/*.js
 DexieCloudNET/wwwroot/
-DexieCloudNET/yarn/src/DexieNET
+DexieCloudNET/yarn/src/*.js
+DexieCloudNET/yarn/.eslintrc.js
 
 DexieNETCloudSample/Dexie/dexie-cloud.json
 DexieNETCloudSample/Dexie/dexie-cloud.key
 DexieNETCloudSample/wwwroot/dexie-cloud.json
 DexieNETCloudSample/wwwroot/importfile.json
-
-DexieNET/yarn/.eslintrc.js
 DexieNETCloudSample/Properties/Settings.xml
 DexieNETCloudSample/wwwroot/.htaccess
-DexieNETCloudPushServer/database
-DexieCloudNET/yarn/dexiecloud/node_modules
-DexieCloudNET/yarn/serviceworker/node_modules
-docker-compose.yml
-*.tar
-DexieNET/npm
-Nuget
 DexieNETCloudSample/wwwroot/appsettings*
+DexieNETCloudPushServer/database
