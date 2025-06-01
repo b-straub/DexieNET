@@ -61,7 +61,7 @@ namespace DexieNET
         private readonly bool _parallel;
 
         private TAMode _mode;
-        private bool _aborted = false;
+        private bool _aborted;
 
         private readonly HashSet<string> _tables;
         public Transaction(DBBase db, bool parallel) : base(db.DBBaseJS.Module, null)

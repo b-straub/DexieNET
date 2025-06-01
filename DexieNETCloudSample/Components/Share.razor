@@ -4,7 +4,7 @@
     <MudCardHeader>
         <CardHeaderAvatar>
             <MudAvatar Color="Color.Inherit">
-                <MudIcon Icon="@Icons.Material.Filled.People" />
+                <MudIcon Icon="@Icons.Material.Filled.People"/>
             </MudAvatar>
         </CardHeaderAvatar>
         <CardHeaderContent>
@@ -12,14 +12,11 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
-        @if (Service.Members.Any())
-        {
-            <MemberForm List=@List />
-        }
-        @if (Service.CanAddMember())
-        {
-            <InviteForm />
-        }
+        <RxBLStateScope TScope=@ToDoListMemberService.MemberScope TService=@ToDoListMemberService
+                        ScopeFactory=@(() => Service.CreateMemberScope())>
+                <MemberForm List=List/>
+                <InviteForm/>
+        </RxBLStateScope>
     </MudCardContent>
 </MudCard>
 
@@ -27,21 +24,4 @@
 @code {
     [Parameter, EditorRequired]
     public required ToDoDBList List { get; init; }
-
-    protected override Task OnInitializedAsync()
-    {
-        Service.List.Value = List;
-
-        return base.OnInitializedAsync();
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (Service.List.Value != List)
-        {
-            Service.List.Value = List;
-        }
-
-        await base.OnParametersSetAsync();
-    }
 }

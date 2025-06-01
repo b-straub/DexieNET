@@ -1,4 +1,5 @@
 ﻿const path = require('path')
+const RemovePlugin = require('remove-files-webpack-plugin');
 
 module.exports = {
     mode: 'development',
@@ -30,5 +31,15 @@ module.exports = {
     },
     optimization: {
         minimize: false
-    }
+    },
+    plugins: [
+        new RemovePlugin({
+            before: {
+                allowRootAndOutside: true,
+                include: [
+                    path.resolve(__dirname, '../../wwwroot/js')
+                ]
+            }
+        })
+    ]
 }

@@ -2,11 +2,11 @@
 
 @if (AddMode)
 {
-    <MudFabAsyncRx StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanAdd Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" HasProgress=@false ExecuteAsyncCallback=@ShowAddUpdateDialog />
+    <MudFabAsyncRx StateCommand=@Owner.CommandAsync CanChangeCallback=@Owner.CanAdd Class="mr-2" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" HasProgress=@false ExecuteAsyncCallback=@ShowAddUpdateDialog />
 }
 else
 {
-    <MudIconButtonAsyncRx StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanUpdateItem(Item) Color="Color.Info" Icon=@Icons.Material.Filled.Edit ExecuteAsyncCallback=@ShowAddUpdateDialog />
+    <MudIconButtonAsyncRx StateCommand=@Owner.CommandAsync CanChangeCallback=@Owner.CanUpdateItem(Item) Color="Color.Info" Icon=@Icons.Material.Filled.Edit ExecuteAsyncCallback=@ShowAddUpdateDialog />
 }
 
 @code {
@@ -21,7 +21,8 @@ else
 
     private async Task ShowAddUpdateDialog(IStateCommandAsync _)
     {
-        var parameters = new DialogParameters { ["Item"] = Item, ["Service"] = Service };
+        using var itemInput = Owner.CreateItemInput(Item);
+        var parameters = new DialogParameters { ["Item"] = Item, ["Owner"] = itemInput };
         var dialog = await DialogService.ShowAsync<AddToDoItem>(AddMode ? "Add ToDo" : "Edit ToDo", parameters);
         var result = await dialog.Result;
 

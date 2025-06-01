@@ -15,40 +15,52 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-'DexieNET' used with permission of David Fahlander 
+'DexieNET' used with permission of David Fahlander
 */
 
 using Microsoft.JSInterop;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using R3;
 
 namespace DexieNET
 {
-    public sealed class LiveQuery<T> : IObservable<T>
+    public interface IUseLiveQuery<T>
     {
-        private DotNetObjectReference<LiveQuery<T>>? dotnetRef;
-        private long? _id;
+        public Observable<T> AsObservable { get; }
+    }
+    
+    public interface ILiveQuery<T>
+    {
+        public Observable<T> AsObservable { get; }
+        public IUseLiveQuery<T> UseLiveQuery(params Observable<Unit>[] observables);
+    }
+    
+    internal sealed class LiveQuery<T> : ILiveQuery<T>, IUseLiveQuery<T>
+    {
+        public Observable<T> AsObservable { get; }
+        public Observable<T> AsRawObservable { get; }
         
+        private DotNetObjectReference<LiveQuery<T>>? _dotnetRef;
+        private long? _id;
+
         private readonly DBBase _db;
         private readonly Func<ValueTask<T>> _query;
-        private readonly BehaviorSubject<T?> _changedSubject;
-        private readonly IObservable<T> _queryObservable;
+        private readonly Subject<T> _subject;
         
-        internal LiveQuery(DBBase db, Func<ValueTask<T>> query)
+        public LiveQuery(DBBase db, Func<ValueTask<T>> query, params Observable<Unit>[] observables)
         {
             _db = db;
             _query = query;
-            _changedSubject = new(default);
+            _subject = new();
 
-            _queryObservable = _changedSubject
-                .Where(t => t is not null)
-                .Select(t => t!)
+            AsRawObservable = _subject
+                .Do(onSubscribe: OnSubscribe, onDispose: OnUnsubscribe);
+            
+            AsObservable = AsRawObservable
                 .DistinctUntilChanged()
-                .Finally(Unsubscribe);
+                .Share();
         }
 
-        public UseLiveQuery<T> UseLiveQuery(params IObservable<Unit>[] observables)
+        public IUseLiveQuery<T> UseLiveQuery(params Observable<Unit>[] observables)
         {
             return new UseLiveQuery<T>(this, observables);
         }
@@ -60,92 +72,62 @@ namespace DexieNET
         }
 
         [JSInvokable]
-        public void OnNext(T value)
+        public void OnNextJS(T value)
         {
-            _changedSubject.OnNext(value);
+            _subject.OnNext(value);
         }
 
         [JSInvokable]
-        public void OnCompleted()
+        public void OnCompletedJS()
         {
-            _changedSubject.OnCompleted();
+            _subject.OnCompleted(Result.Success);
         }
 
         [JSInvokable]
-        public void OnError(string error)
+        public void OnErrorJS(string error)
         {
-            _changedSubject.OnError(new InvalidOperationException(error));
+            _subject.OnErrorResume(new InvalidOperationException(error));
         }
-
-        public IDisposable Subscribe(IObserver<T> observer)
+        
+        private void OnSubscribe()
         {
-            var liveQuerySubscribe = !_changedSubject.HasObservers;
-
-            dotnetRef ??= DotNetObjectReference.Create(this);
-            
-            if (liveQuerySubscribe)
+            OnUnsubscribe();
+            if (_dotnetRef is null && _id is null)
             {
-                _id = _db.DBBaseJS.Module.Invoke<long>("LiveQuerySubscribe", dotnetRef);
+                _dotnetRef = DotNetObjectReference.Create(this);
+                _id = _db.DBBaseJS.Module.Invoke<long>("LiveQuerySubscribe", _dotnetRef);
 #if DEBUG
                 Console.WriteLine($"LiveQuery subscribe: {_id}");
 #endif
-                
-                return _changedSubject.Value is null ?
-                    _queryObservable.Subscribe(observer) :
-                    _queryObservable.Skip(1).Subscribe(observer); // LiveQuerySubscribe invokes initial query
             }
-
-            return _queryObservable.Subscribe(observer); ;
         }
 
-        private void Unsubscribe()
+        private void OnUnsubscribe()
         {
-            if (!_changedSubject.HasObservers)
+            if (_dotnetRef is not null && _id is not null)
             {
 #if DEBUG
                 Console.WriteLine($"LiveQuery unsubscribe: {_id}");
 #endif
                 _db.DBBaseJS.Module.InvokeVoid("LiveQueryUnsubscribe", _id);
                 _id = null;
-                
-                dotnetRef?.Dispose();
-                dotnetRef = null;
+
+                _dotnetRef?.Dispose();
+                _dotnetRef = null;
             }
         }
     }
 
-    public sealed class UseLiveQuery<T> : IObservable<T>
+    internal sealed class UseLiveQuery<T>(LiveQuery<T> liveQuery, params Observable<Unit>[] observables)
+        : IUseLiveQuery<T>
     {
-        private readonly IObservable<Unit> _lqTrigger;
-        private readonly LiveQuery<T> _liveQuery;
-        private IDisposable? _lqDisposable;
-
-        internal UseLiveQuery(LiveQuery<T> liveQuery, params IObservable<Unit>[] observables)
-        {
-            _liveQuery = liveQuery;
-
-            _lqTrigger = observables.Length == 0 ? 
-            Observable.Return(Unit.Default) :
-            Observable
-                .Merge(observables)
-                .StartWith(Unit.Default)
-                .Finally(Unsubscribe);
-        }
-
-        private void Unsubscribe()
-        {
-            _lqDisposable?.Dispose();
-            _lqDisposable = null;
-        }
-
-        public IDisposable Subscribe(IObserver<T> observer)
-        {
-            return _lqTrigger
-                .Subscribe(_ =>
-                {
-                    _lqDisposable?.Dispose();
-                    _lqDisposable = _liveQuery.Subscribe(observer);
-                });
-        }
+        public Observable<T> AsObservable { get; } = observables.Length == 0
+            ? liveQuery.AsObservable
+            : Observable.Merge(liveQuery.AsRawObservable,
+                    observables
+                        .Merge()
+                        .SelectAwait(async (_, _) => await liveQuery.LiveQueryCallback(), AwaitOperation.Switch))
+                .DistinctUntilChanged()
+                .Share();
     }
 }

@@ -102,9 +102,9 @@ namespace DexieNETCloudSample.Dexie.Services
             return ItemsState.Value.Any(CanDelete);
         }
 
-        public async Task OpenList(string listID)
+        public async Task<bool> OpenList(string listID)
         {
-            await DbService.OpenList(listID);
+            return await DbService.OpenList(listID);
         }
     }
 }

@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DexieCloudNET;
 using Quartz;
-using Quartz.Listener;
 
 namespace DexieNETCloudPushServer.Services;
 

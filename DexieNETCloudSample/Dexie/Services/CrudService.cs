@@ -4,8 +4,7 @@ using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 using System.Linq.Expressions;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using R3;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
@@ -16,7 +15,6 @@ namespace DexieNETCloudSample.Dexie.Services
         public PushPayloadToDo? PushPayload => DbService.PushPayload;
         public SharePayload? SharePayload => DbService.SharePayload;
         
-        // Transformers
         protected CompositeDisposable DBDisposeBag { get; } = [];
         protected DexieCloudService DbService { get; }
 
@@ -40,8 +38,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             _dbDisposable = DbService.AsChangedObservable(DbService.State)
                 .Where(s => s is DBState.Cloud)
-                .Select(async s => await InitDB())
-                .Subscribe();
+                .SubscribeAwait(async (_,_) => await InitDB());
         }
 
 
@@ -63,9 +60,7 @@ namespace DexieNETCloudSample.Dexie.Services
         protected override void Dispose(bool disposing)
         {
             DBDisposeBag.Clear();
-            Permissions?.Dispose();
-            Permissions = null;
-
+        
             if (disposing)
             {
                 _dbDisposable?.Dispose();
@@ -74,7 +69,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
         protected abstract Table<T, string> GetTable();
 
-        protected abstract Task<LiveQuery<IEnumerable<T>>> InitializeDB(ToDoDB db);
+        protected abstract Task<ILiveQuery<IEnumerable<T>>> InitializeDB(ToDoDB db);
 
         private async Task InitDB()
         {
@@ -87,7 +82,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             var allItemsQuery = await InitializeDB(DbService.DB);
 
-            DBDisposeBag.Add(allItemsQuery
+            DBDisposeBag.Add(allItemsQuery.AsObservable
                 .Subscribe(l =>
             {
 #if DEBUG
@@ -97,7 +92,7 @@ namespace DexieNETCloudSample.Dexie.Services
             }));
             
             Permissions = GetTable().CreateUsePermissions();
-            DBDisposeBag.Add(Permissions.Subscribe(this));
+            DBDisposeBag.Add(Permissions.AsObservable.Subscribe(this));
         }
 
         protected virtual Task PostAddAction(string id) { return Task.CompletedTask; }

@@ -15,163 +15,137 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-'DexieNET' used with permission of David Fahlander 
+'DexieNET' used with permission of David Fahlander
 */
 
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using R3;
 using DexieNET;
 using Microsoft.JSInterop;
 
+// ReSharper disable once CheckNamespace
 namespace DexieCloudNET;
 
-public class JSObservableKey<T>(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction, params object?[] args) : JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction, null, args)
+public record TimeOut<T>(TimeSpan TimeSpan, T Value);
+
+internal class JSObservable<T>
 {
-    protected override void PostUnsubscribe()
-    {
-        if (!DB.HasCloud())
-        {
-            throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
-        }
+    public Observable<T> AsObservable { get; }
 
-        ArgumentNullException.ThrowIfNull(Value);
-        ArgumentNullException.ThrowIfNull(JsPostUnsubscribeFunction);
-
-        DB.Cloud.Module.InvokeVoid(JsPostUnsubscribeFunction, Value);
-    }
-}
-
-public class JSObservable<T> : IObservable<T>
-{
-    public record TimeOut(TimeSpan TimeSpan, T Value);
-    
     public T? Value => _subject.Value;
-    protected DBBase DB { get; }
-    protected string? JsPostUnsubscribeFunction { get; }
 
+    private readonly DBBase _db;
     private DotNetObjectReference<JSObservable<T>>? _dotnetRef;
     private readonly BehaviorSubject<T?> _subject;
     private readonly string _jsSubscribeFunction;
-
+    private readonly string? _jsUnSubscribeFunction;
+   
     private IJSInProcessObjectReference? _jsSubscription;
-    private readonly IObservable<T> _observable;
     private readonly object?[] _args;
 
-    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, TimeOut? timeout = null)
+    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction)
     {
-        return new JSObservable<T>(db, jsSubscribeFunction, null, timeout);
+        return new JSObservable<T>(db, jsSubscribeFunction);
     }
-    
-    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction) 
+
+    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, TimeOut<T>? timeout)
     {
-        return new JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction);
+        return new JSObservable<T>(db, jsSubscribeFunction, null, null, timeout);
     }
-    
-    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, string jsPostUnsubscribeFunction, params object?[] args) 
+
+    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, string? jsUnsubscribeFunction)
     {
-        return new JSObservable<T>(db, jsSubscribeFunction, jsPostUnsubscribeFunction, null, args);
+        return new JSObservable<T>(db, jsSubscribeFunction, jsUnsubscribeFunction);
     }
-    
-    protected JSObservable(DBBase db, string jsSubscribeFunction, string? jsPostUnsubscribeFunction = null, TimeOut? timeout = null, params object?[] args)
+
+    public static JSObservable<T> Create(DBBase db, string jsSubscribeFunction, string? jsUnsubscribeFunction, params object?[] args)
     {
-        DB = db;
+        return new JSObservable<T>(db, jsSubscribeFunction, jsUnsubscribeFunction, null, args);
+    }
+
+    protected JSObservable(DBBase db, string jsSubscribeFunction, string? jsUnsubscribeFunction = null, TimeOut<T>? timeout = null, params object?[] args)
+    {
+        _db = db;
         _subject = new(default);
         _jsSubscribeFunction = jsSubscribeFunction;
-        JsPostUnsubscribeFunction = jsPostUnsubscribeFunction;
+        _jsUnSubscribeFunction = jsUnsubscribeFunction;
         _args = args;
 
-        _observable = _subject
-            .Skip(1)
+        AsObservable = _subject
+            .Do(onSubscribe: OnSubscribe, onDispose: OnUnsubscribe)
             .Where(x => x is not null)
             .Select(x => x!)
-            .Finally(Unsubscribe)
-            .Publish()
-            .RefCount();
+            .Share();
 
         if (timeout is not null)
         {
-            _observable = _observable.Timeout(timeout.TimeSpan, Observable.Return(timeout.Value));
+            AsObservable = AsObservable.Timeout(timeout.TimeSpan).Select(_ => timeout.Value);
         }
-    }
-
-    public IDisposable Subscribe(IObserver<T> observer)
-    {
-        if (!DB.HasCloud())
-        {
-            throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
-        }
-#if DEBUG
-        Console.WriteLine($"JSObservable subscribe: {_jsSubscribeFunction}");
-#endif
-        _dotnetRef ??= DotNetObjectReference.Create(this);
-        
-        if (_jsSubscription is null)
-        {
-            var args = new List<object?>() { DB.Cloud.Reference, _dotnetRef };
-            args.AddRange(_args);
-            _jsSubscription = DB.Cloud.Module.Invoke<IJSInProcessObjectReference>(_jsSubscribeFunction, [.. args]);
-        }
-   
-        return _observable.Subscribe(observer);
     }
 
     [JSInvokable]
-    public void OnNext(T value)
+    public void OnNextJS(T value)
     {
         _subject.OnNext(value);
     }
 
     [JSInvokable]
-    public void OnCompleted()
+    public void OnCompletedJS()
     {
         _subject.OnCompleted();
     }
 
     [JSInvokable]
-    public void OnError(string error)
+    public void OnErrorJS(string error)
     {
-        _subject.OnError(new InvalidOperationException(error));
+        _subject.OnErrorResume(new InvalidOperationException(error));
     }
 
-    protected virtual void PostUnsubscribe()
+    private void OnSubscribe()
     {
-        if (!DB.HasCloud())
+        OnUnsubscribe();
+
+        if (!_db.HasCloud())
         {
             throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
         }
 
-        if (JsPostUnsubscribeFunction is not null)
+        if (_dotnetRef is null && _jsSubscription is null)
         {
-            DB.Cloud.Module.InvokeVoid(JsPostUnsubscribeFunction);
 #if DEBUG
-            Console.WriteLine($"JSObservable unsubscribe: {JsPostUnsubscribeFunction}");
+            Console.WriteLine($"JSObservable subscribe: {_jsSubscribeFunction}");
 #endif
+            _dotnetRef = DotNetObjectReference.Create(this);
+            var args = new List<object?>() { _db.Cloud.Reference, _dotnetRef };
+            args.AddRange(_args);
+            _jsSubscription = _db.Cloud.Module.Invoke<IJSInProcessObjectReference>(_jsSubscribeFunction, [.. args]);
         }
     }
 
-    private void Unsubscribe()
+    private void OnUnsubscribe()
     {
-        if (!DB.HasCloud())
+        if (!_db.HasCloud())
         {
             throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
         }
 
-        if (_jsSubscription is not null)
+        if (_dotnetRef is not null && _jsSubscription is not null)
         {
-            DB.Cloud.Module.InvokeVoid("UnSubscribeJSObservable", _jsSubscription);
-            _jsSubscription.Dispose();
-            _jsSubscription = null;
-            PostUnsubscribe();
-
 #if DEBUG
             Console.WriteLine($"JSObservable unsubscribe");
 #endif
-        }
-
-        if (!_subject.HasObservers)
-        {
+            _db.Cloud.Module.InvokeVoid("UnSubscribeJSObservable", _jsSubscription);
+            _jsSubscription.Dispose();
+            _jsSubscription = null;
             _dotnetRef?.Dispose();
             _dotnetRef = null;
+
+            if (_jsUnSubscribeFunction is not null)
+            {
+#if DEBUG
+                Console.WriteLine($"JSObservable unsubscribe: {_jsUnSubscribeFunction} with {Value}");
+#endif
+                _db.Cloud.Module.InvokeVoid(_jsUnSubscribeFunction, Value);
+            }
         }
     }
 }

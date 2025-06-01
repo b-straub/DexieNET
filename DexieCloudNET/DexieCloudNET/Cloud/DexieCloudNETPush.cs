@@ -18,10 +18,11 @@ limitations under the License.
 'DexieNET' used with permission of David Fahlander
 */
 
-using System.Text.Json.Serialization;
 using Microsoft.JSInterop;
 using DexieNET;
+using R3;
 
+// ReSharper disable once CheckNamespace
 namespace DexieCloudNET
 {
     public enum NotificationState
@@ -99,19 +100,19 @@ namespace DexieCloudNET
             return await dexie.Cloud.Module.InvokeAsync<bool>("AskForNotificationPermission");
         }
         
-        public static IObservable<NotificationState> NotificationStateObservable(this DBBase dexie)
+        public static Observable<NotificationState> NotificationStateObservable(this DBBase dexie)
         {
             if (!dexie.HasCloud())
             {
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
 
-            return JSObservable<NotificationState>.Create(dexie, "SubscribeNotificationState");
+            return JSObservable<NotificationState>.Create(dexie, "SubscribeNotificationState").AsObservable;
         }
         
-        public static IObservable<ServiceWorkerNotifications> ServiceWorkerNotificationObservable(this DBBase dexie)
+        public static Observable<ServiceWorkerNotifications> ServiceWorkerNotificationObservable(this DBBase dexie)
         {
-            return JSObservable<ServiceWorkerNotifications>.Create(dexie, "SubscribeServiceWorkerNotification");
+            return JSObservable<ServiceWorkerNotifications>.Create(dexie, "SubscribeServiceWorkerNotification").AsObservable;
         }
 
         public static async Task ExpireNotifications(this Table<PushNotification, string> table, IEnumerable<string?> notifierIDs)

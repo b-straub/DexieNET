@@ -1,18 +1,18 @@
-﻿@inherits RxBLStateSubscriber<ToDoItemService>
+﻿@inherits RxBLStateSubscriber<ToDoItemService.ToDoItemItemInput>
 
 <MudDialog ContentStyle="width: 400px; height: 400px">
     <DialogContent>
-        <EditForm Model=@_scope OnValidSubmit="OnValidSubmit">
+        <EditForm Model=@Owner OnValidSubmit="OnValidSubmit">
             <MudCard>
                 <MudCardContent>
                     <MudFocusTrap>
-                        <MudTextFieldRx State=@_scope.Text Validation=@ToDoItemService.ToDoItemItemInput.ValidateText CanChangeCallback=@_scope.CanUpdateText AutoFocus="true" Immediate="true" Label="ToDo" />
-                        <MudDatePickerRx State=@_scope.DueDateDate Validation=@ToDoItemService.ToDoItemItemInput.ValidateDueDate CanChangeCallback=@_scope.CanUpdateDueDate Label="Due Date" Editable="true" />
-                        <MudTimePickerRx PickerVariant=@PickerVariant.Dialog State=@_scope.DueDateTime Validation=@_scope.ValidateDueDateTime CanChangeCallback=@_scope.CanUpdateTime />
+                        <MudTextFieldRx State=@Owner.Text Validation=@ToDoItemService.ToDoItemItemInput.ValidateText CanChangeCallback=@Owner.CanUpdateText AutoFocus="true" Immediate="true" Label="ToDo" />
+                        <MudDatePickerRx State=@Owner.DueDateDate Validation=@ToDoItemService.ToDoItemItemInput.ValidateDueDate CanChangeCallback=@Owner.CanUpdateDueDate Label="Due Date" Editable="true" />
+                        <MudTimePickerRx PickerVariant=@PickerVariant.Dialog State=@Owner.DueDateTime Validation=@Owner.ValidateDueDateTime CanChangeCallback=@Owner.CanUpdateTime />
                     </MudFocusTrap>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Disabled=@(!_scope.CanSubmit()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color=@Color.Success Class="ml-auto">Save</MudButton>
+                    <MudButton Disabled=@(!Owner.CanSubmit()) ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color=@Color.Success Class="ml-auto">Save</MudButton>
                 </MudCardActions>
             </MudCard>
         </EditForm>
@@ -26,15 +26,9 @@
 
     [Parameter]
     public required ToDoDBItem? Item { get; init; }
-
-    [NotNull]
-    private ToDoItemService.ToDoItemItemInput? _scope { get; set; }
     
     protected override async Task OnInitializedAsync()
     {
-        _scope = Service.CreateItemInput(Item);
-        ArgumentNullException.ThrowIfNull(_scope);
-        
         var options = MudDialog.Options with
         {
             CloseButton = true
@@ -46,6 +40,6 @@
     
     private void OnValidSubmit(EditContext context)
     {
-        MudDialog.Close(_scope);
+        MudDialog.Close(Owner);
     }
 }

@@ -1,62 +1,63 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
-	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
-	</PropertyGroup>
-	
-	<ItemGroup>
-		<ProjectReference Include="..\DexieCloudNET\DexieCloudNET.csproj"
-			Condition="'$(Configuration)' == 'Debug'" />
-		<ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj"
-			OutputItemType="Analyzer" Condition="'$(Configuration)' == 'Debug'" />
-	</ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="DexieCloudNET" Version="1.4.2" Condition="'$(Configuration)' == 'Release'" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.4" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.4" PrivateAssets="all" />
-		<PackageReference Include="RxMudBlazorLight" Version="1.0.1" />
-		<PackageReference Include="cmdwtf.BuildTimestampGenerator" Version="*" PrivateAssets="all" />
-	</ItemGroup>
-	
-	<ItemGroup>
-		<ServiceWorker Include="wwwroot\service-worker.js"
-			PublishedContent="wwwroot\service-worker.published.js" />
-		<None Include="wwwroot\.htaccess" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\DexieCloudNET\DexieCloudNET.csproj" Condition="'$(Configuration)' == 'Debug'" />
+        <ProjectReference Include="..\DexieNETTableGeneratorCodeFix\DexieNETTableGeneratorCodeFix.csproj" OutputItemType="Analyzer" Condition="'$(Configuration)' == 'Debug'" />
+        <ProjectReference Include="..\DexieNETTableGenerator\DexieNETTableGenerator.csproj" OutputItemType="Analyzer" Condition="'$(Configuration)' == 'Debug'" />
+    </ItemGroup>
 
-	<Target Name="CopyWwwroot" AfterTargets="Build">
-		<ItemGroup>
-			<CopyItems Include="Dexie\*.json" />
-		</ItemGroup>
-		<Copy SourceFiles="@(CopyItems)" DestinationFolder="wwwroot" SkipUnchangedFiles="false" />
-	</Target>
+    <ItemGroup>
+        <PackageReference Include="DexieCloudNET" Version="1.5.0" Condition="'$(Configuration)' == 'Release'" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.5" PrivateAssets="all"/>
+        <PackageReference Include="cmdwtf.BuildTimestampGenerator" Version="1.1.0" PrivateAssets="all"/>
+        <PackageReference Include="RxMudBlazorLight" Version="1.1.1" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Content Update="wwwroot\*.json">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</Content>
-		<Content Update="wwwroot\appsettings.Development.json" CopyToPublishDirectory="Never" />
-	</ItemGroup>
+    <ItemGroup>
+        <ServiceWorker Include="wwwroot\service-worker.js"
+                       PublishedContent="wwwroot\service-worker.published.js" />
+        <None Include="wwwroot\.htaccess"/>
+    </ItemGroup>
 
-	<UsingTask TaskName="ReplaceRegexInFile" TaskFactory="RoslynCodeTaskFactory"
-		AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-		<ParameterGroup>
-			<Filename ParameterType="System.String" Required="true" />
-			<Default ParameterType="System.String" Required="true" />
-			<Match ParameterType="System.String" Required="true" />
-			<Settings ParameterType="System.String" />
-			<Field ParameterType="System.String" />
-		</ParameterGroup>
-		<Task>
-			<Using Namespace="System" />
-			<Using Namespace="System.IO" />
-			<Using Namespace="System.Text.RegularExpressions" />
-			<Code Type="Fragment" Language="cs">
-        <![CDATA[
+    <Target Name="CopyWwwroot" AfterTargets="Build">
+        <ItemGroup>
+            <CopyItems Include="Dexie\*.json"/>
+        </ItemGroup>
+        <Copy SourceFiles="@(CopyItems)" DestinationFolder="wwwroot" SkipUnchangedFiles="false"/>
+    </Target>
+
+    <ItemGroup>
+        <Content Update="wwwroot\*.json">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\appsettings.Development.json" CopyToPublishDirectory="Never"/>
+    </ItemGroup>
+
+    <UsingTask TaskName="ReplaceRegexInFile" TaskFactory="RoslynCodeTaskFactory"
+               AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+        <ParameterGroup>
+            <Filename ParameterType="System.String" Required="true"/>
+            <Default ParameterType="System.String" Required="true"/>
+            <Match ParameterType="System.String" Required="true"/>
+            <Settings ParameterType="System.String"/>
+            <Field ParameterType="System.String"/>
+        </ParameterGroup>
+        <Task>
+            <Using Namespace="System"/>
+            <Using Namespace="System.IO"/>
+            <Using Namespace="System.Text.RegularExpressions"/>
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
 var replace = Default;
 
 try
@@ -81,40 +82,67 @@ catch (Exception ex)
     Console.WriteLine(ex.Message);
 }
         ]]>
-      </Code>
-		</Task>
-	</UsingTask>
+            </Code>
+        </Task>
+    </UsingTask>
 
-	<Target Name="ReleaseSubfolder" Condition="'$(Configuration)'=='Release'" AfterTargets="Build">
-		<ReplaceRegexInFile
-			Filename="wwwroot\index.html"
-			Default="/"
-			Match="(&lt;base href=&quot;)(.*)(&quot; /&gt;)"
-			Settings="wwwroot\appsettings.Production.json"
-			Field="rootFolder"
-		/>
+    <Target Name="ReleaseSubfolder" Condition="'$(Configuration)'!='Debug'" BeforeTargets="BeforeCompile">
+        <ReplaceRegexInFile
+                Filename="wwwroot\index.html"
+                Default="/"
+                Match="(&lt;base href=&quot;)(.*)(&quot; /&gt;)"
+                Settings="wwwroot\appsettings.Production.json"
+                Field="rootFolder"
+        />
 
-		<ReplaceRegexInFile
-			Filename="wwwroot\service-worker.published.js"
-			Default="/"
-			Match="(const base = &quot;)(.*)(&quot;)"
-			Settings="wwwroot\appsettings.Production.json"
-			Field="rootFolder"
-		/>
-	</Target>
+        <ReplaceRegexInFile
+                Filename="wwwroot\service-worker.published.js"
+                Default="/"
+                Match="(const base = &quot;)(.*)(&quot;)"
+                Settings="wwwroot\appsettings.Production.json"
+                Field="rootFolder"
+        />
 
-	<Target Name="DebugSubfolder" Condition="'$(Configuration)'=='Debug'" AfterTargets="Build">
-		<ReplaceRegexInFile
-			Filename="wwwroot\index.html"
-			Match="(&lt;base href=&quot;)(.*)(&quot; /&gt;)"
-			Default="/"
-		/>
+        <ReplaceRegexInFile
+                Filename="wwwroot\.htaccess"
+                Default="/"
+                Match="(RewriteBase )(.*)()"
+                Settings="wwwroot\appsettings.Production.json"
+                Field="rootFolder"
+        />
 
-		<ReplaceRegexInFile
-			Filename="wwwroot\service-worker.published.js"
-			Match="(const base = &quot;)(.*)(&quot;)"
-			Default="/"
-		/>
-	</Target>
+        <ReplaceRegexInFile
+                Filename="wwwroot\.htaccess"
+                Default="/"
+                Match="(RewriteRule . )(.*)(index.html \[L\])"
+                Settings="wwwroot\appsettings.Production.json"
+                Field="rootFolder"
+        />
+    </Target>
 
+    <Target Name="DebugSubfolder" Condition="'$(Configuration)'=='Debug'" BeforeTargets="BeforeCompile">
+        <ReplaceRegexInFile
+                Filename="wwwroot\index.html"
+                Match="(&lt;base href=&quot;)(.*)(&quot; /&gt;)"
+                Default="/"
+        />
+
+        <ReplaceRegexInFile
+                Filename="wwwroot\service-worker.published.js"
+                Match="(const base = &quot;)(.*)(&quot;)"
+                Default="/"
+        />
+
+        <ReplaceRegexInFile
+                Filename="wwwroot\.htaccess"
+                Match="(RewriteBase )(.*)()"
+                Default="/"
+        />
+
+        <ReplaceRegexInFile
+                Filename="wwwroot\.htaccess"
+                Match="(RewriteRule . )(.*)(index.html \[L\])"
+                Default="/"
+        />
+    </Target>
 </Project>

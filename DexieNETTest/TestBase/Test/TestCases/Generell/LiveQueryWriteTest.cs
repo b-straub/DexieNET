@@ -1,8 +1,5 @@
 ﻿using DexieNET;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using R3;
 
 namespace DexieNETTest.TestBase.Test
 {
@@ -27,12 +24,12 @@ namespace DexieNETTest.TestBase.Test
                 return values;
             });
 
-            var disposableP = lqP.Select(async values =>
+            var disposableP = lqP.AsObservable.SubscribeAwait(async (values, ct) =>
             {
                 Console.WriteLine($"Count: {values.Count()}");
                 await tableStudents.Delete(keyStudent);
                 finished = true;
-            }).Subscribe();
+            });
             
             var persons = DataGenerator.GetPersons();
             await DB.Persons.BulkAdd(persons);
@@ -49,6 +46,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException($"studentsCount : {studentsCount}-> LiveQueryWriteTest failed.");
             }
             
+            disposableP.Dispose();
             return "OK";
         }
     }

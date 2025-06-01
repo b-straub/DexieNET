@@ -1,18 +1,29 @@
-﻿@inherits RxBLServiceSubscriber<ToDoListMemberService>
-
-<MudTable T="Member" Items=@(Service.Members)>
-    <HeaderContent>
-        <MudTh>Member</MudTh>
-        <MudTh>Role</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <RxBLStateScope TScope=@ToDoListMemberService.MemberRowScope TService=@ToDoListMemberService ScopeFactory=@Service.CreateRowScope>
-            <MemberRow List=@List Member=@context />
-        </RxBLStateScope>
-    </RowTemplate>
-</MudTable>
+﻿
+<MudHidden Hidden=@(!Scope.Members.Any())>
+    <MudTable T="Member" Items=@(Scope.Members)>
+        <HeaderContent>
+            <MudTh>Member</MudTh>
+            <MudTh>Role</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <RxBLStateScope TScope=@ToDoListMemberService.MemberScope.MemberRowScope TService=@ToDoListMemberService 
+                            ScopeFactory=@(() => Scope.CreateRowScope())>
+                <MemberRow Member=@context/>
+            </RxBLStateScope>
+        </RowTemplate>
+    </MudTable>
+</MudHidden>
 
 @code {
+    [CascadingParameter]
+    public required ToDoListMemberService.MemberScope Scope { get; init; }
+    
     [Parameter, EditorRequired]
-    public required ToDoDBList List { get; set; }
+    public required ToDoDBList List { get; init; }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        Scope.SetList(List);
+        await base.OnParametersSetAsync();
+    }
 }

@@ -15,47 +15,44 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-'DexieNET' used with permission of David Fahlander 
+'DexieNET' used with permission of David Fahlander
 */
 
-using Microsoft.JSInterop;
-using System.Data;
 using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using R3;
 using DexieNET;
 
+// ReSharper disable once CheckNamespace
 namespace DexieCloudNET
 {
-    public interface IUsePermissions<T> : IObservable<Unit>, IDisposable where T : IDBStore, IDBCloudEntity
+    public interface IUsePermissions<T> where T : IDBStore, IDBCloudEntity
     {
+        public Observable<Unit> AsObservable { get; }
         public bool CanAdd(IDBCloudEntity? item = null, params ITable[] tables);
         public bool CanUpdate<Q>(IDBCloudEntity item, Expression<Func<T, Q>> query);
         public bool CanDelete(IDBCloudEntity item);
     }
 
-    public sealed class UsePermissions<T, I> : IUsePermissions<T>, IDisposable where T : IDBStore, IDBCloudEntity
+    internal sealed class UsePermissions<T, I> : IUsePermissions<T> where T : IDBStore, IDBCloudEntity
     {
-        private readonly Dictionary<string, PermissionChecker<T, I>> _updatePermissions = [];
-        private PermissionChecker<T, I> _tablePermissions;
+        public Observable<Unit> AsObservable { get; }
+
+        private readonly Dictionary<string, PermissionChecker<T, I>> _permissionsCheckers = [];
         private readonly Table<T, I> _table;
         private readonly Subject<Unit> _changedSubject;
-        private readonly IDisposable? _tpDisposable;
-
+        private const string NoTableItemEntity = "noTableItemEntity";
+        
         private UsePermissions(Table<T, I> table)
         {
             _table = table;
             _changedSubject = new();
-            _tablePermissions = PermissionChecker<T, I>.Create(_table);
-
-            _tpDisposable = _tablePermissions
-                .Skip(1)
-                .Subscribe(pc =>
-                {
-                    _tablePermissions = pc;
-                    _changedSubject.OnNext(Unit.Default);
-                });
+            var pc = PermissionChecker<T, I>.Create(_changedSubject.AsObserver(), _table);
+            _permissionsCheckers[NoTableItemEntity] = pc;
+     
+            AsObservable = _changedSubject
+                .Do(onDispose:OnUnsubscribe)
+                .Prepend(Unit.Default)
+                .Share();
         }
 
         public static UsePermissions<T, I> Create(Table<T, I> table)
@@ -67,10 +64,10 @@ namespace DexieCloudNET
         {
             if (item.EntityKey is not null)
             {
-                if (!_updatePermissions.TryGetValue(item.EntityKey, out PermissionChecker<T, I>? pc))
+                if (!_permissionsCheckers.TryGetValue(item.EntityKey, out PermissionChecker<T, I>? pc))
                 {
-                    pc = PermissionChecker<T, I>.Create(_table, item);
-                    _updatePermissions[item.EntityKey] = pc;
+                    pc = PermissionChecker<T, I>.Create(_changedSubject.AsObserver(), _table, item);
+                    _permissionsCheckers[item.EntityKey] = pc;
                     _changedSubject.OnNext(Unit.Default);
                 }
 
@@ -78,11 +75,6 @@ namespace DexieCloudNET
             }
 
             return false;
-        }
-
-        public IDisposable Subscribe(IObserver<Unit> observer)
-        {
-            return _changedSubject.Subscribe(observer);
         }
 
         public bool CanAdd(IDBCloudEntity? item = null, params ITable[] tables)
@@ -96,19 +88,21 @@ namespace DexieCloudNET
 
             if (item is null)
             {
-                return _tablePermissions.CanAdd([.. tableNameList]);
+                return _permissionsCheckers[NoTableItemEntity].CanAdd([.. tableNameList]);
             }
 
             if (item.EntityKey is not null)
             {
-                if (!_updatePermissions.TryGetValue(item.EntityKey, out PermissionChecker<T, I>? pc))
+                if (!_permissionsCheckers.TryGetValue(item.EntityKey, out PermissionChecker<T, I>? pc))
                 {
-                    pc = PermissionChecker<T, I>.Create(_table, item);
-                    _updatePermissions[item.EntityKey] = pc;
+                    pc = PermissionChecker<T, I>.Create(_changedSubject.AsObserver(), _table, item);
+                    _permissionsCheckers[item.EntityKey] = pc;
                     _changedSubject.OnNext(Unit.Default);
                 }
+
                 return pc.CanAdd([.. tableNameList]);
             }
+
             return false;
         }
 
@@ -116,85 +110,59 @@ namespace DexieCloudNET
         {
             if (item.EntityKey is not null)
             {
-                if (!_updatePermissions.TryGetValue(item.EntityKey, out PermissionChecker<T, I>? pc))
+                if (!_permissionsCheckers.TryGetValue(item.EntityKey, out PermissionChecker<T, I>? pc))
                 {
-                    pc = PermissionChecker<T, I>.Create(_table, item);
-                    _updatePermissions[item.EntityKey] = pc;
+                    pc = PermissionChecker<T, I>.Create(_changedSubject.AsObserver(), _table, item);
+                    _permissionsCheckers[item.EntityKey] = pc;
                     _changedSubject.OnNext(Unit.Default);
                 }
+
                 return pc.CanDelete();
             }
+
             return false;
         }
 
-        public void Dispose()
+        private void OnUnsubscribe()
         {
-            _tpDisposable?.Dispose();
-            _tablePermissions.Dispose();
-            foreach (var pc in _updatePermissions.Values)
+            foreach (var pc in _permissionsCheckers.Values)
             {
                 pc.Dispose();
             }
-            _updatePermissions.Clear();
+
+            _permissionsCheckers.Clear();
         }
     }
 
-    internal interface IPermissionSubscription
-    {
-        public IJSInProcessObjectReference Subscription { get; }
-        public double Key { get; }
-    }
-
-    internal sealed class PermissionChecker<T, I> : IObservable<PermissionChecker<T, I>>, IDisposable where T : IDBStore, IDBCloudEntity
+    internal sealed class PermissionChecker<T, I> : IDisposable where T : IDBStore, IDBCloudEntity
     {
         public string? EntityKey { get; private set; }
-
-        internal DexieJSObject? Cloud { get; }
-
-        private readonly JSObservableKey<double>? _jSObservable;
-
-        private readonly BehaviorSubject<PermissionChecker<T, I>?> _updateSubject = new(null);
-        private readonly IObservable<PermissionChecker<T, I>> _observable;
-        private readonly IDisposable _jsDisposable;
-
+        private DexieJSObject? Cloud { get; }
+        private readonly JSObservable<double> _jSObservable;
+        private IDisposable? _jsSubscription;
         private bool _errorMode;
-
-        private PermissionChecker(Table<T, I> table, JSObservableKey<double> jSObservable, string? entityKey)
+        private readonly Observer<Unit> _changedObserver;
+      
+        private PermissionChecker(Observer<Unit> changedObserver, Table<T, I> table, JSObservable<double> jSObservable, string? entityKey)
         {
             _errorMode = false;
             EntityKey = entityKey;
             Cloud = table.DB.Cloud;
             _jSObservable = jSObservable;
-
-            _jsDisposable = _jSObservable
-                .Subscribe(_ =>
-                {
-                    _updateSubject.OnNext(this);
-                },
-                onError: (err) =>
-                {
-                    Console.WriteLine($"Can not create PermissionChecker: {err.Message}");
-                    _errorMode = true;
-                    _updateSubject.OnNext(this);
-                });
-
-            _observable = _updateSubject
-               .Skip(1)
-               .Where(x => x is not null)
-               .Select(x => x!)
-               .Publish()
-               .RefCount();
+            _changedObserver = changedObserver;
+            OnSubscribe();
         }
 
-        public static PermissionChecker<T, I> Create(Table<T, I> table, IDBCloudEntity? item = default)
+        public static PermissionChecker<T, I> Create(Observer<Unit> changedObserver, Table<T, I> table, IDBCloudEntity? item = null)
         {
             if (!table.CloudSync)
             {
                 throw new InvalidOperationException("Can not create 'PermissionChecker' for non cloud table.");
             }
 
-            var jso = new JSObservableKey<double>(table.DB, "SubscribePermissionChecker", "ClearPermissionChecker", table.Name, item);
-            return new PermissionChecker<T, I>(table, jso, item?.EntityKey);
+            var jso = JSObservable<double>.Create(table.DB, "SubscribePermissionChecker", "ClearPermissionChecker",
+                table.Name, item);
+            return new PermissionChecker<T, I>(changedObserver, table, jso, item?.EntityKey);
         }
 
         public bool CanAdd(params string[] tableNames)
@@ -207,11 +175,6 @@ namespace DexieCloudNET
             if (_errorMode)
             {
                 return true;
-            }
-
-            if (_jSObservable?.Value is null)
-            {
-                return false;
             }
 
             return Cloud.Module.Invoke<bool>("PermissionCheckerAdd", _jSObservable.Value, tableNames);
@@ -229,11 +192,6 @@ namespace DexieCloudNET
                 return true;
             }
 
-            if (_jSObservable?.Value is null)
-            {
-                return false;
-            }
-
             return Cloud.Module.Invoke<bool>("PermissionCheckerUpdate", _jSObservable.Value, query.GetKey());
         }
 
@@ -249,24 +207,35 @@ namespace DexieCloudNET
                 return true;
             }
 
-            if (_jSObservable?.Value is null)
-            {
-                return false;
-            }
 
             return Cloud.Module.Invoke<bool>("PermissionCheckerDelete", _jSObservable.Value);
         }
 
-        public IDisposable Subscribe(IObserver<PermissionChecker<T, I>> observer)
+        private void OnSubscribe()
         {
-            return _observable
-                .StartWith(this)
-                .Subscribe(observer);
+            _jsSubscription ??= _jSObservable
+                .AsObservable
+                // ReSharper disable once UnusedParameter.Local -> Debug
+                .Subscribe(key =>
+                    {
+#if DEBUG
+                        Console.WriteLine($"Subscribe PermissionChecker: {key}");
+#endif
+                        _changedObserver.OnNext(Unit.Default);
+                    },
+                    onCompleted: _ => { },
+                    onErrorResume: (err) =>
+                    {
+                        Console.WriteLine($"Can not create PermissionChecker: {err.Message}");
+                        _errorMode = true;
+                        _changedObserver.OnNext(Unit.Default);
+                    });
         }
 
         public void Dispose()
         {
-            _jsDisposable.Dispose();
+            _jsSubscription?.Dispose();
+            _jsSubscription = null;
         }
     }
 }

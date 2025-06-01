@@ -1,11 +1,8 @@
 ﻿using DexieNET;
 using DexieCloudNET;
-using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using R3;
 
 namespace DexieNETCloudSample.Dexie.Services
 {
@@ -54,10 +51,7 @@ namespace DexieNETCloudSample.Dexie.Services
     public sealed partial class ToDoListMemberService : RxBLService
     {
         public bool IsDBOpen => _dbService.DB is not null;
-        public IState<ToDoDBList?> List { get; }
-        public IEnumerable<Member> Members { get; private set; } = [];
-        public IEnumerable<string> Users { get; private set; } = [];
-
+        
         private readonly DexieCloudService _dbService;
         private ITable? _membersTable;
         private readonly CompositeDisposable _dbDisposeBag = [];
@@ -70,114 +64,25 @@ namespace DexieNETCloudSample.Dexie.Services
         {
             _dbService = serviceProvider.GetRequiredService<DexieCloudService>();
             _configuration = serviceProvider.GetRequiredService<IConfiguration>();
-
-            List = this.CreateState((ToDoDBList?)null);
         }
 
         protected override ValueTask ContextReadyAsync()
         {
-            if (IsDBOpen)
+            if (!IsDBOpen)
             {
-                InitDB();
+                throw new InvalidOperationException("MemberService DB is not open");
             }
 
-            ArgumentNullException.ThrowIfNull(_dbService.DB);
-
-            var memberQuery = _dbService.DB.LiveQuery(async () =>
-                await _dbService.DB.Members.Where(m => m.RealmId).Equal(List.Value?.RealmId).ToArray());
-
-            var useMemberQuery = memberQuery.UseLiveQuery(this.AsObservable(List));
-
-            _dbDisposeBag.Add(useMemberQuery.Select(m =>
-            {
-                Members = m;
-
-                var usersInvited = Members
-                    .Where(m => m.Invite.True())
-                    .Select(m => m.UserId);
-
-                Users = _configuration.GetUsers().Where(u =>
-                {
-                    return u != _dbService.UserLogin.Value?.UserId && !usersInvited.Contains(u);
-                })
-                .Append("by eMail");
-                return Unit.Default;
-            }).Subscribe(this));
-
+            InitDB();
+            
             return ValueTask.CompletedTask;
         }
 
-        public MemberRowScope CreateRowScope()
+        public MemberScope CreateMemberScope()
         {
-            return new MemberRowScope(this); 
+            return new MemberScope(this);
         }
-
-        public bool CanAddMember()
-        {
-            return Users.Any() && _membersTable is not null &&
-                (_permissionsMember?.CanAdd(List.Value, _membersTable)).True();
-        }
-
-        private bool CanUpdateRole(Member Member)
-        {
-            var isOwner = GetMemberRole(Member) is MemberRole.OWNER;
-
-            return !isOwner && (_permissionsMember?.CanUpdate(Member, m => m.Roles)).True();
-        }
-
-        private bool CanChangeToRole(Member? Member, MemberRole newRole)
-        {
-            ArgumentNullException.ThrowIfNull(_dbService.DB);
-            ArgumentNullException.ThrowIfNull(Member);
-            ArgumentNullException.ThrowIfNull(List.Value);
-
-            var canUpdateRoles = (_permissionsMember?.CanUpdate(Member, m => m.Roles)).True();
-            var canUpdateOwner = (_permissionsRealm?.CanUpdate(List.Value, m => m.Owner)).True();
-
-            return newRole switch
-            {
-                MemberRole.OWNER => Member?.UserId is not null && canUpdateRoles && canUpdateOwner,
-                _ => canUpdateRoles
-            };
-        }
-
-        public MemberAction GetMemberAction(Member? member)
-        {
-            if (member is null)
-            {
-                return MemberAction.NONE;
-            }
-
-            ArgumentNullException.ThrowIfNull(_dbService.DB);
-            ArgumentNullException.ThrowIfNull(List.Value);
-
-            var isOwner = member.UserId == List.Value.Owner;
-            var isCurrentUser = member.UserId == _dbService.DB.CurrentUserId();
-            var aTime = member.Accepted ?? DateTime.UtcNow;
-            var rTime = member.Rejected ?? member.Accepted;
-
-            if (isOwner)
-            {
-                return MemberAction.OWNER;
-            }
-            else if (!isCurrentUser && (_permissionsMember?.CanDelete(member)).True())
-            {
-                return MemberAction.DELETE;
-            }
-
-            if (isCurrentUser)
-            {
-                if (aTime >= rTime)
-                {
-                    return MemberAction.LEAVE;
-                }
-                else
-                    return MemberAction.ACCEPT;
-            }
-
-            return MemberAction.NONE;
-        }
-
+        
         public static MemberState GetMemberState(Member? member)
         {
             if (member is null)
@@ -189,39 +94,20 @@ namespace DexieNETCloudSample.Dexie.Services
             {
                 return MemberState.PENDING;
             }
-            else if (member.Accepted is not null && member.Rejected is null)
+
+            if (member.Accepted is not null && member.Rejected is null)
             {
                 return MemberState.ACCEPTED;
             }
-            else if (member.Rejected is not null && member.Accepted is null)
+
+            if (member.Rejected is not null && member.Accepted is null)
             {
                 return MemberState.REJECTED;
             }
 
             return MemberState.NONE;
         }
-
-        private MemberRole GetMemberRole(Member member)
-        {
-            ArgumentNullException.ThrowIfNull(_dbService?.Roles);
-            ArgumentNullException.ThrowIfNull(List.Value);
-
-            var roleName = member.Roles?.FirstOrDefault();
-            var memberRole = MemberRole.GUEST;
-
-            if (roleName is not null && _dbService.Roles.HasValue() && _dbService.Roles.Value.TryGetValue(roleName, out var role))
-            {
-                if (role.DisplayName is not null)
-                {
-                    memberRole = (MemberRole)Enum.Parse(typeof(MemberRole), role.DisplayName.ToUpperInvariant());
-                }
-            }
-
-            memberRole = member.UserId == List.Value.Owner ? MemberRole.OWNER : memberRole;
-
-            return memberRole;
-        }
-
+        
         public string? GetRoleDisplayName(MemberRole memberRole)
         {
             if (memberRole is MemberRole.OWNER)
@@ -241,14 +127,10 @@ namespace DexieNETCloudSample.Dexie.Services
 
         protected override void Dispose(bool dispose)
         {
-            _permissionsDisposeBag.Clear();
-            _permissionsMember?.Dispose();
-            _permissionsRealm?.Dispose();
-            _permissionsMember = null;
-
             if (dispose)
             {
-                _dbDisposeBag.Clear();
+                _permissionsDisposeBag.Dispose();
+                _dbDisposeBag.Dispose();
             }
         }
 
@@ -258,17 +140,9 @@ namespace DexieNETCloudSample.Dexie.Services
             _membersTable = _dbService.DB.Members;
 
             _permissionsMember = _dbService.DB.Members.CreateUsePermissions();
-            _permissionsDisposeBag.Add(_permissionsMember.Subscribe(this));
-
+            _permissionsDisposeBag.Add(_permissionsMember.AsObservable.Subscribe(this));
             _permissionsRealm = _dbService.DB.Realms.CreateUsePermissions();
-            _permissionsDisposeBag.Add(_permissionsRealm.Subscribe(this));
-        }
-
-        public async Task AddMember(string user)
-        {
-            ArgumentNullException.ThrowIfNull(List.Value);
-
-            await ShareWith(List.Value, user, user, true, MemberRole.USER);
+            _permissionsDisposeBag.Add(_permissionsRealm.AsObservable.Subscribe(this));
         }
     }
 }

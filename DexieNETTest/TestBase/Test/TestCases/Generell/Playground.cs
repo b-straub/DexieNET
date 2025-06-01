@@ -1,8 +1,5 @@
 ﻿using DexieNET;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using R3;
 
 namespace DexieNETTest.TestBase.Test
 {
@@ -39,18 +36,28 @@ namespace DexieNETTest.TestBase.Test
                 {
                     throw new InvalidOperationException($"observableP: {values.Count()} -=> LiveQuery failed.");
                 }
+
                 return values;
             });
 
-            var disposableP = observableP.Subscribe(values =>
-            {
-                disposeSubject.OnNext(disposeSubject.Value + 1);
-            }, onError: e => firstError ??= e.Message);
+            var disposableP = observableP.AsObservable.Subscribe(
+                values =>
+                {
+                    disposeSubject.OnNext(disposeSubject.Value + 1);
+                },
+                onCompleted: _ => 
+                { }, 
+                onErrorResume: e =>
+                {
+                    firstError ??= e.Message;
+                });
 
             disposeBag.Add(disposableP);
 
             var opDisposable = Observable.Interval(TimeSpan.FromMilliseconds(10))
-                .SelectMany(async op =>
+                .Select((_, i) => i)
+                .Do(onDispose: () => disposeSubject.OnNext(disposeSubject.Value + 1))
+                .SubscribeAwait(async (op, _) =>
                 {
                     switch (op)
                     {
@@ -60,11 +67,8 @@ namespace DexieNETTest.TestBase.Test
                         default:
                             break;
                     }
+                });
 
-                    return Unit.Default;
-                })
-            .Finally(() => disposeSubject.OnNext(disposeSubject.Value + 1))
-            .Subscribe();
 
             var finished = false;
 
@@ -75,22 +79,23 @@ namespace DexieNETTest.TestBase.Test
             }
 
             disposeSubject
-               .Timeout(TimeSpan.FromSeconds(10))
-               .Subscribe(
-                   onNext: d =>
-                   {
+                .Timeout(TimeSpan.FromSeconds(10))
+                .Subscribe(
+                    onNext: d =>
+                    {
                         if (d > 1)
                         {
                             testFinished();
                         }
-                   },
-                   onError: e =>
-                   {
-                       if (e.GetType() == typeof(TimeoutException))
-                       {
-                           testFinished();
-                       }
-                   });
+                    },
+                    onCompleted: _ => { },
+                    onErrorResume: e =>
+                    {
+                        if (e.GetType() == typeof(TimeoutException))
+                        {
+                            testFinished();
+                        }
+                    });
 
             do
             {

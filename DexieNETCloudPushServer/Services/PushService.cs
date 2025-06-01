@@ -370,9 +370,9 @@ namespace DexieNETCloudPushServer.Services
                         var webPushNotification =
                             new WebPushNotification(notification.Title, pushTrigger.Message, pushURLBase64,
                                 notification.Tag, notification.AppBadge,
-                                dexieSubscription.PushSupport.Declarative ? null : pushTrigger.Icon,
-                                dexieSubscription.PushSupport.Declarative ? null : pushTrigger.RequireInteraction);
-                        var magicNumber = dexieSubscription.PushSupport is { Declarative: true }
+                                dexieSubscription.Declarative ? null : pushTrigger.Icon,
+                                dexieSubscription.Declarative ? null : pushTrigger.RequireInteraction);
+                        var magicNumber = dexieSubscription.Declarative
                             ? DeclarativeWebPushNotification.DeclarativeWebPushMagicNumber
                             : (int?)null;
 
@@ -388,11 +388,12 @@ namespace DexieNETCloudPushServer.Services
                             cancellationToken);
 
                         var timeStamp = TimeStamp(DateTime.UtcNow.ToLocalTime());
+                        var logMessage = dexieSubscription.Declarative ? "Submit declarative notification:" : "Submit notification:";
 #if !DEBUG
-                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}' at '{TIMESTAMP}'.", notification.Title,
+                        Logger.LogInformation("'{LOG}'  '{MESSAGE}' to '{URL}': '{BODY}' at '{TIMESTAMP}'.", logMessage, notification.Title,
                             GetURLPart(dexieSubscription.Subscription.Endpoint, 40), pushTrigger.Message, timeStamp);
 #else
-                        Logger.LogInformation("Submit notification '{MESSAGE}' to '{URL}': '{BODY}' - '{NAVIGATE}' - '{TAG}' at '{TIMESTAMP}'.", notification.Title,
+                        Logger.LogInformation("'{LOG}' '{MESSAGE}' to '{URL}': '{BODY}' - '{NAVIGATE}' - '{TAG}' at '{TIMESTAMP}'.", logMessage, notification.Title,
                             GetURLPart(dexieSubscription.Subscription.Endpoint), pushTrigger.Message, pushURLBase64, notification.Tag, timeStamp);
 #endif
                     }

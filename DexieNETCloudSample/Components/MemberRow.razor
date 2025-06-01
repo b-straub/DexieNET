@@ -1,6 +1,4 @@
-﻿@using RxMudBlazorLight.Extensions
-@inherits RxBLServiceSubscriber<ToDoListMemberService>
-
+﻿
 <MudTd DataLabel="Member">
     <MudText>@MemberName(Member)</MudText>
 </MudTd>
@@ -12,9 +10,9 @@
 </MudTd>
 <MudTd DataLabel="Actions">
     <MudFabAsyncRx Color=@(_currentMemberAction is MemberAction.ACCEPT ? Color.Success : Color.Error)
-                   StartIcon=@GetMemberActionIcon() Size="Size.Small" StateCommand=@Service.CommandAsync
-                   CanChangeCallback=@Service.CanChangeMemberState(Member)
-                   ConfirmExecutionAsync=@ConfirmChangeMemberStateAsync ExecuteAsyncCallback=@Service.ChangeMemberState(Member)/>
+                   StartIcon=@GetMemberActionIcon() Size="Size.Small" StateCommand=@Scope.MemberScope.CommandAsync
+                   CanChangeCallback=@Scope.MemberScope.CanChangeMemberState(Member)
+                   ConfirmExecutionAsync=@ConfirmChangeMemberStateAsync ExecuteAsyncCallback=@Scope.MemberScope.ChangeMemberState(Member)/>
     @if (_isOwnList && _currentMemberAction is not MemberAction.OWNER)
     {
         <MudIcon Class="ml-4" Color=@(_currentMemberState is MemberState.ACCEPTED ? Color.Success : Color.Error) Icon=@GetMemberStateIcon()/>
@@ -25,26 +23,30 @@
     [Inject] public required DexieCloudService DBService { get; init; }
 
     [Inject] public required IDialogService DialogService { get; init; }
-
-    [Parameter, EditorRequired] public required ToDoDBList List { get; init; }
-
-    [Parameter, EditorRequired] public required Member Member { get; init; }
-
-    [CascadingParameter] public required ToDoListMemberService.MemberRowScope Scope { get; set; }
+    
+    [Parameter, EditorRequired]
+    public required Member Member { get; init; }
+    
+    [CascadingParameter] 
+    public required ToDoListMemberService.MemberScope.MemberRowScope Scope { get; set; }
 
     private MemberAction _currentMemberAction = MemberAction.NONE;
     private MemberState _currentMemberState = MemberState.NONE;
-    private bool _isOwnList = false;
+    private bool _isOwnList;
 
     protected override void OnInitialized()
     {
         ArgumentNullException.ThrowIfNull(DBService.DB);
-
-        _currentMemberAction = Service.GetMemberAction(Member);
-        _currentMemberState = ToDoListMemberService.GetMemberState(Member);
-        _isOwnList = List.Owner == DBService.DB.CurrentUserId();
+        _isOwnList = Scope.MemberScope.List?.Owner == DBService.DB.CurrentUserId();
 
         base.OnInitialized();
+    }
+    
+    protected override void OnParametersSet()
+    {
+        _currentMemberAction = Scope.MemberScope.GetMemberAction(Member);
+        _currentMemberState = ToDoListMemberService.GetMemberState(Member);
+        base.OnParametersSet();
     }
 
     private string MemberName(Member member)
@@ -121,5 +123,4 @@
 
         return res.OK();
     }
-
 }

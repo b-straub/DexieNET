@@ -1,6 +1,6 @@
 {
   "name": "dexiercloudnet",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "",
   "main": "dexieCloudNET.js",
   "scripts": {
@@ -14,8 +14,8 @@
   "dependencies": {
     "@microsoft/dotnet-js-interop": "^8.0.0",
     "dexie": "4.0.11",
-    "dexie-cloud-addon": "4.0.11",
-    "dexie-cloud-common": "1.0.47"
+    "dexie-cloud-addon": "^4.0.11",
+    "dexie-cloud-common": "^1.0.52"
   },
   "devDependencies": {
     "file-loader": "^6.2.0",

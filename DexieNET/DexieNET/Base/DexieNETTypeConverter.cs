@@ -57,7 +57,7 @@ namespace DexieNET
         {
             var keysC = keys.Select(k => Convert(k))
                 .Where(k => k is not null)
-                .Select(k => k!)
+                .Select(k => k)
                 .ToArray();
             return keysC;
         }

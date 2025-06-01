@@ -33,9 +33,9 @@ export function LiveQuerySubscribe(dotnetRef: any): number {
     }));
 
     liveQuerySubscription[id] = liveQueryObservables[id].subscribe({
-        next: (v) => dotnetRef.invokeMethod('OnNext', v),
-        error: (e) => dotnetRef.invokeMethod('OnError', e.message),
-        complete: () => dotnetRef.invokeMethod('OnCompleted')
+        next: (v) => dotnetRef.invokeMethod('OnNextJS', v),
+        error: (e) => dotnetRef.invokeMethod('OnErrorJS', e.message),
+        complete: () => dotnetRef.invokeMethod('OnCompletedJS')
     });
 
     return id;

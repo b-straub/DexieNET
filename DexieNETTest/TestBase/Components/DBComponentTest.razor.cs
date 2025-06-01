@@ -1,10 +1,7 @@
 ﻿using DexieNET;
 using DexieNETTest.TestBase.Test;
 using System.ComponentModel.DataAnnotations;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using R3;
 
 namespace DexieNETTest.TestBase.Components
 {
@@ -28,15 +25,16 @@ namespace DexieNETTest.TestBase.Components
         [Range(0, 100, ErrorMessage = "Invalid Age.")]
         public int Age { get; set; } = 0;
 
-        public bool CreateByTransaction { get; set; } = false;
+        public bool CreateByTransaction { get; set; }
 
         private readonly CompositeDisposable _disposeBag = new();
         private string _queryName = string.Empty;
         private readonly Subject<Unit> _queryChanged = new();
-        private LiveQuery<IEnumerable<Friend>>? _friendsQuery = null;
-        private UseLiveQuery<IEnumerable<Friend>>? _searchFriendsQuery = null;
-        private bool _hasData = false;
-        private IDisposable? _hasDataDisposable = null;
+        private readonly BehaviorSubject<bool> _caseQuery = new(false);
+        private ILiveQuery<IEnumerable<Friend>>? _friendsQuery;
+        private IUseLiveQuery<IEnumerable<Friend>>? _searchFriendsQuery;
+        private bool _hasData;
+        private IDisposable? _hasDataDisposable;
 
         public DBComponentTest() : base() { }
 
@@ -60,18 +58,18 @@ namespace DexieNETTest.TestBase.Components
 
                 var lq = Dexie.LiveQuery(async () =>
                 {
-                    var sf = await Dexie.Friends.Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
+                    var sf = _caseQuery.Value
+                        ? await Dexie.Friends.Where(f => f.Name).StartsWith(_queryName)
+                            .ToArray()
+                        : await Dexie.Friends.Where(f => f.Name).StartsWithIgnoreCase(_queryName.ToLowerInvariant()).ToArray();
                     return sf;
                 });
 
-                _searchFriendsQuery = lq.UseLiveQuery(_queryChanged);
+                _searchFriendsQuery = lq.UseLiveQuery(_queryChanged, _caseQuery.Select(_ => Unit.Default));
 
-                var hasDataQuery = Dexie.LiveQuery(async () =>
-                {
-                    return await Dexie.Friends.Count();
-                });
+                var hasDataQuery = Dexie.LiveQuery(async () => await Dexie.Friends.Count());
 
-                _hasDataDisposable = hasDataQuery.Subscribe(c =>
+                _hasDataDisposable = hasDataQuery.AsObservable.Subscribe(c =>
                 {
                     _hasData = c > 0;
                     InvokeAsync(StateHasChanged);
@@ -91,6 +89,11 @@ namespace DexieNETTest.TestBase.Components
         {
             _queryChanged.OnNext(Unit.Default);
         }
+        
+        private void CaseQuery()
+        {
+            _caseQuery.OnNext(!_caseQuery.Value);
+        }
 
         private async Task ClearDatabase()
         {
@@ -99,7 +102,7 @@ namespace DexieNETTest.TestBase.Components
 
         private void Subscribe()
         {
-            var disposable = _friendsQuery?.Select(async values =>
+            var disposable = _friendsQuery?.AsObservable.SubscribeAwait(async (values, _) =>
             {
                 if (CreateByTransaction)
                 {
@@ -118,14 +121,14 @@ namespace DexieNETTest.TestBase.Components
 
                 _friends = values;
                 await InvokeAsync(StateHasChanged);
-            }).Subscribe();
+            });
 
             if (disposable is not null)
             {
                 _disposeBag.Add(disposable);
             }
 
-            disposable = _searchFriendsQuery?.Subscribe(values =>
+            disposable = _searchFriendsQuery?.AsObservable.Subscribe(values =>
             {
                 _searchedFriends = values;
                 InvokeAsync(StateHasChanged);
@@ -139,7 +142,7 @@ namespace DexieNETTest.TestBase.Components
 
         private void SubscribeSecond()
         {
-            var disposable = _friendsQuery?.Subscribe(values =>
+            var disposable = _friendsQuery?.AsObservable.Subscribe(values =>
             {
                 _friendsSecond = values;
                 InvokeAsync(StateHasChanged);

@@ -1,5 +1,4 @@
-﻿using DexieCloudNET;
-using DexieNETCloudSample.Dialogs;
+﻿using DexieNETCloudSample.Dialogs;
 using DexieNETCloudSample.Logic;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
@@ -87,9 +86,9 @@ namespace DexieNETCloudSample.Components
             Service.SetSharePayload(null);
         }
 
-        protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList)
+        protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList, CancellationToken ct)
         {
-            if (crList.Any(cr => cr.ID == Service.ItemsState.ID))
+            if (crList.Any(cr => cr.StateID == Service.ItemsState.StateID))
             {
                 if (Service.SharePayload?.Title is not null)
                 {

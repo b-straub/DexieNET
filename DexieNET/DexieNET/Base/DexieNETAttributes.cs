@@ -109,7 +109,7 @@ namespace DexieNET
             IsMultiEntry = false;
         }
 
-        public override JsonConverter? CreateConverter(Type typeToConvert)
+        public override JsonConverter CreateConverter(Type typeToConvert)
         {
             if (typeToConvert == typeof(T))
             {

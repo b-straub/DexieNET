@@ -9,49 +9,62 @@ namespace DexieNETCloudSample.Dexie.Services
 {
     public sealed partial class ToDoItemService : CrudService<ToDoDBItem>
     {
-        public sealed class ToDoItemItemInput(ToDoItemService service, ToDoDBItem? item)
+        public sealed class ToDoItemItemInput : RxBLStateScope<ToDoItemService>
         {
-            public IState<string> Text { get; } = service.CreateState(item is null ? string.Empty : item.Text);
+            private readonly ToDoDBItem? _item;
 
-            public IState<DateTime> DueDateDate { get; } =
-                service.CreateState(item is null ? DateTime.Now.Date : item.DueDate.Date);
+            public ToDoItemItemInput(ToDoItemService service, ToDoDBItem? item) : base(service)
+            {
+                _item = item;
+                Text = this.CreateState(item is null ? string.Empty : item.Text);
+                DueDateDate = this.CreateState(item is null ? DateTime.Now.Date : item.DueDate.Date);
+                DueDateTime = this.CreateState(item is null ? DateTime.Now.TimeOfDay : item.DueDate.TimeOfDay);
+            }
 
-            public IState<TimeSpan> DueDateTime { get; } =
-                service.CreateState(item is null ? DateTime.Now.TimeOfDay : item.DueDate.TimeOfDay);
+            public IState<string> Text { get; }
+
+            public IState<DateTime> DueDateDate { get; }
+
+            public IState<TimeSpan> DueDateTime { get; }
 
             public async Task SubmitAsync()
             {
-                ArgumentNullException.ThrowIfNull(service.CurrentList.Value);
+                ArgumentNullException.ThrowIfNull(Service.CurrentList.Value);
+                ArgumentNullException.ThrowIfNull(Service._db);
+                
+                var list = await Service._db.ToDoDBLists.Where(l => l.ID, Service.CurrentList.Value.ID).First();
+                ArgumentNullException.ThrowIfNull(list);
+                
                 var newItem = ToDoDBItem.Create(Text.Value, DueDateDate.Value + DueDateTime.Value,
-                    service.CurrentList.Value, item);
-                if (item is null)
+                    list, _item);
+                if (_item is null)
                 {
-                    await service.CommandAsync.ExecuteAsync(service.AddItem(newItem));
+                    await Service.CommandAsync.ExecuteAsync(Service.AddItem(newItem));
                 }
                 else
                 {
-                    await service.CommandAsync.ExecuteAsync(service.UpdateItem(newItem));
+                    await Service.CommandAsync.ExecuteAsync(Service.UpdateItem(newItem));
                 }
             }
 
             public bool CanSubmit()
             {
-                var dateItem = NoSeconds(item?.DueDate);
+                var dateItem = NoSeconds(_item?.DueDate);
                 var dateNew = NoSeconds(DueDateDate.Value.Date + DueDateTime.Value);
                 var dateNow = NoSeconds(DateTime.Now);
 
                 return Text.Value != string.Empty && dateNew >= dateNow &&
-                       (Text.Value != item?.Text || dateNew != dateItem);
+                       (Text.Value != _item?.Text || dateNew != dateItem);
             }
 
             public Func<bool> CanUpdateText => () =>
             {
-                return service.CanUpdate(service.CurrentList.Value, i => i.Text);
+                return Service.CanUpdate(Service.CurrentList.Value, i => i.Text);
             };
 
             public Func<bool> CanUpdateDueDate => () =>
             {
-                return service.CanUpdate(service.CurrentList.Value, i => i.DueDate);
+                return Service.CanUpdate(Service.CurrentList.Value, i => i.DueDate);
             };
 
             public static Func<string, StateValidation> ValidateText => v =>
@@ -73,7 +86,7 @@ namespace DexieNETCloudSample.Dexie.Services
 
             public Func<bool> CanUpdateTime => () =>
             {
-                return service.CanUpdate(service.CurrentList.Value, i => i.DueDate);
+                return Service.CanUpdate(Service.CurrentList.Value, i => i.DueDate);
             };
 
             private static DateTime? NoSeconds(DateTime? dateTime)
@@ -109,7 +122,7 @@ namespace DexieNETCloudSample.Dexie.Services
             return _db.ToDoDBItems;
         }
 
-        protected override Task<LiveQuery<IEnumerable<ToDoDBItem>>> InitializeDB(ToDoDB db)
+        protected override Task<ILiveQuery<IEnumerable<ToDoDBItem>>> InitializeDB(ToDoDB db)
         {
             ArgumentNullException.ThrowIfNull(CurrentList.Value?.ID);
             _db = db;

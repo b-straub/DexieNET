@@ -15,10 +15,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-'DexieNET' used with permission of David Fahlander 
+'DexieNET' used with permission of David Fahlander
 */
 
-using System.Data;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -68,7 +67,8 @@ namespace DexieNET
                 t == typeof(DateTime) ||
                 t == typeof(TimeSpan) ||
                 t.IsArray && (t.GetElementType()?.IsAllowedPrimaryIndexType()).GetValueOrDefault(false) ||
-                t.IsAssignableTo(typeof(ITuple)) && !t.GenericTypeArguments.Where(t => !IsAllowedPrimaryIndexType(t)).Any();
+                t.IsAssignableTo(typeof(ITuple)) &&
+                !t.GenericTypeArguments.Where(t => !IsAllowedPrimaryIndexType(t)).Any();
         }
 
         public static T GetDefaultPrimaryKey<T>()
@@ -77,7 +77,9 @@ namespace DexieNET
 
             object? o = type switch
             {
-                _ when type.IsArray => type.GetElementType() is null ? null : Array.CreateInstance(type.GetElementType()!, 0),
+                _ when type.IsArray => type.GetElementType() is null
+                    ? null
+                    : Array.CreateInstance(type.GetElementType()!, 0),
                 _ when type.IsAssignableTo(typeof(ITuple)) => MakeTuple<T>(type),
                 _ => GetDefaultPrimaryKey(type)
             };
@@ -147,7 +149,8 @@ namespace DexieNET
                 _ => null
             };
 
-            var constructor = valueTupleType?.MakeGenericType(type.GenericTypeArguments).GetConstructor(type.GenericTypeArguments);
+            var constructor = valueTupleType?.MakeGenericType(type.GenericTypeArguments)
+                .GetConstructor(type.GenericTypeArguments);
             return constructor;
         }
     }

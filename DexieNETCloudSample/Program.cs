@@ -1,6 +1,6 @@
 using DexieCloudNET;
 using DexieNETCloudSample;
-using DexieNETCloudSample.Aministration;
+using DexieNETCloudSample.Administration;
 using DexieNETCloudSample.Dexie.Services;
 using DexieNETCloudSample.Extensions;
 using DexieNETCloudSample.Logic;
@@ -23,8 +23,8 @@ builder.Services.AddDexieCloudNET<ToDoDB>();
 builder.Services.AddSingleton(sp => new DexieCloudService(sp));
 builder.Services.AddSingleton(sp => new AdministrationService(sp));
 builder.Services.AddScoped(sp => new ToDoItemService(sp));
-builder.Services.AddSingleton(sp => new ToDoListService(sp));
 builder.Services.AddSingleton(sp => new ToDoListMemberService(sp));
+builder.Services.AddSingleton(sp => new ToDoListService(sp));
 
 builder.Logging.ClearProviders();
 #if !DEBUG

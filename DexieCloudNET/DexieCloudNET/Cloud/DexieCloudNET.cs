@@ -20,7 +20,9 @@ limitations under the License.
 
 using Microsoft.JSInterop;
 using DexieNET;
+using R3;
 
+// ReSharper disable once CheckNamespace
 namespace DexieCloudNET
 {
     public record DBCloudEntity(string Owner, string RealmId) : IDBCloudEntity
@@ -114,10 +116,9 @@ namespace DexieCloudNET
 
         #region UIInteraction
 
-        public static IObservable<UIInteraction> UserInteractionObservable(this DBBase dexie)
+        public static Observable<UIInteraction> UserInteractionObservable(this DBBase dexie)
         {
-            var jso = JSObservable<UIInteraction>.Create(dexie, "SubscribeUserInteraction", "ClearUserInteraction");
-            return jso;
+            return JSObservable<UIInteraction>.Create(dexie, "SubscribeUserInteraction", "ClearUserInteraction").AsObservable;
         }
 
         public static void SubmitUserInteraction(this DBBase dexie, UIInteraction interaction, UIParam param)
@@ -155,10 +156,9 @@ namespace DexieCloudNET
 
         #region Invites
 
-        public static IObservable<IEnumerable<Invite>> InvitesObservable(this DBBase dexie)
+        public static Observable<IEnumerable<Invite>> InvitesObservable(this DBBase dexie)
         {
-            var jso = JSObservable<IEnumerable<Invite>>.Create(dexie, "SubscribeInvites", "ClearInvites");
-            return jso;
+            return JSObservable<IEnumerable<Invite>>.Create(dexie, "SubscribeInvites", "ClearInvites").AsObservable;
         }
 
         public static void AcceptInvite(this DBBase dexie, Invite invite)
@@ -215,38 +215,38 @@ namespace DexieCloudNET
 
         #region Roles
 
-        public static IObservable<Dictionary<string, Role>> RoleObservable(this DBBase dexie)
+        public static Observable<Dictionary<string, Role>> RoleObservable(this DBBase dexie)
         {
             if (!dexie.HasCloud())
             {
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
 
-            return JSObservable<Dictionary<string, Role>>.Create(dexie, "SubscribeRoles");
+            return JSObservable<Dictionary<string, Role>>.Create(dexie, "SubscribeRoles").AsObservable;
         }
 
         #endregion
 
         #region SyncState
 
-        public static IObservable<SyncState> SyncStateObservable(this DBBase dexie)
+        public static Observable<SyncState> SyncStateObservable(this DBBase dexie)
         {
             if (!dexie.HasCloud())
             {
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
 
-            return JSObservable<SyncState>.Create(dexie, "SubscribeSyncState");
+            return JSObservable<SyncState>.Create(dexie, "SubscribeSyncState").AsObservable;
         }
 
-        public static IObservable<PersistedSyncState> PersistedSyncStateStateObservable(this DBBase dexie)
+        public static Observable<PersistedSyncState> PersistedSyncStateStateObservable(this DBBase dexie)
         {
             if (!dexie.HasCloud())
             {
                 throw new InvalidOperationException("Can not ConfigureCloud for non cloud database.");
             }
 
-            return JSObservable<PersistedSyncState>.Create(dexie, "SubscribePersistedSyncState");
+            return JSObservable<PersistedSyncState>.Create(dexie, "SubscribePersistedSyncState").AsObservable;
         }
 
         public static async ValueTask Sync(this DBBase dexie, SyncOptions? syncOptions = null)
@@ -259,28 +259,28 @@ namespace DexieCloudNET
             await dexie.Cloud.Module.InvokeVoidAsync("Sync", dexie.Cloud.Reference, syncOptions);
         }
 
-        public static IObservable<bool> SyncCompleteObservable(this DBBase dexie,
-            JSObservable<bool>.TimeOut? timeout = null)
+        public static Observable<bool> SyncCompleteObservable(this DBBase dexie,
+            TimeOut<bool>? timeout = null)
         {
-            return JSObservable<bool>.Create(dexie, "SubscribeSyncComplete", timeout);
+            return JSObservable<bool>.Create(dexie, "SubscribeSyncComplete", timeout).AsObservable;
         }
 
         #endregion
 
         #region WebSocketStatus
 
-        public static IObservable<string> WebSocketStatusObservable(this DBBase dexie)
+        public static Observable<string> WebSocketStatusObservable(this DBBase dexie)
         {
-            return JSObservable<string>.Create(dexie, "SubscribeWebSocketStatus");
+            return JSObservable<string>.Create(dexie, "SubscribeWebSocketStatus").AsObservable;
         }
 
         #endregion
 
         #region UserLogin
 
-        public static IObservable<UserLogin> UserLoginObservable(this DBBase dexie)
+        public static Observable<UserLogin> UserLoginObservable(this DBBase dexie)
         {
-            return JSObservable<UserLogin>.Create(dexie, "SubscribeUserLogin");
+            return JSObservable<UserLogin>.Create(dexie, "SubscribeUserLogin").AsObservable;
         }
 
         public static string CurrentUserId(this DBBase dexie)

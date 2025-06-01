@@ -2,10 +2,9 @@
 using RxBlazorLightCore;
 using System.Text.Json;
 using System.Text;
-using DexieNET;
 using DexieCloudNET;
 
-namespace DexieNETCloudSample.Aministration
+namespace DexieNETCloudSample.Administration
 {
     public sealed partial class AdministrationService(IServiceProvider serviceProvider) : RxBLService
     {

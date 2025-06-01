@@ -5,7 +5,7 @@ using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 using RxMudBlazorLight.Extensions;
 
-namespace DexieNETCloudSample.Aministration
+namespace DexieNETCloudSample.Administration
 {
     public partial class Administration
     {

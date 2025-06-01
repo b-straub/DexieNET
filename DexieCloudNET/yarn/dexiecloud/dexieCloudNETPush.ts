@@ -36,16 +36,11 @@ interface PushInformation {
     id: number
 }
 
-interface  DeclarativeWebPushSupport {
-    declarative : boolean
-    isMobile: boolean
-}
-
 interface DexieCloudPushSubscription {
     id: string,
     expired: boolean,
     pushURL: string,
-    pushSupport: DeclarativeWebPushSupport,
+    declarative: boolean,
     subscription: PushSubscriptionJSON
 }
 
@@ -90,6 +85,8 @@ const BroadcastIn = new BroadcastChannel(DexieCloudNETBroadcastOut);
 const BroadcastOut = new BroadcastChannel(DexieCloudNETBroadcastIn);
 
 let worker = await navigator.serviceWorker.getRegistration();
+// @ts-ignore
+let pushManager: PushManager | undefined = window.pushManager !== undefined ? window.pushManager : worker?.pushManager;
 let SubscriptionCountSubscription: Subscription | undefined = undefined;
 let PushURL: string | undefined = undefined;
 
@@ -98,7 +95,7 @@ export async function SubscribePush(): Promise<boolean> {
         throw ("CurrentDB is null or undefined")
     }
 
-    let subscription = await worker?.pushManager?.getSubscription();
+    let subscription = await pushManager?.getSubscription();
 
     if (!subscription) {
         let pushInformation = await GetPushInformation();
@@ -113,7 +110,7 @@ export async function SubscribePush(): Promise<boolean> {
                 applicationServerKey: pushInformation.applicationServerKey
             };
 
-            subscription = await worker?.pushManager?.subscribe(options);
+            subscription = await pushManager?.subscribe(options);
         } catch (error) {
             if (error.name === 'NotAllowedError') {
                 return false;
@@ -127,7 +124,7 @@ export async function SubscribePush(): Promise<boolean> {
 }
 
 export async function UnSubscribePush(remote: boolean = false): Promise<boolean> {
-    const subscription = await worker?.pushManager?.getSubscription();
+    const subscription = await pushManager?.getSubscription();
 
     if (subscription) {
         await subscription.unsubscribe();
@@ -210,7 +207,7 @@ async function UpdatePushDatabases(initial: boolean, remote: boolean) {
         throw ("PushInformation is null or undefined")
     }
 
-    const subscription = await worker?.pushManager?.getSubscription();
+    const subscription = await pushManager?.getSubscription();
     await UpdateSubscription(initial, pushInformation, subscription);
 
     //await CurrentDB.cloud.sync();
@@ -250,7 +247,7 @@ async function InitPushInformation(applicationServerKey: string) {
         throw ("CurrentDB is null or undefined")
     }
 
-    const subscription = await worker?.pushManager?.getSubscription();
+    const subscription = await pushManager?.getSubscription();
     const subscriptionId = GetSubscriptionID(subscription);
 
     const pushInformation: PushInformation = {
@@ -297,11 +294,9 @@ async function UpdateSubscription(initial: boolean, pushInformation: PushInforma
 
     if (subscriptionId && PushURL) {
         if (!initial) {
-            
-            // @ts-ignore
-            const pushSupport: DeclarativeWebPushSupport = {declarative: window.pushManager !== undefined, isMobile: navigator.maxTouchPoints > 1}
-            const subscriptionItem: DexieCloudPushSubscription = {
-                id: subscriptionId, expired: false, pushURL: PushURL, pushSupport: pushSupport, subscription: subscription.toJSON()
+             const subscriptionItem: DexieCloudPushSubscription = {
+                 // @ts-ignore
+                id: subscriptionId, expired: false, pushURL: PushURL, declarative: window.pushManager !== undefined, subscription: subscription.toJSON()
             };
 
             await subscriptionsTable.put(subscriptionItem);

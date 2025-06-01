@@ -1,5 +1,4 @@
-﻿using System.Reactive;
-using System.Reactive.Linq;
+﻿using R3;
 using DexieNET;
 using DexieCloudNET;
 using DexieNETCloudSample.Logic;
@@ -49,16 +48,15 @@ namespace DexieNETCloudSample.Dexie.Services
             return _db.ToDoDBLists;
         }
 
-        protected override Task<LiveQuery<IEnumerable<ToDoDBList>>> InitializeDB(ToDoDB db)
+        protected override Task<ILiveQuery<IEnumerable<ToDoDBList>>> InitializeDB(ToDoDB db)
         {
             _db = db;
 
             var listOpenQuery = _db.LiveQuery(GetListOpenCloseDo);
-            DBDisposeBag.Add(listOpenQuery.Subscribe(i => { _listOpenClose.Value = i; }));
+            DBDisposeBag.Add(listOpenQuery.AsObservable.Subscribe(i => { _listOpenClose.Value = i; }));
 
-            DBDisposeBag.Add(DbService.Where(cr => cr.ID == DbService.Invites.ID)
-                .Select(_ => Unit.Default)
-                .Subscribe(this));
+            DBDisposeBag.Add(DbService.AsObservable.Where(cr => cr.StateID == DbService.Invites.StateID)
+                .Select(_ => Unit.Default).Subscribe(this));
             
             return Task.FromResult(db.LiveQuery(async () => await GetTable().ToArray()));
         }

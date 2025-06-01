@@ -144,7 +144,7 @@ namespace DexieNET
 
     public static class DBExtensions
     {
-        public static LiveQuery<T> LiveQuery<T>(this DBBase db, Func<ValueTask<T>> query)
+        public static ILiveQuery<T> LiveQuery<T>(this DBBase db, Func<ValueTask<T>> query)
         {
             return new LiveQuery<T>(db, query);
         }

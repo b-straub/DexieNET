@@ -38,7 +38,7 @@
 
     [Inject] public required IConfiguration Configuration { get; init; }
 
-    private IEnumerable<string> _users = Enumerable.Empty<string>();
+    private IEnumerable<string> _users = [];
 
     protected override void OnInitialized()
     {
@@ -73,15 +73,11 @@
         {
             Snackbar.Add(error, Severity.Error);
         }
-        /*else
-        {
-            await Service.Sync(new SyncOptions(SyncOptions.SyncPurpose.PULL));
-        }*/
     };
 
     private async Task<bool> LogoutDialog(string userID)
     {
-        return await DialogAsyncORx<DexieCloudService>.Show(DialogService, Service.LogoutObserver, Service.LogoutObservable,
+        return await DialogAsyncORx<DexieCloudService>.Show(Service, DialogService, Service.LogoutObserver, Service.LogoutObservable,
             $"Logout", $"Logout {userID}?", $"Logout", "Cancel", true, "Cancel Logout!", Color.Error);
     }
 }

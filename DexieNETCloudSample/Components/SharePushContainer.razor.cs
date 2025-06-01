@@ -20,9 +20,16 @@ public partial class SharePushContainer
 
     [Inject]
     public required NavigationManager NavigationManager { get; init; }
-    
-    protected override void OnParametersSet()
+
+    protected override void OnAfterRender(bool firstRender)
     {
+        base.OnAfterRender(firstRender);
+
+        if (!firstRender)
+        {
+            return;
+        }
+
         if (PushPayloadBase64 is not null)
         {
             try

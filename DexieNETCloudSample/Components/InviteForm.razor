@@ -1,25 +1,25 @@
-﻿@using DexieNET
-@inherits RxBLServiceSubscriber<ToDoListMemberService>
-
-<MudTable Class="mt-2" T="string" Items=@(Service.Users)>
-    <ColGroup>
-        <col />
-        <col style="width:50px;" />
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Invite User</MudTh>
-        <MudTh Style="text-align:center">
-            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" />
-        </MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Invite User"><MudText>@context</MudText></MudTd>
-        <MudTd DataLabel="Invite" Style="text-align:center">
-            <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd StateCommand=@Service.CommandAsync
-                CanChangeCallback=@Service.CanAddMember ExecuteAsyncCallback=@AddMember(context) />
-        </MudTd>
-    </RowTemplate>
-</MudTable>
+﻿
+<MudHidden Hidden=@(!Scope.CanAddMember())>
+    <MudTable Class="mt-2" T="string" Items=@(Scope.Users)>
+        <ColGroup>
+            <col />
+            <col style="width:50px;" />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Invite User</MudTh>
+            <MudTh Style="text-align:center">
+                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" />
+            </MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Invite User"><MudText>@context</MudText></MudTd>
+            <MudTd DataLabel="Invite" Style="text-align:center">
+                <MudIconButtonAsyncRx Color="Color.Info" Icon=@Icons.Material.Filled.PersonAdd StateCommand=@Scope.Service.CommandAsync
+                                      CanChangeCallback=@Scope.CanAddMember ExecuteAsyncCallback=@AddMember(context) />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudHidden>
 
 @code {
     [Inject]
@@ -28,16 +28,14 @@
     [Inject]
     public required IDialogService DialogService { get; init; }
 
-    private IEnumerable<string> users = Enumerable.Empty<string>();
-
-    protected override Task OnInitializedAsync()
-    {
-        return base.OnInitializedAsync();
-    }
-
+    [CascadingParameter]
+    public required ToDoListMemberService.MemberScope Scope { get; init; }
+    
+    private IEnumerable<string> _users = [];
+    
     private Func<IStateCommandAsync, Task> AddMember(string user) => async _ =>
     {
-        if (user == Service.Users.Last())
+        if (user == Scope.Users.Last())
         {
             ArgumentNullException.ThrowIfNull(DialogService);
 
@@ -68,6 +66,6 @@
             }
         }
 
-        await Service.AddMember(user);
+        await Scope.AddMember(user);
     };
 }

@@ -15,7 +15,7 @@ namespace DexieNETTest.TestBase.Test
         public RenderFragment? ChildContent { get; set; }
 
         [Parameter]
-        public bool Benchmark { get; set; } = false;
+        public bool Benchmark { get; set; }
 
         [Parameter]
         public string? TestName { get; set; }
@@ -29,7 +29,7 @@ namespace DexieNETTest.TestBase.Test
 
         private string? _lastCategory;
         private bool _running;
-        private bool _testsCompleted = false;
+        private bool _testsCompleted;
 
         private readonly CancellationTokenSource _cancellationTokenSource = new();
 

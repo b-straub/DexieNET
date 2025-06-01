@@ -41,11 +41,11 @@ export function DotNetObservable<T>(observable: Observable<T>, action: (input: T
     return observable.subscribe({
         next: (v) => {
             if (isVoidObservable || v != undefined) {
-                dotnetRef.invokeMethod('OnNext', action(v))
+                dotnetRef.invokeMethod('OnNextJS', action(v))
             }
         },
-        error: (e) => dotnetRef.invokeMethod('OnError', e.message),
-        complete: () => dotnetRef.invokeMethod('OnCompleted')
+        error: (e) => dotnetRef.invokeMethod('OnErrorJS', e.message),
+        complete: () => dotnetRef.invokeMethod('OnCompletedJS')
     });
 }
 

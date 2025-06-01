@@ -85,8 +85,12 @@ namespace DexieNETCloudSample.Components
             ArgumentNullException.ThrowIfNull(Service.PushPayload?.ListID);
         
             Snackbar.Add($"Push Notification, ListID {Service.PushPayload.ListID}, ItemID {Service.PushPayload.ItemID}", Severity.Info, config => { config.RequireInteraction = false; });
-            await Service.OpenList(Service.PushPayload.ListID);
-            Service.SetPushPayload(null);
+            var open = await Service.OpenList(Service.PushPayload.ListID);
+
+            if (open)
+            {
+                Service.SetPushPayload(null);
+            }
         }
         
         private async Task HandleSharePayload()
@@ -135,9 +139,9 @@ namespace DexieNETCloudSample.Components
             }
         }
 
-        protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList)
+        protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList, CancellationToken ct)
         {
-            if (crList.Any(cr => cr.ID == Service.ItemsState.ID))
+            if (crList.Any(cr => cr.StateID == Service.ItemsState.StateID))
             {
                 if (Service.PushPayload?.ListID is not null)
                 {

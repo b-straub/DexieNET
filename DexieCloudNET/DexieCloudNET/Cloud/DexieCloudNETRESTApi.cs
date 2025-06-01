@@ -150,15 +150,13 @@ namespace DexieCloudNET
     public record SubscriptionKeys(string P256dh, string Auth);
     public record Subscription(string Endpoint, double? ExpirationTime, SubscriptionKeys Keys);
     
-    public record DeclarativeWebPushSupport(bool Declarative, bool IsMobile);
-    
     public record WebPushSubscription
     (
         Subscription Subscription,
         string Owner,
         string ID,
         string PushURL,
-        DeclarativeWebPushSupport PushSupport,
+        bool Declarative,
         bool Expired = true
     );
     

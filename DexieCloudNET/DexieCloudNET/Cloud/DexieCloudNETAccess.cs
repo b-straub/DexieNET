@@ -21,6 +21,7 @@ limitations under the License.
 using System.Linq.Expressions;
 using DexieNET;
 
+// ReSharper disable once CheckNamespace
 namespace DexieCloudNET
 {
     // records are not actually compiled to DB stores but are prebuild in SG when any table with '[Schema(CloudSync = true)]' exist in DB
@@ -52,15 +53,15 @@ namespace DexieCloudNET
     {
         [Index]
         public string? UserId { get; init; } = null;
-        public string? Email { get; init; } = null;
-        public string? Name { get; init; } = null;
-        public bool? Invite { get; init; } = null;
+        public string? Email { get; init; }
+        public string? Name { get; init; }
+        public bool? Invite { get; init; }
         public bool? Invited { get; init; } = null;
         public DateTime? Accepted { get; init; } = null;
         public DateTime? Rejected { get; init; } = null;
         public DateTime? InvitedDate { get; init; } = null; // Set by system in processInvites
         public InvitedBy? InvitedBy { get; init; } = null; // Set by system in processInvites
-        public string[]? Roles { get; init; } = null;
+        public string[]? Roles { get; init; }
         public Permission? Permissions { get; init; } = null;
 
         [Index(IsPrimary = true, IsAuto = true)]

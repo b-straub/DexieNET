@@ -1,6 +1,4 @@
 ﻿
-using System.Linq;
-
 namespace DexieNETTest.TestBase.Test
 {
     internal static class DataGenerator

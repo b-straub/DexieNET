@@ -1,5 +1,4 @@
-using System.Reactive;
-using System.Reactive.Linq;
+using R3;
 using System.Text.Json;
 using DexieCloudNET;
 using DexieNET;
@@ -34,7 +33,7 @@ public partial class DexieCloudService
         return await DB.AskForNotificationPermission();
     }
     
-    public async Task OpenList(string listID)
+    public async Task<bool> OpenList(string listID)
     {
         ArgumentNullException.ThrowIfNull(DB);
 
@@ -42,20 +41,23 @@ public partial class DexieCloudService
 
         if (!listExist)
         {
-            return;
+            return false;
         }
 
         await DB.Transaction(async t =>
         {
-            await DB.ListOpenCloses.ToCollection().Modify(oc => oc.IsItemsOpen, false);
-            await DB.ListOpenCloses.ToCollection().Modify(oc => oc.IsShareOpen, false);
             var oc = await DB.ListOpenCloses.Get(listID);
+            await DB.ListOpenCloses.ToCollection().Modify(oc1 => oc1.IsItemsOpen, false);
+            await DB.ListOpenCloses.ToCollection().Modify(oc1 => oc1.IsShareOpen, false);
+           
             if (!t.Collecting)
             {
-                oc = oc is null ? new ListOpenClose(true, false, listID) : oc with { IsItemsOpen = true };
+                oc = oc is null ? new ListOpenClose(false, true, listID) : oc with { IsItemsOpen = true };
             }
             await DB.ListOpenCloses.Put(oc);
         });
+        
+        return true;
     }
     
     public Func<IStateCommandAsync, Task> ToggleDarkMode => async _ =>
@@ -75,7 +77,7 @@ public partial class DexieCloudService
         });
     };
     
-    public Func<IStateObserverAsync, IDisposable> LogoutObservable => observer =>
+    public Func<IStateProgressObserverAsync, IDisposable> LogoutObservable => observer =>
     {
         ArgumentNullException.ThrowIfNull(DB);
         const int timeOutS = 1;
@@ -109,7 +111,7 @@ public partial class DexieCloudService
         var triggerObservable =
             Observable
                 .Timer(TimeSpan.FromSeconds(timeOutS))
-                .Select(_ => true).Amb(DB.SyncCompleteObservable());
+                .Select(_ => true).Race(DB.SyncCompleteObservable());
 
         return Observable
             .Interval(TimeSpan.FromMilliseconds(progressSliceMS))
@@ -124,8 +126,8 @@ public partial class DexieCloudService
                             .TakeUntil(stopObservable)
                     )
             )
-            .Select(_ => -1L)
-            .Subscribe(observer);
+            .Select(_ => -1.0)
+            .Subscribe(observer.AsObserver);
     };
     
     public void SetPushPayload(PushPayloadToDo? pushPayload)

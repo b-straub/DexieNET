@@ -1,9 +1,8 @@
 ﻿using DexieNET;
 using DexieCloudNET;
-//using DexieNETCloudSample.Aministration;
+//using DexieNETCloudSample.Administration;
 using RxBlazorLightCore;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using R3;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DexieNETCloudSample.Extensions;
@@ -24,7 +23,7 @@ namespace DexieNETCloudSample.Logic
     [Schema(CloudSync = true)]
     [CompoundIndex("ListID", "RealmId")]
     [CompoundIndex("ListID", "Completed")]
-    public partial record ToDoDBItem(
+    public partial record ToDoDBItem(   
         [property: Index] string Text,
         [property: Index] DateTime DueDate,
         [property: BoolIndex] bool Completed,
@@ -141,7 +140,7 @@ namespace DexieNETCloudSample.Logic
         public IState<Dictionary<string, Role>?> Roles { get; }
         public IState<bool> LightMode { get; }
         public IState<NotificationState> NotificationsState { get; }
-        public IStateObserverAsync LogoutObserver { get; }
+        public IStateProgressObserverAsync LogoutObserver { get; }
         public string? CloudURL { get; private set; }
         private ILogger Logger { get; }
 
@@ -244,7 +243,7 @@ namespace DexieNETCloudSample.Logic
                 return settings.FirstOrDefault();
             });
 
-            _DBServicesDisposeBag.Add(settingsQuery.Subscribe(s =>
+            _DBServicesDisposeBag.Add(settingsQuery.AsObservable.Subscribe(s =>
             {
                 if (s is not null)
                 {
@@ -274,15 +273,8 @@ namespace DexieNETCloudSample.Logic
 
             _DBServicesDisposeBag.Add(this.AsChangedObservable(State)
                 .Where(s => s is DBState.Cloud)
-                .Select(async s => await InitDB())
-                .Subscribe());
+                .SubscribeAwait(async (_,_) => await InitDB()));
             
-#if DEBUG
-            Logger.LogDebug("We're using dexie-cloud-addon {VALUE}", DB.AddOnVersion());
-            var cloudOptions = DB.Options();
-            var schema = DB.Schema();
-            var usingServiceWorker = DB.UsingServiceWorker();
-#endif
             State.Value = DBState.Cloud;
         }
 
@@ -343,7 +335,7 @@ namespace DexieNETCloudSample.Logic
                 return await DB.ToDoDBItems.Where(i => i.Completed, false).ToArray();
             });
 
-            _DBServicesDisposeBag.Add(lq.SubscribeAsyncConcat(async notCompletedItems =>
+            _DBServicesDisposeBag.Add(lq.AsObservable.SubscribeAwait(async (notCompletedItems, _) =>
             {
                 await DB.SetAppBadge(notCompletedItems.LongCount());
             }));

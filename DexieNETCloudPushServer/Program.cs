@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using Quartz.Logging;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 var builder = Host.CreateApplicationBuilder(args);

@@ -36,7 +36,7 @@
 
         var message = $"Are you sure you want to delete your user completely along all stored data for {Service2.UserLogin.Value.UserId}? Private data will be deleted. Shared data will not be deleted. This action cannot be undone.";
 
-        return await DialogAsyncRx<AdministrationService>.Show(DialogService, Service1.CommandAsync, Service1.DeleteUser, $"Delete {Service2.UserLogin.Value.UserId}",
+        return await DialogAsyncRx<AdministrationService>.Show(Service1, DialogService, Service1.CommandAsync, Service1.DeleteUser, $"Delete {Service2.UserLogin.Value.UserId}",
             message, $"Delete {Service2.UserLogin.Value.UserId}", "Cancel", false, "Cancel Delete");
     }
 

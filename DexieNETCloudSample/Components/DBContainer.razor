@@ -23,13 +23,15 @@
     [Inject]
     public required IConfiguration Configuration { get; init; }
     
-    protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList)
+    bool _swNotificationShown;
+    
+    protected override async Task OnServiceStateHasChangedAsync(IList<ServiceChangeReason> crList, CancellationToken ct)
     {
         foreach (var cr in crList)
         {
-            switch (cr.ID)
+            switch (cr.StateID)
             {
-                case var value when value == Service.UIInteraction.ID:
+                case var value when value == Service.UIInteraction.StateID:
                     if (Service.DB is not null && Service.UIInteraction.HasValue())
                     {
                         bool res = await Authenticate.HandleUIInteraction(Service.DB, Service.UIInteraction.Value, DialogService);
@@ -40,7 +42,7 @@
                     }
 
                     break;
-                case var value when value == Service.ServiceWorkerNotificationState.ID:
+                case var value when value == Service.ServiceWorkerNotificationState.StateID:
                 {
                     if (Service.DB is not null && Service.ServiceWorkerNotificationState.HasValue())
                     {
@@ -57,7 +59,7 @@
                 }
                     break;
 
-                case var value when value == Service.NotificationsState.ID:
+                case var value when value == Service.NotificationsState.StateID:
                     if (Service.DB is not null && Service.NotificationsState.Value == NotificationState.UnsubscribedRemote)
                     {
                         ShowUnsubscribedRemote();
@@ -80,7 +82,7 @@
             var hostURL = new Uri(NavigationManager.Uri).GetLeftPart(UriPartial.Path);
             var pushUrl = new Uri(new Uri(hostURL), Configuration.GetRouteFolder());
             pushUrl = new Uri(pushUrl, PushConstants.PushRoute + $"?{PushConstants.PushPayloadBase64}=");
-             
+
             await Service.OpenDB();
             ArgumentNullException.ThrowIfNull(Service.DB);
 
@@ -98,6 +100,17 @@
         if (!state.HasValue())
         {
             return Icons.Material.Outlined.QuestionMark;
+        }
+        
+        if (state.Value.Phase == SyncState.SyncStatePhase.IN_SYNC && Service.DB is not null && !_swNotificationShown)
+        {
+            var usingServiceWorker = Service.DB.UsingServiceWorker();
+            if (usingServiceWorker.True())
+            {
+                Snackbar.Add($"We are using the serviceWorker for DexieCloud!", Severity.Info, config => { config.RequireInteraction = false; });
+            }
+
+            _swNotificationShown = true;
         }
 
         return state.Value.Phase switch
@@ -168,14 +181,6 @@
             });
     }
 
-    private async Task SetSelectedItem((string ListID, string ItemID) pushItem)
-    {
-        if (Service.DB is not null)
-        {
-            await Service.OpenList(pushItem.ListID);
-        }
-    }
-
     private async Task UpdateApp()
     {
         if (_updateSnackBar is not null)
@@ -199,4 +204,5 @@
         ArgumentNullException.ThrowIfNull(Service.DB);
         await Service.SubscribePush();
     }
+
 }

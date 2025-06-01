@@ -16,7 +16,7 @@
         </CardHeaderContent>
         <CardHeaderActions>
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <ToDoDBItemAddOrUpdate Service=@Service AddMode=@true Item=@null />
+                <ToDoDBItemAddOrUpdate Owner=@Service AddMode=@true Item=@null />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.Completed))
                                StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteCompletedItems ExecuteAsyncCallback=@(Service.DeleteItems(true)) />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
@@ -27,7 +27,7 @@
     <MudCardContent>
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <MudContainer Class="ml-n3 mb-8">
-                <ToDoDBItemAddOrUpdate Service=@Service AddMode=@true Item=@null />
+                <ToDoDBItemAddOrUpdate Owner=@Service AddMode=@true Item=@null />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.AutoDelete" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.Completed))
                                StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteCompletedItems ExecuteAsyncCallback=@(Service.DeleteItems(true)) />
                 <MudFabAsyncRx Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" ConfirmExecutionAsync=@(() => ConfirmDelete(DeleteType.All))
@@ -64,7 +64,7 @@
                                           HasProgress=@false CanChangeCallback=@Service.CanToggledItemCompleted(context) ExecuteAsyncCallback=@Service.ToggledItemCompleted(context) />
                 </MudTd>
                 <MudTd DataLabel="Edit" Style="text-align:center">
-                    <ToDoDBItemAddOrUpdate Service=@Service AddMode=@false Item=@context />
+                    <ToDoDBItemAddOrUpdate Owner=@Service AddMode=@false Item=@context />
                 </MudTd>
                 <MudTd DataLabel="Delete" Style="text-align:center">
                     <MudIconButtonAsyncRx Color="Color.Error" Icon=@Icons.Material.Filled.Delete StateCommand=@Service.CommandAsync CanChangeCallback=@Service.CanDeleteItem(context)

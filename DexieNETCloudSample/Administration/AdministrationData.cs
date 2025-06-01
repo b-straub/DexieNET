@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DexieNETCloudSample.Aministration
+namespace DexieNETCloudSample.Administration
 {
     public class CloudKeyData(string? placeholderClientId = null, string? placeholderClientSecret = null)
     {

@@ -5,7 +5,7 @@ namespace DexieCloudNET
 {
     internal class PermissionArrayConverter : JsonConverter<string[]>
     {
-        public override string[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override string[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             return CloudJsonExtensions.ReadStringOrArray(ref reader, options);
         }
@@ -23,7 +23,7 @@ namespace DexieCloudNET
 
     internal class PermissionArrayConverterAttribute : JsonConverterAttribute
     {
-        public override JsonConverter? CreateConverter(Type typeToConvert)
+        public override JsonConverter CreateConverter(Type typeToConvert)
         {
             if (typeToConvert != typeof(string[]))
             {
@@ -36,7 +36,7 @@ namespace DexieCloudNET
 
     internal class PermissionDictionaryConverter : JsonConverter<Dictionary<string, string[]>>
     {
-        public override Dictionary<string, string[]>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override Dictionary<string, string[]> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var dictionary = new Dictionary<string, string[]>();
 
@@ -71,7 +71,7 @@ namespace DexieCloudNET
                 }
 
                 reader.Read();
-                dictionary.Add(propertyName!, CloudJsonExtensions.ReadStringOrArray(ref reader, options));
+                dictionary.Add(propertyName, CloudJsonExtensions.ReadStringOrArray(ref reader, options));
             }
 
             return dictionary;
@@ -106,7 +106,7 @@ namespace DexieCloudNET
 
     internal class PermissionDictionaryConverterAttribute : JsonConverterAttribute
     {
-        public override JsonConverter? CreateConverter(Type typeToConvert)
+        public override JsonConverter CreateConverter(Type typeToConvert)
         {
             if (typeToConvert != typeof(Dictionary<string, string[]>))
             {

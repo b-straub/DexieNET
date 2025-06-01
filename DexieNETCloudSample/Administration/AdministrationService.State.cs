@@ -1,8 +1,7 @@
 ﻿using DexieCloudNET;
 using RxBlazorLightCore;
-using DexieNET;
 
-namespace DexieNETCloudSample.Aministration
+namespace DexieNETCloudSample.Administration
 {
     public partial class AdministrationService
     {

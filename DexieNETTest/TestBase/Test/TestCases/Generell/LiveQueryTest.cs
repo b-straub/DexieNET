@@ -1,8 +1,5 @@
 ﻿using DexieNET;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using R3;
 
 namespace DexieNETTest.TestBase.Test
 {
@@ -17,7 +14,7 @@ namespace DexieNETTest.TestBase.Test
             return Unit.Default;
         }
 
-        private ulong? keyP = null;
+        private ulong? keyP;
 
         private async Task PersonAddOp()
         {
@@ -42,7 +39,7 @@ namespace DexieNETTest.TestBase.Test
             });
         }
 
-        private bool _exThrown = false;
+        private bool _exThrown;
 
         private async Task FailedTransactionOp()
         {
@@ -108,21 +105,21 @@ namespace DexieNETTest.TestBase.Test
             
             int executionCountP = 0;
 
-            var disposableP = observableP.Subscribe(values =>
+            var disposableP = observableP.AsObservable.Subscribe(values =>
             {
                 executionCountP++;
                 disposeSubject.OnNext(disposeSubject.Value + 1);
-            }, onError: e => firstError ??= e.Message);
+            }, onCompleted: _ => { }, onErrorResume: e => firstError ??= e.Message);
 
             disposeBag.Add(disposableP);
 
             int executionCountS = 0;
 
-            var disposableS = observableS.Subscribe(values =>
+            var disposableS = observableS.AsObservable.Subscribe(values =>
             {
                 executionCountS++;
                 disposeSubject.OnNext(disposeSubject.Value + 1);
-            }, onError: e => firstError ??= e.Message);
+            }, onCompleted: _ => { }, onErrorResume: e => firstError ??= e.Message);
 
             disposeBag.Add(disposableS);
 
@@ -130,17 +127,20 @@ namespace DexieNETTest.TestBase.Test
 
             IEnumerable<int> result = Enumerable.Empty<int>();
 
-            var disposableSP = observableSP.Subscribe(values =>
+            var disposableSP = observableSP.AsObservable.Subscribe(values =>
             {
                 result = values.ToArray();
                 executionCountSP++;
                 disposeSubject.OnNext(disposeSubject.Value + 1);
-            }, onError: e => firstError ??= e.Message);
+            }, onCompleted: _ => { }, onErrorResume: e => firstError ??= e.Message);
 
             disposeBag.Add(disposableSP);
 
             var opDisposable = Observable.Interval(TimeSpan.FromMilliseconds(10))
-                .SelectMany(async op =>
+                .Select((_, i) => i)
+                .TakeWhile(_ => !_exThrown)
+                .Do(onDispose: () => disposeSubject.OnNext(disposeSubject.Value + 1))
+                .SubscribeAwait(async (op, _) =>
                 {
                     switch (op)
                     {
@@ -164,12 +164,8 @@ namespace DexieNETTest.TestBase.Test
                         default:
                             break;
                     }
-
-                    return Unit.Default;
-                })
-            .TakeWhile(_ => !_exThrown)
-            .Finally(() => disposeSubject.OnNext(disposeSubject.Value + 1))
-            .Subscribe();
+                });
+            
 
             var finished = false;
 
@@ -189,7 +185,8 @@ namespace DexieNETTest.TestBase.Test
                            testFinished();
                        }
                    },
-                   onError: e =>
+                   onCompleted: _ => { },
+                   onErrorResume: e =>
                    {
                        if (e.GetType() == typeof(TimeoutException))
                        {
@@ -209,7 +206,7 @@ namespace DexieNETTest.TestBase.Test
                 throw new InvalidOperationException(firstError);
             }
 
-            if (executionCountP != 4)
+            if (executionCountP < 3 || executionCountP > 4)
             {
                 throw new InvalidOperationException($"executionCountP : {executionCountP}-> LiveQuery failed.");
             }

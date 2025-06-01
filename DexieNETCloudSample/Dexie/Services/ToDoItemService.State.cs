@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-using DexieCloudNET;
-using DexieNET;
+﻿using DexieNET;
 using DexieNETCloudSample.Logic;
 using RxBlazorLightCore;
 
