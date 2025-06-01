@@ -37,13 +37,39 @@
 	<ItemGroup>
 		<Content Include="yarn\dexiecloud\*.js" Pack="false" />
 		<Content Include="yarn\serviceworker\*.js" Pack="false" />
+		<Content Update="yarn\serviceworkerSimple\package.json">
+		  <Pack>false</Pack>
+		</Content>
+		<Content Update="yarn\serviceworkerSimple\tsconfig.json">
+		  <Pack>false</Pack>
+		</Content>
+		<Content Update="yarn\serviceworkerSimple\webpackDEV.config.js">
+		  <Pack>false</Pack>
+		</Content>
+		<Content Update="yarn\serviceworkerSimple\webpackREL.config.js">
+		  <Pack>false</Pack>
+		</Content>
+		<Content Update="yarn\dexieServiceworker\package.json">
+		  <Pack>false</Pack>
+		</Content>
+		<Content Update="yarn\dexieServiceworker\tsconfig.json">
+		  <Pack>false</Pack>
+		</Content>
+		<Content Update="yarn\dexieServiceworker\webpackDEV.config.js">
+		  <Pack>false</Pack>
+		</Content>
+		<Content Update="yarn\dexieServiceworker\webpackREL.config.js">
+		  <Pack>false</Pack>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Update="yarn/dexiecloud/package.json" Pack="false"/>
-		<Content Update="yarn/dexiecloud/tsconfig.json" Pack="false"/>
-		<Content Update="yarn/serviceworker/package.json" Pack="false"/>
-		<Content Update="yarn/serviceworker/tsconfig.json" Pack="false"/>
+		<Content Update="yarn/dexiecloud/package.json" Pack="false" />
+		<Content Update="yarn/dexiecloud/tsconfig.json" Pack="false" />
+		<Content Update="yarn/serviceworker/package.json" Pack="false" />
+		<Content Update="yarn/serviceworker/tsconfig.json" Pack="false" />
+		<Content Update="yarn/dexieServiceworker/package.json" Pack="false" />
+		<Content Update="yarn/dexieServiceworker/tsconfig.json" Pack="false" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -51,17 +77,6 @@
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
 		<ProjectReference Include="..\DexieNET\DexieNET.csproj" />
 	</ItemGroup>
-
-	<PropertyGroup>
-		<!-- File with mtime of last successful npm install -->
-		<YarnInstallStampFileSW>yarn/serviceworker/node_modules/.install-stamp</YarnInstallStampFileSW>
-		<Authors>Bernhard Straub</Authors>
-	</PropertyGroup>
-
-	<Target Name="YarnInstallServiceWorker" BeforeTargets="BeforeBuild" Inputs="yarn/serviceworker/package.json" Outputs="$(YarnInstallStampFileSW)">
-		<Exec Command="yarn install" WorkingDirectory="yarn/serviceworker" />
-		<Touch Files="$(YarnInstallStampFileSW)" AlwaysCreate="true" />
-	</Target>
 
 	<PropertyGroup>
 		<!-- File with mtime of last successful npm install -->
@@ -73,6 +88,28 @@
 		<Exec Command="yarn install" WorkingDirectory="yarn/dexiecloud" />
 		<Touch Files="$(YarnInstallStampFileCloud)" AlwaysCreate="true" />
 	</Target>
+	
+	<PropertyGroup>
+		<!-- File with mtime of last successful npm install -->
+		<YarnInstallStampFileSW>yarn/serviceworker/node_modules/.install-stamp</YarnInstallStampFileSW>
+		<Authors>Bernhard Straub</Authors>
+	</PropertyGroup>
+
+	<Target Name="YarnInstallServiceWorker" AfterTargets="YarnInstallDexieCloud" Inputs="yarn/serviceworker/package.json" Outputs="$(YarnInstallStampFileSW)">
+		<Exec Command="yarn install" WorkingDirectory="yarn/serviceworker" />
+		<Touch Files="$(YarnInstallStampFileSW)" AlwaysCreate="true" />
+	</Target>
+
+	<PropertyGroup>
+		<!-- File with mtime of last successful npm install -->
+		<YarnInstallStampFileDexieSW>yarn/dexieServiceworker/node_modules/.install-stamp</YarnInstallStampFileDexieSW>
+		<Authors>Bernhard Straub</Authors>
+	</PropertyGroup>
+
+	<Target Name="YarnInstallDexieServiceWorker" AfterTargets="YarnInstallServiceWorker" Inputs="yarn/serviceworker/package.json" Outputs="$(YarnInstallStampFileDexieSW)">
+		<Exec Command="yarn install" WorkingDirectory="yarn/dexieServiceworker" />
+		<Touch Files="$(YarnInstallStampFileDexieSW)" AlwaysCreate="true" />
+	</Target>
 
 	<Target Name="YarnCommandsDebugDexieCloud" AfterTargets="YarnInstallDexieCloud" Condition="'$(Configuration)' == 'Debug'">
 		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn/dexiecloud" />
@@ -82,12 +119,20 @@
 		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn/dexiecloud" />
 	</Target>
 	
-	<Target Name="YarnCommandsDebugServiceworker" AfterTargets="YarnInstallServiceWorker" Condition="'$(Configuration)' == 'Debug'">
+	<Target Name="YarnCommandsDebugServiceworker" AfterTargets="YarnCommandsDebugDexieCloud" Condition="'$(Configuration)' == 'Debug'">
 		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn/serviceworker" />
 	</Target>
 
-	<Target Name="YarnCommandsReleaseServiceworker" AfterTargets="YarnInstallServiceWorker" Condition="'$(Configuration)' == 'Release'">
+	<Target Name="YarnCommandsReleaseServiceworker" AfterTargets="YarnCommandsReleaseDexieCloud" Condition="'$(Configuration)' == 'Release'">
 		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn/serviceworker" />
+	</Target>
+
+	<Target Name="YarnCommandsDebugDexieServiceworker" AfterTargets="YarnCommandsDebugServiceworker" Condition="'$(Configuration)' == 'Debug'">
+		<Exec Command="yarn run buildDebug" WorkingDirectory="yarn/dexieServiceworker" />
+	</Target>
+
+	<Target Name="YarnCommandsReleaseDexieServiceworker" AfterTargets="YarnCommandsReleaseServiceworker" Condition="'$(Configuration)' == 'Release'">
+		<Exec Command="yarn run buildRelease" WorkingDirectory="yarn/dexieServiceworker" />
 	</Target>
 	
 </Project>

@@ -1,8 +1,8 @@
 {
-  "name": "dexiecloudnetserviceworker",
+  "name": "dexieserviceworker",
   "version": "1.5.0",
   "description": "",
-  "main": "dexieCloudNETServiceWorker.js",
+  "main": "dexieServiceWorker.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "buildDebug": "webpack --config webpackDEV.config.js",

@@ -204,7 +204,7 @@ namespace DexieNETCloudSample.Logic
                     .WithCustomLoginGui(true)
                     .WithRequireAuth(false)
 #if !DEBUG
-                    .WithTryUseServiceWorker(true)
+                    //.WithTryUseServiceWorker(true)
 #endif
             ;
             //.WithFetchTokens(FetchTokens);

@@ -1,8 +1,9 @@
 ﻿const path = require('path')
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
-    entry: ['./dexieCloudNETServiceWorker.ts'],
+    mode: 'production',
+    entry: ['./dexieServiceWorker.ts'],
     module: {
         rules: [
             {
@@ -17,7 +18,7 @@ module.exports = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
-      },
+    },
     devtool: 'source-map',
     output: {
         module: true,
@@ -25,10 +26,11 @@ module.exports = {
             type: 'module'
         },
         path: path.resolve(__dirname, '../../wwwroot/js'),
-        filename: 'dexieCloudNETServiceWorker.js',
+        filename: 'dexieServiceWorker.js',
         publicPath: '_content/DexieCloudNET/js/'
     },
     optimization: {
-        minimize: false
+        minimize: true,
+        minimizer: [new TerserPlugin()],
     }
 }

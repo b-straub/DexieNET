@@ -3,6 +3,8 @@
 // be reflected on the first load after each change).
 
 import { notifyUpdate } from './_content/DexieCloudNET/js/dexieCloudNETServiceWorker.js';
+// use the import below together with .WithTryUseServiceWorker(true) in DexieCloudOptions
+//import './_content/DexieCloudNET/js/dexieServiceWorker.js';
 
 self.addEventListener('fetch', () => {
 });

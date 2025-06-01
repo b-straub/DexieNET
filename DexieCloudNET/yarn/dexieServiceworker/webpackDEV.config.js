@@ -2,7 +2,7 @@
 
 module.exports = {
     mode: 'development',
-    entry: ['./dexieCloudNETServiceWorker.ts'],
+    entry: ['./dexieServiceWorker.ts'],
     module: {
         rules: [
             {
@@ -25,7 +25,7 @@ module.exports = {
             type: 'module'
         },
         path: path.resolve(__dirname, '../../wwwroot/js'),
-        filename: 'dexieCloudNETServiceWorker.js',
+        filename: 'dexieServiceWorker.js',
         publicPath: '_content/DexieCloudNET/js/'
     },
     optimization: {
