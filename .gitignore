@@ -36,3 +36,4 @@ DexieNETCloudSample/Properties/Settings.xml
 DexieNETCloudSample/wwwroot/.htaccess
 DexieNETCloudSample/wwwroot/appsettings*
 DexieNETCloudPushServer/database
+*.code-workspace
