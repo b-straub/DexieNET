@@ -8,8 +8,9 @@ DexieCloudNET is a .NET wrapper for dexie.js minimalist wrapper for IndexedDB se
 *and made with*
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/Rider.png" alt="Rider logo." style="width:100px;"> [Free edition](https://www.jetbrains.com/de-de/rider/download) !
 
-## Breaking changes
+## Known Issues
 - please make sure that the latest .NET SDK is installed and used, otherwise you will get an error for Microsoft.CodeAnalysis.Analyzers 4.14.0
+- Members and Invites table is not working in small mode, investigating ...
 ##  News
 - Starting with revision 1.5, [R3](https://github.com/Cysharp/R3) is used as reactive core. Please refer to the samples for usage.
 - Added experimental support for 'share' via a magic link. See the updates in the [ToDoSample](DexieNETCloudSample). Unfortunately, the basic idea of using this for an iOS/iPadOS shortcut doesn't work as expected. The shortcut scheme *"webapp://"* does not handle query parameters. On macOS using the normal *"https://"* scheme it's working as expected!
