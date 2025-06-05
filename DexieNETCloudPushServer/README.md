@@ -9,7 +9,7 @@ The best way to set up your own PushServer is with Docker.
 Create a Docker image using the [buildPushServer.sh](../buildPushServer.sh) script.
 Make sure *--platform* matches your desired architecture.
 
-**For new releases please expire all subscriptions and if push still doesn't work delete and reinstall your PWA!**
+**For new releases please expire all subscriptions, and if push still doesn't work, delete and reinstall your PWA!**
 
 Setting up the app's secrets is a two-step process:
 * map any local directory to */pushserver/database/*

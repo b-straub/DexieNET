@@ -1,18 +1,18 @@
-﻿
-<MudHidden Hidden=@(!Scope.Members.Any())>
+﻿@if (Scope.Members.Any())
+{
     <MudTable T="Member" Items=@(Scope.Members)>
         <HeaderContent>
             <MudTh>Member</MudTh>
             <MudTh>Role</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <RxBLStateScope TScope=@ToDoListMemberService.MemberScope.MemberRowScope TService=@ToDoListMemberService 
+            <RxBLStateScope TScope=@ToDoListMemberService.MemberScope.MemberRowScope TService=@ToDoListMemberService
                             ScopeFactory=@(() => Scope.CreateRowScope())>
                 <MemberRow Member=@context/>
             </RxBLStateScope>
         </RowTemplate>
     </MudTable>
-</MudHidden>
+}
 
 @code {
     [CascadingParameter]
@@ -26,4 +26,5 @@
         Scope.SetList(List);
         await base.OnParametersSetAsync();
     }
+
 }

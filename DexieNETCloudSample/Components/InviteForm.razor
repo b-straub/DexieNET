@@ -1,10 +1,7 @@
 ﻿
-<MudHidden Hidden=@(!Scope.CanAddMember())>
+@if (Scope.CanAddMember())
+{
     <MudTable Class="mt-2" T="string" Items=@(Scope.Users)>
-        <ColGroup>
-            <col />
-            <col style="width:50px;" />
-        </ColGroup>
         <HeaderContent>
             <MudTh>Invite User</MudTh>
             <MudTh Style="text-align:center">
@@ -19,7 +16,7 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
-</MudHidden>
+}
 
 @code {
     [Inject]
