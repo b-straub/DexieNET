@@ -89,6 +89,7 @@ public partial class DexieCloudService
                 if (NotificationsState.Value is NotificationState.Subscribed)
                 {
                     await UnsubscribePush();
+                    await Sync(new SyncOptions());
                 }
                 return Observable.Return(Unit.Default);
             });
@@ -96,13 +97,14 @@ public partial class DexieCloudService
         var stopObservable = Observable
             .FromAsync(async _ =>
             {
-                if (await DB.NumUnsyncedChanges() == 0 && SyncState.Value.ValidPhase())
+                var unsyncedChanges = await DB.NumUnsyncedChanges();
+                if (unsyncedChanges == 0 && SyncState.Value.ValidPhase())
                 {
                     await DB.Logout();
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Can not logout: {SyncState.Value?.Phase}");
+                    throw new InvalidOperationException($"Can not logout: {SyncState.Value?.Phase} - {unsyncedChanges} unsynced changes");
                 }
 
                 return Observable.Return(Unit.Default);
